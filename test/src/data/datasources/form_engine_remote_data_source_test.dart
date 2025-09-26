@@ -570,7 +570,8 @@ void main() {
           // Arrange
           const engineId = '1';
           final mockResponse = MockResponse();
-          // This will cause JSON parsing error because FormEngineResponse expects specific structure
+          // This will cause JSON parsing error because FormEngineResponse
+          // expects specific structure
           when(() => mockResponse.data).thenReturn(<String, dynamic>{
             'invalidField': 123,
             'anotherInvalid': {'nested': 'error'},
@@ -587,8 +588,9 @@ void main() {
 
           // Assert
           expect(result, isA<Success<FormEngineResponse>>());
-          // Even with invalid fields, the JSON parsing will succeed for FormEngineResponse
-          // as it has optional fields. This test shows that the parsing is robust.
+          // Even with invalid fields, the JSON parsing will succeed for
+          // FormEngineResponse as it has optional fields. This test shows that
+          // the parsing is robust.
         });
       });
 

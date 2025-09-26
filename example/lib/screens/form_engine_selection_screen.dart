@@ -71,7 +71,7 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
         });
       }
     } catch (e) {
-      print('Error loading engines: $e');
+      debugPrint('Error loading engines: $e');
     }
   }
 
@@ -93,7 +93,7 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
         });
       }
     } catch (e) {
-      print('Error loading downloaded engines: $e');
+      debugPrint('Error loading downloaded engines: $e');
     }
   }
 

@@ -31,19 +31,19 @@ class _SimpleTypedBridgeTestScreenState
       final webView = await FormGearSDK.instance.createDebugBridgeTest(
         customHandlers: customHandlers,
         onWebViewCreated: (controller) {
-          print('WebView created with SDK');
+          debugPrint('WebView created with SDK');
         },
         onLoadStart: (controller, url) {
-          print('Load started: $url');
+          debugPrint('Load started: $url');
         },
         onLoadStop: (controller, url) {
-          print('Load finished: $url');
+          debugPrint('Load finished: $url');
         },
         onLoadError: (controller, url, code, message) {
-          print('Load error: $code - $message');
+          debugPrint('Load error: $code - $message');
         },
         onConsoleMessage: (controller, consoleMessage) {
-          print(
+          debugPrint(
             'Console [${consoleMessage.messageLevel}]: '
             '${consoleMessage.message}',
           );
@@ -55,7 +55,7 @@ class _SimpleTypedBridgeTestScreenState
         isLoading = false;
       });
     } catch (e) {
-      print('Error loading debug WebView: $e');
+      debugPrint('Error loading debug WebView: $e');
       setState(() {
         isLoading = false;
       });
