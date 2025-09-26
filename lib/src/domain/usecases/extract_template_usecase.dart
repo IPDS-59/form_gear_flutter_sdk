@@ -20,7 +20,8 @@ class ExtractTemplateParams {
 @LazySingleton()
 /// Use case for extracting template ZIP files
 ///
-/// This use case handles the extraction logic for templates following FASIH patterns:
+/// This use case handles the extraction logic for templates following
+/// FASIH patterns:
 /// 1. Validates ZIP file exists and is valid
 /// 2. Creates target directory if needed (Template/{templateId}/)
 /// 3. Extracts ZIP contents to template directory
@@ -55,7 +56,7 @@ class ExtractTemplateUseCase
       );
 
       return result;
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }

@@ -45,7 +45,10 @@ class FormGearApiConfig extends Equatable {
   /// Used for FASIH-compatible ZIP downloads
   String? getTemplateZipUrl(String templateId) {
     if (baseUrl == null || templateZipEndpoint == null) return null;
-    return '$baseUrl${templateZipEndpoint!.replaceAll('{templateId}', templateId)}';
+    return '$baseUrl${templateZipEndpoint!.replaceAll(
+      '{templateId}',
+      templateId,
+    )}';
   }
 
   /// Get full form engine API URL

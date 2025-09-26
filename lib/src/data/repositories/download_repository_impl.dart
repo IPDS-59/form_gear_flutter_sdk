@@ -116,7 +116,7 @@ class DownloadRepositoryImpl implements DownloadRepository {
         }
         // Wait before retry with exponential backoff
         await Future<void>.delayed(Duration(seconds: attempt * 2));
-      } catch (e) {
+      } on Exception catch (e) {
         FormGearLogger.sdkError(
           'Download failed on attempt $attempt: $e',
         );
@@ -176,7 +176,7 @@ class DownloadRepositoryImpl implements DownloadRepository {
       } else {
         return downloadResult as Failure<String>;
       }
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }
@@ -191,7 +191,7 @@ class DownloadRepositoryImpl implements DownloadRepository {
         FormGearLogger.sdk('Cancelled download: $url');
       }
       return const Success(null);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }

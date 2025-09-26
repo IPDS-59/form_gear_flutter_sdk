@@ -41,7 +41,7 @@ class VersionRepositoryImpl implements VersionRepository {
         'Saved version $version for form engine $engineId in JSON format',
       );
       return const Success(null);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       FormGearLogger.sdkError(
         'Failed to save version for form engine $engineId: $e',
       );
@@ -75,14 +75,14 @@ class VersionRepositoryImpl implements VersionRepository {
         final versionJson = jsonDecode(content) as Map<String, dynamic>;
         final version = versionJson['version'] as String?;
         return Success(version);
-      } catch (e) {
+      } on Exception {
         // Fallback to plain text for backward compatibility
         FormGearLogger.sdk(
           'Using plain text version format for backward compatibility',
         );
         return Success(content.isEmpty ? null : content);
       }
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       FormGearLogger.sdkError(
         'Failed to read form engine $engineId version: $e',
       );
@@ -125,7 +125,7 @@ class VersionRepositoryImpl implements VersionRepository {
         'Saved template version $version for template $templateId',
       );
       return const Success(null);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       FormGearLogger.sdkError(
         'Failed to save template version for $templateId: $e',
       );
@@ -172,7 +172,7 @@ class VersionRepositoryImpl implements VersionRepository {
       final version = _extractVersionFromJson(content);
 
       return Success(version);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       FormGearLogger.sdkError('Error reading template version: $e');
       return Failure(e, stackTrace);
     }
@@ -185,7 +185,7 @@ class VersionRepositoryImpl implements VersionRepository {
         engineId,
       );
       return await _fileRepository.fileExists(versionFile.path);
-    } catch (e) {
+    } on Exception {
       return false;
     }
   }
@@ -209,7 +209,7 @@ class VersionRepositoryImpl implements VersionRepository {
       // Check for version.json fallback
       final versionPath = path.join(templateDir.path, 'version.json');
       return await _fileRepository.fileExists(versionPath);
-    } catch (e) {
+    } on Exception {
       return false;
     }
   }
@@ -227,7 +227,7 @@ class VersionRepositoryImpl implements VersionRepository {
       }
 
       return deleteResult;
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       FormGearLogger.sdkError('Failed to delete form engine version: $e');
       return Failure(e, stackTrace);
     }
@@ -266,7 +266,7 @@ class VersionRepositoryImpl implements VersionRepository {
       }
 
       return deleteResult; // Return the first error
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       FormGearLogger.sdkError('Failed to delete template version: $e');
       return Failure(e, stackTrace);
     }
@@ -297,7 +297,7 @@ class VersionRepositoryImpl implements VersionRepository {
         r'"version"\s*:\s*"([^"]+)"',
       ).firstMatch(jsonContent);
       return versionMatch?.group(1);
-    } catch (e) {
+    } on Exception catch (e) {
       FormGearLogger.sdkError('Error extracting version from JSON: $e');
       return null;
     }

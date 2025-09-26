@@ -86,7 +86,7 @@ void main() {
           ).thenAnswer((_) async => Success(responseData));
 
           // Act
-          final result = await useCase.call(null);
+          final result = await useCase.call();
 
           // Assert
           expect(result, isA<Success<FormEngineResponse>>());

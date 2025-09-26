@@ -5,7 +5,8 @@ import 'package:archive/archive.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 
 /// ZIP file extraction utility inspired by FASIH's ZipHelper
-/// Provides functionality for extracting ZIP files with error handling and logging
+/// Provides functionality for extracting ZIP files with error handling and
+/// logging
 class ZipHelper {
   ZipHelper._();
 
@@ -14,7 +15,8 @@ class ZipHelper {
   /// Parameters:
   /// - [zipFilePath]: Path to the ZIP file to extract
   /// - [extractToPath]: Directory path where contents should be extracted
-  /// - [deleteZipAfterExtraction]: Whether to delete the ZIP file after successful extraction
+  /// - [deleteZipAfterExtraction]: Whether to delete the ZIP file after
+  ///   successful extraction
   ///
   /// Returns:
   /// - `true` if extraction was successful
@@ -89,7 +91,9 @@ class ZipHelper {
       }
 
       FormGearLogger.sdk(
-        'ZIP extraction completed successfully. Extracted $extractedCount files from $zipFilePath',
+        'ZIP extraction completed successfully. Extracted '
+        '$extractedCount files '
+        'from $zipFilePath',
       );
 
       // Delete ZIP file if requested
@@ -97,7 +101,7 @@ class ZipHelper {
         try {
           zipFile.deleteSync();
           FormGearLogger.sdk('Deleted ZIP file after extraction: $zipFilePath');
-        } catch (deleteError) {
+        } on Exception catch (deleteError) {
           FormGearLogger.sdkError(
             'Failed to delete ZIP file after extraction: $deleteError',
           );
@@ -106,7 +110,7 @@ class ZipHelper {
       }
 
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       FormGearLogger.sdkError(
         'Failed to extract ZIP file $zipFilePath: $e',
       );
@@ -174,11 +178,12 @@ class ZipHelper {
       }
 
       FormGearLogger.sdk(
-        'ZIP extraction from bytes completed successfully. Extracted $extractedCount files',
+        'ZIP extraction from bytes completed successfully. Extracted '
+        '$extractedCount files',
       );
 
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       FormGearLogger.sdkError(
         'Failed to extract ZIP from bytes: $e',
       );
@@ -206,7 +211,7 @@ class ZipHelper {
 
       // If we can decode it without errors, it's valid
       return archive.isNotEmpty;
-    } catch (e) {
+    } on Exception catch (e) {
       FormGearLogger.sdkError('Invalid ZIP file: $filePath - $e');
       return false;
     }
@@ -231,7 +236,7 @@ class ZipHelper {
       final archive = ZipDecoder().decodeBytes(zipBytes);
 
       return archive.map((file) => file.name).toList();
-    } catch (e) {
+    } on Exception catch (e) {
       FormGearLogger.sdkError('Failed to list ZIP contents: $zipFilePath - $e');
       return [];
     }
@@ -288,7 +293,7 @@ class ZipHelper {
 
       FormGearLogger.sdk('ZIP created successfully: $outputZipPath');
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       FormGearLogger.sdkError(
         'Failed to create ZIP: $e',
       );

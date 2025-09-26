@@ -53,7 +53,8 @@ class FormGearSDK {
     _versionManager = getIt<FormGearVersionManager>();
 
     // Note: Dio interceptors are now configured in the DI container
-    // AliceDioAdapter (if present) is automatically added last to capture all modifications
+    // AliceDioAdapter (if present) is automatically added last to capture
+    // all modifications
 
     // Note: Server is now started on-demand when WebView is opened
     // to reduce resource usage when not needed
@@ -116,7 +117,8 @@ class FormGearSDK {
 
       _currentPreparedEngine = preparedEngine;
       FormGearLogger.sdk(
-        'Engine ${engineType.displayName} prepared successfully with ${processedHtml.length} chars HTML',
+        'Engine ${engineType.displayName} prepared successfully with '
+        '${processedHtml.length} chars HTML',
       );
 
       return preparedEngine;
@@ -160,6 +162,9 @@ class FormGearSDK {
     final webView = _createWebViewFromPreparedEngine();
 
     try {
+      // Check if context is still mounted before navigation
+      if (!context.mounted) return;
+
       // Navigate to a full-screen page with the WebView
       await Navigator.of(context).push<void>(
         MaterialPageRoute(
@@ -251,7 +256,8 @@ class FormGearSDK {
           'packages/form_gear_engine_sdk/assets/test/bridge_test.html';
       final htmlContent = await rootBundle.loadString(assetPath);
 
-      // Process the HTML through vendor asset injection to replace jQuery placeholder
+      // Process the HTML through vendor asset injection to replace jQuery
+      // placeholder
       final processedHtml = await _injectVendorAssets(htmlContent);
       return processedHtml;
     } on Exception catch (e) {
@@ -362,7 +368,8 @@ class FormGearSDK {
   /// Loads engine assets from local storage or falls back to bundle assets
   Future<_EngineAssets> _loadEngineAssets(FormEngineType engineType) async {
     try {
-      // Try to load from downloaded engine files first (using DirectoryConstants)
+      // Try to load from downloaded engine files first (using
+      // DirectoryConstants)
       final engineAssets = await _loadEngineFromLocal(engineType);
       if (engineAssets != null) {
         FormGearLogger.sdk(
@@ -370,7 +377,7 @@ class FormGearSDK {
         );
         return engineAssets;
       }
-    } catch (e) {
+    } on Exception catch (e) {
       FormGearLogger.sdkError(
         'Failed to load ${engineType.displayName} from local storage: $e',
       );
@@ -442,7 +449,8 @@ class FormGearSDK {
       }
 
       FormGearLogger.sdk(
-        'Loaded local engine files: HTML(${htmlTemplate.length}), JS(${jsContent.length}), CSS(${cssContent.length})',
+        'Loaded local engine files: HTML(${htmlTemplate.length}), '
+        'JS(${jsContent.length}), CSS(${cssContent.length})',
       );
 
       return _EngineAssets(
@@ -450,7 +458,7 @@ class FormGearSDK {
         jsContent: jsContent,
         cssContent: cssContent,
       );
-    } catch (e) {
+    } on Exception catch (e) {
       FormGearLogger.sdkError('Error loading engine from local: $e');
       return null;
     }
@@ -474,7 +482,7 @@ class FormGearSDK {
         jsContent = await rootBundle.loadString(
           'assets/formengine/$engineId/$jsFileName',
         );
-      } catch (e) {
+      } on Exception {
         // Try alternative JS file names
         final alternativeJsFiles = _getAlternativeJSFileNames(engineType);
         for (final altJsFileName in alternativeJsFiles) {
@@ -483,7 +491,7 @@ class FormGearSDK {
               'assets/formengine/$engineId/$altJsFileName',
             );
             break;
-          } catch (altE) {
+          } on Exception {
             // Continue to next alternative
           }
         }
@@ -501,7 +509,7 @@ class FormGearSDK {
         cssContent = await rootBundle.loadString(
           'assets/formengine/$engineId/style.css',
         );
-      } catch (e) {
+      } on Exception {
         // CSS is optional, continue without it
         FormGearLogger.sdk('No CSS file found for ${engineType.displayName}');
       }
@@ -670,7 +678,7 @@ class FormGearSDK {
         FormGearLogger.sdk(
           '✅ jQuery content injected (${jqueryContent.length} chars)',
         );
-      } catch (e) {
+      } on Exception catch (e) {
         FormGearLogger.sdkError('❌ Failed to load jQuery: $e');
         // Fallback: remove the broken script tag
         processedHtml = processedHtml.replaceAll(

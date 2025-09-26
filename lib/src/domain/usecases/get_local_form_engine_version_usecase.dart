@@ -6,7 +6,8 @@ import 'package:injectable/injectable.dart';
 @LazySingleton()
 /// Use case for getting local form engine version
 ///
-/// This use case handles reading version information for form engines following FASIH patterns:
+/// This use case handles reading version information for form engines
+/// following FASIH patterns:
 /// 1. Reads version.json file from form engine directory
 /// 2. Parses JSON format: {"version": "x.x.x"}
 /// 3. Supports backward compatibility with plain text version files

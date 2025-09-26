@@ -513,7 +513,6 @@ void main() {
           const engineId = '1';
           final dioException = DioException(
             requestOptions: RequestOptions(path: '/api/v1/form-engine'),
-            type: DioExceptionType.unknown,
             message: 'Unknown error',
           );
           when(

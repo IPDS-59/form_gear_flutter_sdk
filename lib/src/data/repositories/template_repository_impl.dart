@@ -23,7 +23,7 @@ class TemplateRepositoryImpl implements TemplateRepository {
     final isOfflineAvailable = await isTemplateDataAvailable(templateId);
 
     if (isOfflineAvailable) {
-      // TODO: Implement offline data retrieval from local storage
+      // TODO(sdk): Implement offline data retrieval from local storage
       // For now, always fetch from remote
     }
 
@@ -48,7 +48,7 @@ class TemplateRepositoryImpl implements TemplateRepository {
 
   @override
   Future<bool> isTemplateDataAvailable(String templateId) async {
-    // TODO: Implement offline availability check
+    // TODO(sdk): Implement offline availability check
     // Check if template data exists in local storage/cache
     return false;
   }
@@ -59,10 +59,10 @@ class TemplateRepositoryImpl implements TemplateRepository {
     CustomDataTemplate templateData,
   ) async {
     try {
-      // TODO: Implement caching to local storage
+      // TODO(sdk): Implement caching to local storage
       // This could use SharedPreferences, SQLite, Hive, etc.
       return const Success(null);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }

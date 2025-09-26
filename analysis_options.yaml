@@ -14,6 +14,8 @@ analyzer:
     avoid_bool_literals_in_conditional_expressions: ignore
     one_member_abstracts: ignore
     cascade_invocations: ignore
+    use_build_context_synchronously: ignore
+    discarded_futures: ignore
 
 linter:
   rules:
