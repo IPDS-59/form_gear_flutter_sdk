@@ -120,7 +120,8 @@ class TemplateVersionManager {
     // STATE 2: Missing version file (treat as missing)
     if (localVersion == null) {
       FormGearLogger.sdkError(
-        'Local template $templateId exists but no version file found - STATE: MISSING',
+        'Local template $templateId exists but no version file found - '
+        'STATE: MISSING',
       );
       return TemplateVersionCheckResult(
         state: TemplateVersionState.missing,
@@ -132,7 +133,8 @@ class TemplateVersionManager {
     // STATE 3: Outdated - Version mismatch
     if (remoteVersion != null && localVersion != remoteVersion) {
       FormGearLogger.sdk(
-        'Template version mismatch - Local: $localVersion, Remote: $remoteVersion - STATE: OUTDATED',
+        'Template version mismatch - Local: $localVersion, Remote: '
+        '$remoteVersion - STATE: OUTDATED',
       );
       return TemplateVersionCheckResult(
         state: TemplateVersionState.outdated,
@@ -202,7 +204,8 @@ class TemplateVersionManager {
       case TemplateVersionState.current:
         title = 'Re-download Template';
         content =
-            '$templateName on your device is the latest version (v${result.localVersion}).\n\n'
+            '$templateName on your device is the latest version '
+            '(v${result.localVersion}).\n\n'
             'Would you like to re-download it anyway?';
         actionText = 'Re-download';
     }

@@ -124,7 +124,8 @@ class FormGearVersionManager {
     // STATE 2: Missing version file (treat as missing)
     if (localVersion == null) {
       FormGearLogger.sdkError(
-        'Local engine $formEngineIdStr exists but no version file found - STATE: MISSING',
+        'Local engine $formEngineIdStr exists but no version file found - '
+        'STATE: MISSING',
       );
       return VersionCheckResult(
         state: VersionState.missing,
@@ -136,7 +137,8 @@ class FormGearVersionManager {
     // STATE 3: Outdated - Version mismatch
     if (remoteVersion != null && localVersion != remoteVersion) {
       FormGearLogger.sdk(
-        'Version mismatch - Local: $localVersion, Remote: $remoteVersion - STATE: OUTDATED',
+        'Version mismatch - Local: $localVersion, Remote: $remoteVersion - '
+        'STATE: OUTDATED',
       );
       return VersionCheckResult(
         state: VersionState.outdated,
@@ -148,7 +150,8 @@ class FormGearVersionManager {
 
     // STATE 4: Current - Up to date
     FormGearLogger.sdk(
-      'Form engine $formEngineIdStr is up to date (v$localVersion) - STATE: CURRENT',
+      'Form engine $formEngineIdStr is up to date (v$localVersion) - '
+      'STATE: CURRENT',
     );
     return VersionCheckResult(
       state: VersionState.current,
@@ -187,7 +190,8 @@ class FormGearVersionManager {
         actionText = 'Download';
 
       case VersionState.outdated:
-        // FASIH: "FormGear yang terdapat pada perangkat anda bukan versi terbaru"
+        // FASIH: "FormGear yang terdapat pada perangkat anda bukan versi
+        // terbaru"
         title = isForced ? 'Critical Update Required' : 'Update Available';
         content =
             '$engineName on your device is not the latest version.\n\n'
@@ -196,7 +200,8 @@ class FormGearVersionManager {
 
         if (isForced) {
           content +=
-              '\n\nThis is a critical update and must be installed to continue using the app.';
+              '\n\nThis is a critical update and must be installed to continue '
+              'using the app.';
         } else {
           content += '\n\nWould you like to update now?';
         }
@@ -204,10 +209,12 @@ class FormGearVersionManager {
         actionText = 'Update';
 
       case VersionState.current:
-        // FASIH: "FormGear yang terdapat pada perangkat anda adalah versi terbaru. Ingin tetap mengunduh?"
+        // FASIH: "FormGear yang terdapat pada perangkat anda adalah versi
+        // terbaru. Ingin tetap mengunduh?"
         title = 'Re-download Engine';
         content =
-            '$engineName on your device is the latest version (v${result.localVersion}).\n\n'
+            '$engineName on your device is the latest version '
+            '(v${result.localVersion}).\n\n'
             'Would you like to re-download it anyway?';
         actionText = 'Re-download';
     }
@@ -423,7 +430,8 @@ class FormGearVersionManager {
     }
   }
 
-  /// JSON encoder helper (avoiding dart:convert import for minimal dependencies)
+  /// JSON encoder helper (avoiding dart:convert import for minimal
+  /// dependencies)
   String _jsonEncode(Map<String, dynamic> data) {
     final buffer = StringBuffer();
     buffer.write('{');

@@ -5,7 +5,8 @@ import 'package:archive/archive.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 
 /// ZIP file extraction utility inspired by FASIH's ZipHelper
-/// Provides functionality for extracting ZIP files with error handling and logging
+/// Provides functionality for extracting ZIP files with error handling and
+/// logging
 class ZipHelper {
   ZipHelper._();
 
@@ -14,7 +15,8 @@ class ZipHelper {
   /// Parameters:
   /// - [zipFilePath]: Path to the ZIP file to extract
   /// - [extractToPath]: Directory path where contents should be extracted
-  /// - [deleteZipAfterExtraction]: Whether to delete the ZIP file after successful extraction
+  /// - [deleteZipAfterExtraction]: Whether to delete the ZIP file after
+  ///   successful extraction
   ///
   /// Returns:
   /// - `true` if extraction was successful
@@ -89,7 +91,9 @@ class ZipHelper {
       }
 
       FormGearLogger.sdk(
-        'ZIP extraction completed successfully. Extracted $extractedCount files from $zipFilePath',
+        'ZIP extraction completed successfully. Extracted '
+        '$extractedCount files '
+        'from $zipFilePath',
       );
 
       // Delete ZIP file if requested
@@ -174,7 +178,8 @@ class ZipHelper {
       }
 
       FormGearLogger.sdk(
-        'ZIP extraction from bytes completed successfully. Extracted $extractedCount files',
+        'ZIP extraction from bytes completed successfully. Extracted '
+        '$extractedCount files',
       );
 
       return true;

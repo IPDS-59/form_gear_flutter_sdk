@@ -295,7 +295,8 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
     }
   }
 
-  /// Handle signature action - shows signature capture screen and returns base64 PNG data
+  /// Handle signature action - shows signature capture screen and returns
+  /// base64 PNG data
   Future<ActionInfoJs> _handleSignatureAction(
     String dataKey,
     String data,
