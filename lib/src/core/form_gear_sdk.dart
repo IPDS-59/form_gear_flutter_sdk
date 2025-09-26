@@ -453,7 +453,7 @@ class FormGearSDK {
         jsContent: jsContent,
         cssContent: cssContent,
       );
-    } catch (e) {
+    } on Exception catch (e) {
       FormGearLogger.sdkError('Error loading engine from local: $e');
       return null;
     }
@@ -477,7 +477,7 @@ class FormGearSDK {
         jsContent = await rootBundle.loadString(
           'assets/formengine/$engineId/$jsFileName',
         );
-      } catch (e) {
+      } on Exception {
         // Try alternative JS file names
         final alternativeJsFiles = _getAlternativeJSFileNames(engineType);
         for (final altJsFileName in alternativeJsFiles) {
@@ -486,7 +486,7 @@ class FormGearSDK {
               'assets/formengine/$engineId/$altJsFileName',
             );
             break;
-          } catch (altE) {
+          } on Exception {
             // Continue to next alternative
           }
         }
