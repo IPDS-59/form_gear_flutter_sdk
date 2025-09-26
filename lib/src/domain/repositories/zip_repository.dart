@@ -7,7 +7,8 @@ abstract class ZipRepository {
   /// Parameters:
   /// - [zipFilePath]: Path to the ZIP file to extract
   /// - [extractToPath]: Directory to extract files to
-  /// - [deleteZipAfterExtraction]: Whether to delete ZIP file after successful extraction
+  /// - [deleteZipAfterExtraction]: Whether to delete ZIP file after
+  ///   successful extraction
   ///
   /// Returns `Result<void>` indicating success or failure
   Future<Result<void>> extractZip(

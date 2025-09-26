@@ -17,7 +17,8 @@ class SaveFormEngineVersionParams {
 @LazySingleton()
 /// Use case for saving form engine version information
 ///
-/// This use case handles saving version information for form engines following FASIH patterns:
+/// This use case handles saving version information for form engines
+/// following FASIH patterns:
 /// 1. Creates version.json file in FASIH format: {"version": "x.x.x"}
 /// 2. Stores version in the correct form engine directory
 /// 3. Follows FASIH directory structure: BPS/formengine/{engineId}/version.json
