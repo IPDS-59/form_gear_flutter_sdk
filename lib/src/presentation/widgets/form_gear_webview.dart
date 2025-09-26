@@ -246,8 +246,8 @@ class _FormGearWebViewState extends State<FormGearWebView> {
             // Animated FormGear logo with subtle pulse effect
             TweenAnimationBuilder<double>(
               tween: Tween(begin: 0.8, end: 1),
-              duration: const Duration(milliseconds: 1000),
-              builder: (context, value, child) {
+              duration: const Duration(milliseconds: 500),
+              builder: (_, value, _) {
                 return Transform.scale(
                   scale: value,
                   child: Container(

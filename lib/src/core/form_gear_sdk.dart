@@ -160,6 +160,9 @@ class FormGearSDK {
     final webView = _createWebViewFromPreparedEngine();
 
     try {
+      // Check if context is still mounted before navigation
+      if (!context.mounted) return;
+
       // Navigate to a full-screen page with the WebView
       await Navigator.of(context).push<void>(
         MaterialPageRoute(
