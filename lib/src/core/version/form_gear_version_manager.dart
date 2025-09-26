@@ -347,7 +347,7 @@ class FormGearVersionManager {
           'Download completed but verification failed',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       FormGearLogger.sdkError(
         'Form engine download failed: $e',
       );
@@ -399,7 +399,7 @@ class FormGearVersionManager {
         );
         return null;
       }
-    } catch (e) {
+    } on Exception catch (e) {
       FormGearLogger.sdkError('Error downloading form engine ZIP: $e');
       return null;
     }
@@ -416,7 +416,7 @@ class FormGearVersionManager {
 
       await versionFile.writeAsString(versionJson);
       FormGearLogger.sdk('Saved version $version for engine $engineId');
-    } catch (e) {
+    } on Exception catch (e) {
       FormGearLogger.sdkError(
         'Failed to save version for engine $engineId: $e',
       );

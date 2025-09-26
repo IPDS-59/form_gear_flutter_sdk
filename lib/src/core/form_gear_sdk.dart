@@ -504,7 +504,7 @@ class FormGearSDK {
         cssContent = await rootBundle.loadString(
           'assets/formengine/$engineId/style.css',
         );
-      } catch (e) {
+      } on Exception {
         // CSS is optional, continue without it
         FormGearLogger.sdk('No CSS file found for ${engineType.displayName}');
       }
@@ -673,7 +673,7 @@ class FormGearSDK {
         FormGearLogger.sdk(
           '✅ jQuery content injected (${jqueryContent.length} chars)',
         );
-      } catch (e) {
+      } on Exception catch (e) {
         FormGearLogger.sdkError('❌ Failed to load jQuery: $e');
         // Fallback: remove the broken script tag
         processedHtml = processedHtml.replaceAll(

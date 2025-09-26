@@ -62,7 +62,7 @@ class TemplateRepositoryImpl implements TemplateRepository {
       // TODO(sdk): Implement caching to local storage
       // This could use SharedPreferences, SQLite, Hive, etc.
       return const Success(null);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }

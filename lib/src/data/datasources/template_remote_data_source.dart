@@ -57,7 +57,7 @@ class TemplateRemoteDataSourceImpl implements TemplateRemoteDataSource {
       return Success(customDataTemplate);
     } on DioException catch (e, stackTrace) {
       return Failure(_mapDioException(e), stackTrace);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(UnknownFailure(e.toString()), stackTrace);
     }
   }
@@ -83,7 +83,7 @@ class TemplateRemoteDataSourceImpl implements TemplateRemoteDataSource {
       return Success(lookupResponse);
     } on DioException catch (e, stackTrace) {
       return Failure(_mapDioException(e), stackTrace);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(UnknownFailure(e.toString()), stackTrace);
     }
   }

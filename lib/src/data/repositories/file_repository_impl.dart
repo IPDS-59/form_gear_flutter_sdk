@@ -13,7 +13,7 @@ class FileRepositoryImpl implements FileRepository {
     try {
       final file = File(filePath);
       return file.existsSync();
-    } catch (e) {
+    } on Exception {
       return false;
     }
   }
@@ -23,7 +23,7 @@ class FileRepositoryImpl implements FileRepository {
     try {
       final directory = Directory(directoryPath);
       return directory.existsSync();
-    } catch (e) {
+    } on Exception {
       return false;
     }
   }
@@ -37,7 +37,7 @@ class FileRepositoryImpl implements FileRepository {
       final directory = Directory(directoryPath);
       directory.createSync(recursive: recursive);
       return const Success(null);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }
@@ -50,7 +50,7 @@ class FileRepositoryImpl implements FileRepository {
         file.deleteSync();
       }
       return const Success(null);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }
@@ -66,7 +66,7 @@ class FileRepositoryImpl implements FileRepository {
         directory.deleteSync(recursive: recursive);
       }
       return const Success(null);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }
@@ -88,7 +88,7 @@ class FileRepositoryImpl implements FileRepository {
 
       sourceFile.copySync(destinationPath);
       return const Success(null);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }
@@ -110,7 +110,7 @@ class FileRepositoryImpl implements FileRepository {
 
       sourceFile.renameSync(destinationPath);
       return const Success(null);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }
@@ -121,7 +121,7 @@ class FileRepositoryImpl implements FileRepository {
       final file = File(filePath);
       final content = file.readAsStringSync();
       return Success(content);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }
@@ -142,7 +142,7 @@ class FileRepositoryImpl implements FileRepository {
 
       file.writeAsStringSync(content);
       return const Success(null);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }
@@ -153,7 +153,7 @@ class FileRepositoryImpl implements FileRepository {
       final file = File(filePath);
       final bytes = file.readAsBytesSync();
       return Success(bytes);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }
@@ -174,7 +174,7 @@ class FileRepositoryImpl implements FileRepository {
 
       file.writeAsBytesSync(bytes);
       return const Success(null);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }
@@ -185,7 +185,7 @@ class FileRepositoryImpl implements FileRepository {
       final file = File(filePath);
       final stat = file.statSync();
       return Success(stat.size);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }
@@ -198,7 +198,7 @@ class FileRepositoryImpl implements FileRepository {
       final directory = Directory(directoryPath);
       final entities = directory.listSync();
       return Success(entities);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }

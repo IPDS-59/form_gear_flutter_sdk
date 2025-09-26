@@ -80,7 +80,7 @@ class TemplateVersionManager {
       }
 
       return versionResult;
-    } catch (e) {
+    } on Exception catch (e) {
       FormGearLogger.sdkError(
         'Template version check failed: $e',
       );
@@ -297,7 +297,7 @@ class TemplateVersionManager {
           downloadResult.error ?? 'Unknown download error',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       FormGearLogger.sdkError(
         'Template download failed: $e',
       );
