@@ -8,7 +8,7 @@ on:
       - "hotfix/**"
 
 env:
-  FLUTTER_VERSION: '3.35.3'
+  FLUTTER_VERSION: "3.35.3"
 
 jobs:
   release-branch-setup:
@@ -176,14 +176,14 @@ jobs:
           if echo "$COMMITS" | grep -q "interceptor\|alice\|di\|dependency injection"; then
             echo "- **HTTP Interceptor Support**: Added comprehensive Dio interceptor support for request/response modification" >> $CHANGELOG_FILE
           fi
-          if echo "$COMMITS" | grep -q "realm.*name\|realmName\|custom.*realm"; then
-            echo "- **Custom Realm Names**: Enhanced configuration to support custom realm names while maintaining backward compatibility" >> $CHANGELOG_FILE
+          if echo "$COMMITS" | grep -q "form.*engine\|formEngine\|engine.*config"; then
+            echo "- **Form Engine Configuration**: Enhanced configuration to support multiple form engines with FASIH compatibility" >> $CHANGELOG_FILE
           fi
           if echo "$COMMITS" | grep -q "sdk.*info\|expose.*sdk"; then
             echo "- **SDK Information Exposure**: Added SDK version and metadata access for client applications" >> $CHANGELOG_FILE
           fi
-          if echo "$COMMITS" | grep -q "configuration.*screen\|config.*screen\|realm.*input"; then
-            echo "- **Enhanced Configuration UI**: Improved configuration screen with realm name inputs and enhanced UX" >> $CHANGELOG_FILE
+          if echo "$COMMITS" | grep -q "webview\|js.*bridge\|javascript.*bridge"; then
+            echo "- **WebView Integration**: Enhanced WebView and JavaScript bridge capabilities for form rendering" >> $CHANGELOG_FILE
           fi
           if echo "$COMMITS" | grep -q "ios.*tab\|close.*tab"; then
             echo "- **iOS Platform Improvements**: Enhanced iOS support with proper tab closing functionality" >> $CHANGELOG_FILE
