@@ -75,7 +75,7 @@ class VersionRepositoryImpl implements VersionRepository {
         final versionJson = jsonDecode(content) as Map<String, dynamic>;
         final version = versionJson['version'] as String?;
         return Success(version);
-      } on Exception catch (e) {
+      } on Exception {
         // Fallback to plain text for backward compatibility
         FormGearLogger.sdk(
           'Using plain text version format for backward compatibility',
