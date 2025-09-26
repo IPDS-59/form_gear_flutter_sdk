@@ -17,7 +17,7 @@ on:
         type: boolean
 
 env:
-  FLUTTER_VERSION: '3.35.3'
+  FLUTTER_VERSION: "3.35.3"
 
 jobs:
   # Validation and preparation job
@@ -257,7 +257,7 @@ jobs:
 
           # Create release notes
           cat > release_notes.md << EOF
-          ## 🚀 BPS SSO SDK $CLEAN_VERSION
+          ## 🚀 FormGear Engine SDK $CLEAN_VERSION
 
           ### 📦 Package Information
           - **Version**: $CLEAN_VERSION
@@ -288,7 +288,7 @@ jobs:
             echo "" >> release_notes.md
           else
             echo "### 🎉 Initial Release" >> release_notes.md
-            echo "This is the initial release of the BPS SSO SDK for Flutter." >> release_notes.md
+            echo "This is the initial release of the FormGear Engine SDK for Flutter." >> release_notes.md
             echo "" >> release_notes.md
           fi
 
@@ -328,7 +328,7 @@ jobs:
 
           # Create release
           gh release create "$VERSION" \
-            --title "🚀 BPS SSO SDK $VERSION" \
+            --title "🚀 FormGear Engine SDK $VERSION" \
             --notes-file release_notes.md \
             --target main
 
@@ -355,7 +355,7 @@ jobs:
 
           # Create installation guide
           cat > "release_assets/INSTALLATION.md" << EOF
-          # BPS SSO SDK Installation Guide
+          # FormGear Engine SDK Installation Guide
 
           ## Requirements
           - Flutter SDK ${{ env.FLUTTER_VERSION }} or later

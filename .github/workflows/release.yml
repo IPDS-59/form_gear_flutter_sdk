@@ -6,7 +6,7 @@ on:
     types: [closed]
 
 env:
-  FLUTTER_VERSION: '3.35.3'
+  FLUTTER_VERSION: "3.35.3"
 
 jobs:
   release-process:
@@ -192,8 +192,8 @@ jobs:
           if echo "$ALL_COMMITS" | grep -q "interceptor\|alice\|di\|dependency"; then
             echo "- Enhanced HTTP interceptor and dependency injection support" >> $CHANGELOG_FILE
           fi
-          if echo "$ALL_COMMITS" | grep -q "realm.*name\|realmName\|custom.*realm"; then
-            echo "- Added custom realm names configuration support" >> $CHANGELOG_FILE
+          if echo "$ALL_COMMITS" | grep -q "form.*engine\|formEngine\|engine.*config"; then
+            echo "- Added form engine configuration support" >> $CHANGELOG_FILE
           fi
           if echo "$ALL_COMMITS" | grep -q "sdk.*info\|expose.*sdk"; then
             echo "- Exposed SDK version and metadata information" >> $CHANGELOG_FILE
