@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:form_gear_engine_sdk/src/core/download/template_download_manager.dart';
+import 'package:form_gear_engine_sdk/src/models/models.dart';
+import 'package:form_gear_engine_sdk/src/presentation/screens/template_update_screen.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 import 'package:injectable/injectable.dart';
 
@@ -74,9 +76,9 @@ class TemplateVersionManager {
         remoteVersion,
       );
 
-      // Show dialog if needed and context is available
+      // Show template update screen if needed and context is available
       if (versionResult.needsDownload && showNotifications && context != null) {
-        _showTemplateVersionDialog(context, versionResult);
+        _showTemplateUpdateScreen(context, versionResult);
       }
 
       return versionResult;
@@ -168,67 +170,51 @@ class TemplateVersionManager {
     return _templateDownloadManager.getLocalTemplateVersion(templateId);
   }
 
-  /// Shows template version dialog based on state
-  void _showTemplateVersionDialog(
+  /// Shows template update screen instead of dialog
+  void _showTemplateUpdateScreen(
     BuildContext context,
     TemplateVersionCheckResult result,
   ) {
-    final templateName = result.templateDisplayName;
+    // Convert to VersionCheckResult format for the screen
+    final versionResult = _convertToVersionCheckResult(result);
 
-    String title;
-    String content;
-    String actionText;
+    TemplateUpdateScreen.show(
+      context: context,
+      versionResult: versionResult,
+      templateName: result.templateDisplayName,
+      onDownload: () => _performTemplateDownload(context, result),
+    );
+  }
 
+  /// Converts TemplateVersionCheckResult to VersionCheckResult
+  VersionCheckResult _convertToVersionCheckResult(
+    TemplateVersionCheckResult result,
+  ) {
+    // Convert template states to version states
+    VersionState versionState;
     switch (result.state) {
       case TemplateVersionState.missing:
-        title = 'Template Required';
-        content = '$templateName is not available on your device.';
-
-        if (result.remoteVersion != null) {
-          content += ' Version ${result.remoteVersion} needs to be downloaded.';
-        }
-
-        content += '\n\nWould you like to download it now?';
-        actionText = 'Download';
-
+        versionState = VersionState.missing;
       case TemplateVersionState.outdated:
-        title = 'Template Update Available';
-        content =
-            '$templateName on your device is not the latest version.\n\n'
-            'Current version: v${result.localVersion}\n'
-            'Latest version: v${result.remoteVersion}';
-
-        content += '\n\nWould you like to update now?';
-        actionText = 'Update';
-
+        versionState = VersionState.outdated;
       case TemplateVersionState.current:
-        title = 'Re-download Template';
-        content =
-            '$templateName on your device is the latest version '
-            '(v${result.localVersion}).\n\n'
-            'Would you like to re-download it anyway?';
-        actionText = 'Re-download';
+        versionState = VersionState.current;
     }
 
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(content),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _downloadTemplate(context, result);
-            },
-            child: Text(actionText),
-          ),
-        ],
-      ),
+    // Create a mock FormEngineEntity for templates (templates aren't forced)
+    final mockFormEngine = FormEngineEntity(
+      formEngineId: 1, // Default to FormGear
+      id: result.templateId,
+      version: result.remoteVersion,
+      isForce: false, // Templates are not forced downloads
+      message: 'Template download',
+    );
+
+    return VersionCheckResult(
+      state: versionState,
+      formEngine: mockFormEngine,
+      localVersion: result.localVersion,
+      remoteVersion: result.remoteVersion,
     );
   }
 
@@ -247,31 +233,6 @@ class TemplateVersionManager {
         ],
       ),
     );
-  }
-
-  /// Initiates template download with ZIP extraction
-  void _downloadTemplate(
-    BuildContext context,
-    TemplateVersionCheckResult result,
-  ) {
-    // Show progress dialog
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Downloading template...'),
-          ],
-        ),
-      ),
-    );
-
-    // Perform actual download with ZIP extraction
-    _performTemplateDownload(context, result);
   }
 
   /// Performs the actual template download and ZIP extraction

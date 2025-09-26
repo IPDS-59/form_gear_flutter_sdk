@@ -9,6 +9,7 @@ import 'package:form_gear_engine_sdk/src/core/download/form_gear_download_manage
 import 'package:form_gear_engine_sdk/src/domain/usecases/check_form_engine_version_usecase.dart';
 import 'package:form_gear_engine_sdk/src/domain/usecases/is_form_engine_downloaded_usecase.dart';
 import 'package:form_gear_engine_sdk/src/models/models.dart';
+import 'package:form_gear_engine_sdk/src/presentation/screens/form_engine_update_screen.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 import 'package:form_gear_engine_sdk/src/utils/zip_helper.dart';
 import 'package:injectable/injectable.dart';
@@ -68,11 +69,11 @@ class FormGearVersionManager {
             engineId,
           );
 
-          // Show dialog if needed and context is available
+          // Show update screen if needed and context is available
           if (versionResult.needsDownload &&
               (showNotifications || versionResult.isForced) &&
               context != null) {
-            _showVersionDialog(context, versionResult);
+            _showVersionUpdateScreen(context, versionResult);
           }
 
           return versionResult;
@@ -161,95 +162,20 @@ class FormGearVersionManager {
     );
   }
 
-  /// Shows version dialog based on state (FASIH-inspired 3-state messaging)
-  void _showVersionDialog(BuildContext context, VersionCheckResult result) {
-    final engineName = '${result.engineDisplayName} Engine';
-    final isForced = result.isForced;
-
-    String title;
-    String content;
-    String actionText;
-
-    switch (result.state) {
-      case VersionState.missing:
-        // FASIH: "FormGear belum terdapat pada perangkat"
-        title = isForced ? 'Download Required' : 'Form Engine Required';
-        content = '$engineName is not available on your device.';
-
-        if (result.remoteVersion != null) {
-          content += ' Version ${result.remoteVersion} needs to be downloaded.';
-        }
-
-        if (isForced) {
-          content +=
-              '\n\nThis engine must be downloaded to continue using the app.';
-        } else {
-          content += '\n\nWould you like to download it now?';
-        }
-
-        actionText = 'Download';
-
-      case VersionState.outdated:
-        // FASIH: "FormGear yang terdapat pada perangkat anda bukan versi
-        // terbaru"
-        title = isForced ? 'Critical Update Required' : 'Update Available';
-        content =
-            '$engineName on your device is not the latest version.\n\n'
-            'Current version: v${result.localVersion}\n'
-            'Latest version: v${result.remoteVersion}';
-
-        if (isForced) {
-          content +=
-              '\n\nThis is a critical update and must be installed to continue '
-              'using the app.';
-        } else {
-          content += '\n\nWould you like to update now?';
-        }
-
-        actionText = 'Update';
-
-      case VersionState.current:
-        // FASIH: "FormGear yang terdapat pada perangkat anda adalah versi
-        // terbaru. Ingin tetap mengunduh?"
-        title = 'Re-download Engine';
-        content =
-            '$engineName on your device is the latest version '
-            '(v${result.localVersion}).\n\n'
-            'Would you like to re-download it anyway?';
-        actionText = 'Re-download';
-    }
-
+  /// Shows version update screen instead of dialog
+  void _showVersionUpdateScreen(
+    BuildContext context,
+    VersionCheckResult result,
+  ) {
     unawaited(
-      showDialog<void>(
+      FormEngineUpdateScreen.show(
         context: context,
-        barrierDismissible: !isForced,
-        builder: (context) => PopScope(
-          canPop: !isForced,
-          child: AlertDialog(
-            title: Text(title),
-            content: Text(content),
-            actions: [
-              // Only show Cancel button if not forced
-              if (!isForced)
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
-                ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _downloadFormEngine(context, result.formEngine);
-                },
-                style: isForced
-                    ? ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                      )
-                    : null,
-                child: Text(actionText),
-              ),
-            ],
-          ),
+        versionResult: result,
+        onDownload: () => _performFormEngineDownload(
+          context,
+          result.formEngine,
+          result.formEngine.formEngineId?.toString() ??
+              FormEngineType.formGear.id.toString(),
         ),
       ),
     );
@@ -274,31 +200,6 @@ class FormGearVersionManager {
     );
   }
 
-  /// Initiates form engine download with ZIP extraction
-  void _downloadFormEngine(BuildContext context, FormEngineEntity formEngine) {
-    final engineId =
-        formEngine.formEngineId?.toString() ??
-        FormEngineType.formGear.id.toString();
-
-    // Show progress dialog
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Downloading form engine...'),
-          ],
-        ),
-      ),
-    );
-
-    // Perform actual download with ZIP extraction
-    _performFormEngineDownload(context, formEngine, engineId);
-  }
 
   /// Performs the actual form engine download and ZIP extraction
   /// Following FASIH's workflow: download ZIP -> extract -> save version
