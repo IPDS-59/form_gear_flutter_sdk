@@ -1,0 +1,224 @@
+name: 🔀 Pull Request
+description: Submit changes to FormGear Engine SDK
+title: ""
+labels: ["needs-review"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for contributing to FormGear Engine SDK! Please fill out this form to help us review your changes effectively.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Brief description of what this PR accomplishes
+      placeholder: Describe the main purpose and goals of this pull request...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: change_type
+    attributes:
+      label: Type of Change
+      description: What type of change does this PR introduce?
+      multiple: true
+      options:
+        - 🐛 Bug fix (non-breaking change that fixes an issue)
+        - ✨ New feature (non-breaking change that adds functionality)
+        - 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
+        - 📖 Documentation update
+        - 🔧 Maintenance/refactoring (no functional changes)
+        - 🧪 Test improvements
+        - 🚀 Performance improvement
+        - 🎨 UI/UX improvements
+        - 🔒 Security improvements
+    validations:
+      required: true
+
+  - type: input
+    id: related_issues
+    attributes:
+      label: Related Issues
+      description: Link to related issues (e.g., "Fixes #123, Closes #456, Related to #789")
+      placeholder: "Fixes #123"
+
+  - type: checkboxes
+    id: components
+    attributes:
+      label: Modified Components
+      description: Which components of the SDK were modified?
+      options:
+        - label: Core SDK functionality (`lib/src/core/`)
+        - label: Domain layer (`lib/src/domain/`)
+        - label: Data layer (`lib/src/data/`)
+        - label: Presentation layer (`lib/src/presentation/`)
+        - label: Models (`lib/src/models/`)
+        - label: JavaScript bridge (`lib/src/core/js_bridge/`)
+        - label: WebView integration
+        - label: FASIH integration
+        - label: Example application
+        - label: Tests
+        - label: Documentation
+        - label: CI/CD workflows
+
+  - type: textarea
+    id: detailed_changes
+    attributes:
+      label: Detailed Changes
+      description: List the specific changes made in this PR
+      placeholder: |
+        - Added new feature X that allows...
+        - Fixed bug Y by updating...
+        - Refactored component Z to improve...
+      render: markdown
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: testing
+    attributes:
+      label: Testing
+      description: What testing has been performed?
+      options:
+        - label: Unit tests added/updated
+        - label: Integration tests added/updated
+        - label: Widget tests added/updated
+        - label: Manual testing completed
+        - label: All existing tests pass
+        - label: Cross-platform testing completed
+
+  - type: textarea
+    id: test_scenarios
+    attributes:
+      label: Test Scenarios
+      description: Describe the specific test scenarios that were covered
+      placeholder: |
+        1. Tested feature X with valid input - passes
+        2. Tested error handling with invalid input - handles correctly
+        3. Tested integration with FASIH API - works as expected
+      render: markdown
+
+  - type: input
+    id: flutter_version
+    attributes:
+      label: Flutter/Dart Version Tested
+      description: What Flutter and Dart versions were used for testing?
+      placeholder: "Flutter 3.x.x, Dart 3.x.x"
+
+  - type: checkboxes
+    id: platform_testing
+    attributes:
+      label: Platform Testing
+      description: Which platforms were tested? (check all that apply)
+      options:
+        - label: iOS testing completed
+        - label: Android testing completed
+        - label: Web testing completed
+        - label: FASIH integration testing completed
+
+  - type: checkboxes
+    id: documentation
+    attributes:
+      label: Documentation
+      description: Documentation and code quality checklist
+      options:
+        - label: Code is self-documenting with clear variable/function names
+        - label: Added/updated code comments where necessary
+        - label: Added/updated dartdoc comments for public APIs
+        - label: Updated README.md (if applicable)
+        - label: Updated CHANGELOG.md (if applicable)
+        - label: Added/updated example usage (if applicable)
+
+  - type: checkboxes
+    id: code_quality
+    attributes:
+      label: Code Quality
+      description: Pre-submission code quality checklist
+      options:
+        - label: Code follows the project's style guidelines
+        - label: "`flutter analyze` passes without errors/warnings"
+        - label: "`dart format` has been run on all changed files"
+        - label: No debug print statements or commented code left behind
+        - label: Imports are organized and unused imports removed
+        - label: All CI checks are passing
+
+  - type: checkboxes
+    id: git_hygiene
+    attributes:
+      label: Git Hygiene
+      description: Git and version control best practices
+      options:
+        - label: Commits follow conventional commit format
+        - label: Commit messages are clear and descriptive
+        - label: Branch is up to date with target branch
+        - label: No merge conflicts
+
+  - type: textarea
+    id: review_focus
+    attributes:
+      label: Review Focus Areas
+      description: What should reviewers pay special attention to?
+      placeholder: |
+        Please pay special attention to:
+        - The new authentication flow in AuthService
+        - Error handling in the WebView bridge
+        - Performance implications of the caching changes
+
+  - type: textarea
+    id: breaking_changes
+    attributes:
+      label: Breaking Changes
+      description: If this introduces breaking changes, describe them and the migration path
+      placeholder: |
+        If this PR introduces breaking changes:
+        - What APIs are changed or removed?
+        - How should users migrate their code?
+        - What version bump is required?
+
+  - type: checkboxes
+    id: deployment
+    attributes:
+      label: Deployment Considerations
+      description: Any special considerations for deployment?
+      options:
+        - label: Database migrations required
+        - label: Configuration changes needed
+        - label: Dependencies updated
+        - label: Breaking changes that require version bump
+        - label: Documentation deployment needed
+
+  - type: textarea
+    id: additional_notes
+    attributes:
+      label: Additional Notes
+      description: Any additional information that reviewers should know
+      placeholder: |
+        Add any additional context, implementation decisions, trade-offs,
+        or other information that would be helpful for reviewers...
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+
+        ## 📋 Reviewer Guidelines
+
+        **For Reviewers:**
+        - [ ] Ensure all checklist items are completed
+        - [ ] Verify test coverage is adequate
+        - [ ] Check for potential breaking changes
+        - [ ] Validate FASIH integration compatibility (if applicable)
+        - [ ] Review for security implications
+        - [ ] Confirm documentation is updated appropriately
+        - [ ] Test the changes locally if possible
+
+        **Review Priorities:**
+        1. **Functionality** - Does the code work as intended?
+        2. **Architecture** - Does it follow clean architecture principles?
+        3. **Testing** - Is there adequate test coverage?
+        4. **Performance** - Are there any performance implications?
+        5. **Security** - Are there any security concerns?
+        6. **Documentation** - Is the code well documented?

@@ -21,7 +21,8 @@ class DownloadFormEngineParams {
 @LazySingleton()
 /// Use case for downloading form engine ZIP files
 ///
-/// This use case handles the download logic for form engines following FASIH patterns:
+/// This use case handles the download logic for form engines following
+/// FASIH patterns:
 /// 1. Downloads ZIP file from provided URL
 /// 2. Validates download success
 /// 3. Returns download result with local path
@@ -53,7 +54,7 @@ class DownloadFormEngineUseCase
       );
 
       return result;
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }

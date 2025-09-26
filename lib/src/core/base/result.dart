@@ -14,13 +14,6 @@ final class Success<T> extends Result<T> {
   final T data;
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Success<T> &&
-          runtimeType == other.runtimeType &&
-          data == other.data;
-
-  @override
   String toString() => 'Success(data: $data)';
 
   @override
@@ -34,13 +27,6 @@ final class Failure<T> extends Result<T> {
 
   final Object error;
   final StackTrace? stackTrace;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Failure<T> &&
-          runtimeType == other.runtimeType &&
-          error == other.error;
 
   @override
   String toString() => 'Failure(error: $error)';

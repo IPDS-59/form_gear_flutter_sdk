@@ -6,7 +6,8 @@ import 'package:injectable/injectable.dart';
 @LazySingleton()
 /// Use case for getting local template version
 ///
-/// This use case handles reading version information for templates following FASIH patterns:
+/// This use case handles reading version information for templates
+/// following FASIH patterns:
 /// 1. Reads {templateId}_template.json file from template directory
 /// 2. Falls back to version.json if template-specific file not found
 /// 3. Parses JSON format and extracts version string
