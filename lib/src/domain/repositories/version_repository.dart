@@ -10,7 +10,7 @@ abstract class VersionRepository {
   /// - [engineId]: Form engine identifier
   /// - [version]: Version string to save
   ///
-  /// Returns Result<void> indicating success or failure
+  /// Returns `Result<void>` indicating success or failure
   Future<Result<void>> saveFormEngineVersion(String engineId, String version);
 
   /// Get local version of a form engine
@@ -21,7 +21,7 @@ abstract class VersionRepository {
   /// Parameters:
   /// - [engineId]: Form engine identifier
   ///
-  /// Returns Result<String?> containing version string or null if not found
+  /// Returns `Result<String?>` containing version string or null if not found
   Future<Result<String?>> getLocalFormEngineVersion(String engineId);
 
   /// Save version information for a template
@@ -32,7 +32,7 @@ abstract class VersionRepository {
   /// - [templateId]: Template identifier
   /// - [version]: Version string to save
   ///
-  /// Returns Result<void> indicating success or failure
+  /// Returns `Result<void>` indicating success or failure
   Future<Result<void>> saveTemplateVersion(String templateId, String version);
 
   /// Get local version of a template
@@ -42,7 +42,7 @@ abstract class VersionRepository {
   /// Parameters:
   /// - [templateId]: Template identifier
   ///
-  /// Returns Result<String?> containing version string or null if not found
+  /// Returns `Result<String?>` containing version string or null if not found
   Future<Result<String?>> getLocalTemplateVersion(String templateId);
 
   /// Check if a form engine has any version saved locally
@@ -66,7 +66,7 @@ abstract class VersionRepository {
   /// Parameters:
   /// - [engineId]: Form engine identifier
   ///
-  /// Returns Result<void> indicating success or failure
+  /// Returns `Result<void>` indicating success or failure
   Future<Result<void>> deleteFormEngineVersion(String engineId);
 
   /// Delete version information for a template
@@ -74,7 +74,7 @@ abstract class VersionRepository {
   /// Parameters:
   /// - [templateId]: Template identifier
   ///
-  /// Returns Result<void> indicating success or failure
+  /// Returns `Result<void>` indicating success or failure
   Future<Result<void>> deleteTemplateVersion(String templateId);
 
   /// Compare two version strings

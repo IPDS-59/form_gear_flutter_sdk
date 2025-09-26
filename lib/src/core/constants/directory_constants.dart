@@ -38,7 +38,7 @@ class DirectoryConstants {
           final documentsDir = await getApplicationDocumentsDirectory();
           baseDir = Directory('${documentsDir.path}/$bpsDirectoryName');
         }
-      } catch (e) {
+      } on Exception {
         // Fallback to app documents directory
         final documentsDir = await getApplicationDocumentsDirectory();
         baseDir = Directory('${documentsDir.path}/$bpsDirectoryName');

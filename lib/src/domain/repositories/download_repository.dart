@@ -20,7 +20,7 @@ abstract class DownloadRepository {
   /// - [timeout]: Optional timeout duration
   /// - [maxRetries]: Maximum retry attempts on failure
   ///
-  /// Returns Result<DownloadResult> with download status and details
+  /// Returns `Result<DownloadResult>` with download status and details
   Future<Result<DownloadResult>> downloadFile({
     required String url,
     required String destinationPath,
@@ -39,7 +39,7 @@ abstract class DownloadRepository {
   /// - [timeout]: Optional timeout duration
   /// - [maxRetries]: Maximum retry attempts on failure
   ///
-  /// Returns Result<String> with temporary file path
+  /// Returns `Result<String>` with temporary file path
   Future<Result<String>> downloadToTemp({
     required String url,
     Map<String, String>? headers,
@@ -53,7 +53,7 @@ abstract class DownloadRepository {
   /// Parameters:
   /// - [url]: URL of the download to cancel
   ///
-  /// Returns Result<void> indicating success or failure
+  /// Returns `Result<void>` indicating success or failure
   Future<Result<void>> cancelDownload(String url);
 
   /// Check if a download is currently active for the given URL

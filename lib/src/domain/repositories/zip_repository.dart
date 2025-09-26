@@ -9,7 +9,7 @@ abstract class ZipRepository {
   /// - [extractToPath]: Directory to extract files to
   /// - [deleteZipAfterExtraction]: Whether to delete ZIP file after successful extraction
   ///
-  /// Returns Result<void> indicating success or failure
+  /// Returns `Result<void>` indicating success or failure
   Future<Result<void>> extractZip(
     String zipFilePath,
     String extractToPath, {
@@ -39,7 +39,7 @@ abstract class ZipRepository {
   /// - [fileInZip]: Path of the file inside the ZIP to extract
   /// - [extractToPath]: Path where to extract the specific file
   ///
-  /// Returns Result<void> indicating success or failure
+  /// Returns `Result<void>` indicating success or failure
   Future<Result<void>> extractSpecificFile(
     String zipFilePath,
     String fileInZip,
