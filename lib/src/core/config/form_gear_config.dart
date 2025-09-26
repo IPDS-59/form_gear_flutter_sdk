@@ -1,11 +1,12 @@
 import 'package:equatable/equatable.dart';
 import 'package:form_gear_engine_sdk/src/core/config/config.dart';
-import 'package:form_gear_engine_sdk/src/models/fasih_user.dart';
+import 'package:form_gear_engine_sdk/src/models/bps_user.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'form_gear_config.g.dart';
 
-/// Configuration class for FormGear WebView behavior and official API integration
+/// Configuration class for FormGear WebView behavior and official
+/// API integration
 @JsonSerializable()
 class FormGearConfig extends Equatable {
   const FormGearConfig({
@@ -16,15 +17,18 @@ class FormGearConfig extends Equatable {
     required this.username,
     required this.formMode,
     required this.initialMode,
-    required this.enableConsoleLogForwarding,
-    required this.enableDebugLogging,
     required this.htmlLogPrefix,
     required this.sdkLogPrefix,
     required this.serverPort,
     required this.autoStartServer,
-    this.authToken,
-    this.baseUrl,
-    this.fasihUser,
+    this.bpsUser,
+    this.apiConfig,
+    this.preset,
+    this.formResponse,
+    this.validation,
+    this.remark,
+    this.isNewForm = true,
+    this.enableLogging = true,
   });
 
   factory FormGearConfig.fromJson(Map<String, dynamic> json) =>
@@ -32,12 +36,6 @@ class FormGearConfig extends Equatable {
   // Official FormGear API Configuration Parameters
   /// Client mode: CAWI for web apps, CAPI for mobile apps
   final FormGearClientMode clientMode;
-
-  /// Authentication token for API requests (Bearer token)
-  final String? authToken;
-
-  /// Base URL for data lookup API endpoints
-  final String? baseUrl;
 
   /// Key parameter for lookup requests (default: 'key%5B%5D')
   final String lookupKey;
@@ -58,12 +56,6 @@ class FormGearConfig extends Equatable {
   final FormGearInitialMode initialMode;
 
   // Flutter SDK Specific Configuration Parameters
-  /// Whether to enable console.log forwarding from HTML/JS to Flutter logs
-  final bool enableConsoleLogForwarding;
-
-  /// Whether to enable debug logging from the FormGear SDK
-  final bool enableDebugLogging;
-
   /// Visual indicator prefix for HTML/JS logs
   final String htmlLogPrefix;
 
@@ -76,28 +68,52 @@ class FormGearConfig extends Equatable {
   /// Whether to automatically start the server during initialization
   final bool autoStartServer;
 
-  /// User of the fasih app
-  final FasihUser? fasihUser;
+  /// BPS User from SSO authentication
+  final BpsUser? bpsUser;
+
+  /// API configuration for FormGear services
+  final FormGearApiConfig? apiConfig;
+
+  /// Form preset data
+  final Map<String, dynamic>? preset;
+
+  /// Form response data
+  final Map<String, dynamic>? formResponse;
+
+  /// Form validation rules
+  final Map<String, dynamic>? validation;
+
+  /// Form remark
+  final String? remark;
+
+  /// Whether this is a new form
+  final bool isNewForm;
+
+  /// Whether to enable logging for JS bridge
+  final bool enableLogging;
 
   Map<String, dynamic> toJson() => _$FormGearConfigToJson(this);
 
   @override
   List<Object?> get props => [
     clientMode,
-    authToken,
-    baseUrl,
     lookupKey,
     lookupValue,
     lookupMode,
     username,
     formMode,
     initialMode,
-    enableConsoleLogForwarding,
-    enableDebugLogging,
     htmlLogPrefix,
     sdkLogPrefix,
     serverPort,
     autoStartServer,
-    fasihUser,
+    bpsUser,
+    apiConfig,
+    preset,
+    formResponse,
+    validation,
+    remark,
+    isNewForm,
+    enableLogging,
   ];
 }
