@@ -65,7 +65,7 @@ void main() {
         test('it should pass null engine ID to remote data source', () async {
           // Arrange
           when(
-            () => mockRemoteDataSource.checkFormEngineVersion(null),
+            () => mockRemoteDataSource.checkFormEngineVersion(),
           ).thenAnswer((_) async => Success(responseData));
 
           // Act
@@ -74,7 +74,7 @@ void main() {
           // Assert
           expect(result, isA<Success<FormEngineResponse>>());
           verify(
-            () => mockRemoteDataSource.checkFormEngineVersion(null),
+            () => mockRemoteDataSource.checkFormEngineVersion(),
           ).called(1);
         });
 
@@ -119,16 +119,16 @@ void main() {
           () async {
             // Arrange
             when(
-              () => mockRemoteDataSource.checkFormEngineVersion(null),
+              () => mockRemoteDataSource.checkFormEngineVersion(),
             ).thenAnswer((_) async => Success(responseData));
 
             // Act
-            final result = await repository.checkFormEngineVersion(null);
+            final result = await repository.checkFormEngineVersion();
 
             // Assert
             expect(result, isA<Success<FormEngineResponse>>());
             verify(
-              () => mockRemoteDataSource.checkFormEngineVersion(null),
+              () => mockRemoteDataSource.checkFormEngineVersion(),
             ).called(1);
           },
         );
