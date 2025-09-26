@@ -94,7 +94,8 @@ class FormGearDownloadManager {
 
       if (result.success) {
         FormGearLogger.sdk(
-          'Template $templateId downloaded from FASIH Template API successfully',
+          'Template $templateId downloaded from FASIH Template API '
+          'successfully',
         );
       }
       return result.success;
@@ -267,14 +268,17 @@ class FormGearDownloadManager {
           filesDownloaded++;
 
           FormGearLogger.sdk(
-            'Downloaded engine file: $fileName for engine $engineId (${content.length} chars)',
+            'Downloaded engine file: $fileName for engine $engineId '
+            '(${content.length} chars)',
           );
         } on Exception catch (e) {
           final fileName = assetPath.split('/').last;
           // CSS and version.json are optional files
-          if (fileName == 'style.css' || fileName == 'version.json') {
+          if (fileName == 'style.css' ||
+              fileName == 'version.json') {
             FormGearLogger.sdk(
-              'Optional file $fileName not found for engine $engineId (skipped)',
+              'Optional file $fileName not found for engine $engineId '
+              '(skipped)',
             );
           } else {
             FormGearLogger.sdkError(
@@ -285,7 +289,8 @@ class FormGearDownloadManager {
       }
 
       FormGearLogger.sdk(
-        'FormGear engine $engineId downloaded successfully ($filesDownloaded files)',
+        'FormGear engine $engineId downloaded successfully '
+        '($filesDownloaded files)',
       );
       return true;
     } on Exception catch (e) {
@@ -425,7 +430,8 @@ class FormGearDownloadManager {
   /// Lists all downloaded templates using FASIH-compliant directory structure
   Future<List<String>> getDownloadedTemplates() async {
     try {
-      // Use FASIH-compliant directory structure (same as TemplateDownloadManager)
+      // Use FASIH-compliant directory structure
+      // (same as TemplateDownloadManager)
       final bpsDir = await DirectoryConstants.getBpsDirectory();
       final templatesDir = Directory(
         '${bpsDir.path}/${DirectoryConstants.templatesDirectory}',
@@ -705,7 +711,8 @@ class FormGearDownloadManager {
   /// Gets the configured API configuration
   FormGearApiConfig? get apiConfig => _apiConfig;
 
-  /// Determines if a file should be extracted based on content type, URL, and file content
+  /// Determines if a file should be extracted based on content type,
+  /// URL, and file content
   bool _shouldExtractFile(File file, String contentType, String url) {
     // Check content type first
     if (contentType.contains('application/zip') ||

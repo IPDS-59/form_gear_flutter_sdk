@@ -7,7 +7,8 @@ import 'package:form_gear_engine_sdk/src/data/inteceptors/general_fasih_header_i
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 
-/// Isolated GetIt instance for FormGear SDK to prevent conflicts with client's GetIt
+/// Isolated GetIt instance for FormGear SDK to prevent conflicts
+/// with client's GetIt
 final getIt = GetIt.asNewInstance();
 
 @InjectableInit(

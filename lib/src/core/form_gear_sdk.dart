@@ -53,7 +53,8 @@ class FormGearSDK {
     _versionManager = getIt<FormGearVersionManager>();
 
     // Note: Dio interceptors are now configured in the DI container
-    // AliceDioAdapter (if present) is automatically added last to capture all modifications
+    // AliceDioAdapter (if present) is automatically added last to capture
+    // all modifications
 
     // Note: Server is now started on-demand when WebView is opened
     // to reduce resource usage when not needed
@@ -116,7 +117,8 @@ class FormGearSDK {
 
       _currentPreparedEngine = preparedEngine;
       FormGearLogger.sdk(
-        'Engine ${engineType.displayName} prepared successfully with ${processedHtml.length} chars HTML',
+        'Engine ${engineType.displayName} prepared successfully with '
+        '${processedHtml.length} chars HTML',
       );
 
       return preparedEngine;
