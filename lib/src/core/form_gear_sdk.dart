@@ -370,7 +370,7 @@ class FormGearSDK {
         );
         return engineAssets;
       }
-    } catch (e) {
+    } on Exception catch (e) {
       FormGearLogger.sdkError(
         'Failed to load ${engineType.displayName} from local storage: $e',
       );
