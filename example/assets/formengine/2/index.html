@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Fasih Form Client - Android</title>
+
+    <style>
+      /*style*/
+    </style>
+  </head>
+
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+
+    <div id="root"></div>
+
+    <script src="file:///android_asset/asset/jquery-3.5.1.js"></script>
+
+    <script type="module">
+      //formgear_js
+
+      /**
+       * helpers function to get data from android.
+       * the data type is string, so we have to
+       * parse it to JSON.
+       */
+      const getData = (fn) => {
+        try {
+          return JSON.parse(Android[fn]())
+        } catch (e) {
+          return {}
+        }
+      }
+
+      /**
+       * initiate fasih form
+       */
+      const fasihForm = FasihForm("#root", {
+        template: getData("getTemplate"),
+
+        validation: getData("getValidation"),
+
+        preset: getData("getPreset"),
+
+        response: getData("getResponse"),
+
+        media: getData("getMedia"),
+
+        remark: getData("getRemark"),
+
+        formMode: Number(Android.getFormMode()),
+
+        initialMode: Number(Android.getIsNew()),
+
+        principals: getData("getPrincipalCollection"),
+
+        user: {
+          username: Android.getUserName(),
+
+          role: Android.getUserRole(),
+        },
+
+        locale: "id",
+      })
+
+      /**
+       * expose fasih form to window object
+       */
+      window.fasihForm = fasihForm
+
+      /**
+       * request location to android
+       */
+      fasihForm.event.on("geolocation-request", async (dataKey) => {
+        Android.execute("LOCATION", dataKey, "")
+      })
+
+      /**
+       * request lookup data to local server on android
+       */
+      fasihForm.event.on("lookup-request", (dataKey, config, params) => {
+        const baseUrl = "http://localhost:3310/lookup"
+
+        const url = new URL(baseUrl)
+
+        url.searchParams.append("id", config.id)
+
+        url.searchParams.append("v", config.version)
+
+        url.searchParams.append("c", JSON.stringify(params))
+
+        fetch(url.toString())
+          .then((response) => response.json())
+          .then((result) => {
+            if (!result.data) return
+
+            fasihForm.event.emit("lookup-fetched", dataKey, config, result.data)
+          })
+      })
+
+      const formatDate = () => {
+        const date = new Date()
+
+        const formattedDate =
+          `${date.getFullYear()}${padZero(date.getMonth() + 1)}${padZero(date.getDate())}-` +
+          `${padZero(date.getHours())}${padZero(date.getMinutes())}${padZero(date.getSeconds())}`
+
+        return formattedDate
+      }
+
+      const padZero = (number) => String(number).padStart(2, "0")
+
+      /**
+       * request file dialog open
+       */
+      fasihForm.event.on("file-open", (dataKey, config) => {
+        const randomKey = Math.ceil(Math.random() * 1000)
+
+        const filename = formatDate()
+
+        Android.execute(
+          "FILE",
+          dataKey,
+          JSON.stringify({
+            filename: filename,
+            ...config,
+          })
+        )
+      })
+
+      /**
+       * request file upload
+       */
+      fasihForm.event.on("upload-begin", (dataKey, file) =>
+        Android.execute("FILE_UPLOAD", dataKey, JSON.stringify(file))
+      )
+
+      /**
+       * submit data to android
+       */
+      fasihForm.event.on("submit", (output) =>
+        Android.saveOrSubmitFasihForm(
+          JSON.stringify(output.response),
+          JSON.stringify(output.remark),
+          JSON.stringify(output.principal),
+          "SUBMIT"
+        )
+      )
+
+      /**
+       * save data to android
+       */
+      fasihForm.event.on("save", (output) => {
+        Android.saveOrSubmitFasihForm(
+          JSON.stringify(output.response),
+          JSON.stringify(output.remark),
+          JSON.stringify(output.principal),
+          "SAVE"
+        )
+      })
+
+      fasihForm.render()
+    </script>
+  </body>
+</html>
