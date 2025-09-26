@@ -53,7 +53,7 @@ class DownloadFormEngineUseCase
       );
 
       return result;
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }

@@ -54,7 +54,7 @@ class ExtractFormEngineUseCase
       );
 
       return result;
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return Failure(e, stackTrace);
     }
   }
