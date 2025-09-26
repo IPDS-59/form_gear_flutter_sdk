@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_bridge.dart';
+import 'package:form_gear_engine_sdk/src/presentation/widgets/form_gear_loading_screen.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 
 /// FormGear WebView widget with JSHandler integration
@@ -222,129 +222,9 @@ class _FormGearWebViewState extends State<FormGearWebView> {
           ],
         ),
         // Modern loading overlay with FormGear logo
-        if (_isLoading) _buildModernLoadingScreen(),
+        if (_isLoading)
+          FormGearLoadingScreen(loadingProgress: _loadingProgress),
       ],
-    );
-  }
-
-  /// Builds a modern loading screen with FormGear logo and animated
-  /// progress bar
-  Widget _buildModernLoadingScreen() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFFF8F9FA), // Light gray-white
-            Color(0xFFFFFFFF), // Pure white
-          ],
-        ),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Animated FormGear logo with subtle pulse effect
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.8, end: 1),
-              duration: const Duration(milliseconds: 500),
-              builder: (_, value, _) {
-                return Transform.scale(
-                  scale: value,
-                  child: Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
-                        ),
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(24),
-                    child: SvgPicture.asset(
-                      'packages/form_gear_engine_sdk/assets/logo/form-gear.svg',
-                      width: 72,
-                      height: 72,
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 32),
-
-            // Loading text with modern typography
-            Text(
-              'Loading FormGear...',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF1F2937), // Dark gray
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Subtitle text
-            Text(
-              'Preparing your form experience',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF6B7280), // Medium gray
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-            const SizedBox(height: 40),
-
-            // Modern progress bar with rounded corners and gradient
-            Container(
-              width: 240,
-              height: 6,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE5E7EB), // Light gray background
-                borderRadius: BorderRadius.circular(3),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: LinearProgressIndicator(
-                  value: _loadingProgress > 0 ? _loadingProgress / 100 : null,
-                  backgroundColor: Colors.transparent,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Theme.of(context).primaryColor,
-                  ),
-                  minHeight: 6,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Progress percentage with modern styling
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '$_loadingProgress%',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: Theme.of(context).primaryColor,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
