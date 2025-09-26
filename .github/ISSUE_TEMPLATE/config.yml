@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Documentation
+    url: https://github.com/IPDS-59/form_gear_flutter_sdk/blob/main/README.md
+    about: Check the documentation for usage guides and examples
+  - name: 💬 Discussions
+    url: https://github.com/IPDS-59/form_gear_flutter_sdk/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 📦 pub.dev Package
+    url: https://pub.dev/packages/form_gear_engine_sdk
+    about: View the package page on pub.dev
+  - name: 🏠 FormGear Project
+    url: https://github.com/bps-statistics/form-gear
+    about: Visit the main FormGear project repository
