@@ -69,7 +69,8 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
         return ActionInfoJs(
           success: false,
           error:
-              'Camera permission permanently denied. Please enable in settings.',
+              'Camera permission permanently denied. Please enable in '
+              'settings.',
         );
       }
 
@@ -147,7 +148,8 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
         return ActionInfoJs(
           success: false,
           error:
-              'Location services are disabled. Please enable location services.',
+              'Location services are disabled. Please enable location '
+              'services.',
         );
       }
 
@@ -167,7 +169,8 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
         return ActionInfoJs(
           success: false,
           error:
-              'Location permission permanently denied. Please enable in settings.',
+              'Location permission permanently denied. Please enable in '
+              'settings.',
         );
       }
 

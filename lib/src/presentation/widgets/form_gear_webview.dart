@@ -183,7 +183,8 @@ class _FormGearWebViewState extends State<FormGearWebView> {
                         const Duration(milliseconds: 1000),
                       );
                       await _injectAndroidBridgeFromFile(controller);
-                      // Additional delay for iOS to ensure bridge is fully ready
+                      // Additional delay for iOS to ensure bridge is fully
+                      // ready
                       await Future<void>.delayed(
                         const Duration(milliseconds: 500),
                       );
@@ -226,7 +227,8 @@ class _FormGearWebViewState extends State<FormGearWebView> {
     );
   }
 
-  /// Builds a modern loading screen with FormGear logo and animated progress bar
+  /// Builds a modern loading screen with FormGear logo and animated
+  /// progress bar
   Widget _buildModernLoadingScreen() {
     return Container(
       decoration: const BoxDecoration(

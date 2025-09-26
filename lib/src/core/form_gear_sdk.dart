@@ -256,7 +256,8 @@ class FormGearSDK {
           'packages/form_gear_engine_sdk/assets/test/bridge_test.html';
       final htmlContent = await rootBundle.loadString(assetPath);
 
-      // Process the HTML through vendor asset injection to replace jQuery placeholder
+      // Process the HTML through vendor asset injection to replace jQuery
+      // placeholder
       final processedHtml = await _injectVendorAssets(htmlContent);
       return processedHtml;
     } on Exception catch (e) {
@@ -367,7 +368,8 @@ class FormGearSDK {
   /// Loads engine assets from local storage or falls back to bundle assets
   Future<_EngineAssets> _loadEngineAssets(FormEngineType engineType) async {
     try {
-      // Try to load from downloaded engine files first (using DirectoryConstants)
+      // Try to load from downloaded engine files first (using
+      // DirectoryConstants)
       final engineAssets = await _loadEngineFromLocal(engineType);
       if (engineAssets != null) {
         FormGearLogger.sdk(
@@ -447,7 +449,8 @@ class FormGearSDK {
       }
 
       FormGearLogger.sdk(
-        'Loaded local engine files: HTML(${htmlTemplate.length}), JS(${jsContent.length}), CSS(${cssContent.length})',
+        'Loaded local engine files: HTML(${htmlTemplate.length}), '
+        'JS(${jsContent.length}), CSS(${cssContent.length})',
       );
 
       return _EngineAssets(

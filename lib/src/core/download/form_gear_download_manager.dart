@@ -274,8 +274,7 @@ class FormGearDownloadManager {
         } on Exception catch (e) {
           final fileName = assetPath.split('/').last;
           // CSS and version.json are optional files
-          if (fileName == 'style.css' ||
-              fileName == 'version.json') {
+          if (fileName == 'style.css' || fileName == 'version.json') {
             FormGearLogger.sdk(
               'Optional file $fileName not found for engine $engineId '
               '(skipped)',

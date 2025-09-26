@@ -44,6 +44,7 @@ class TemplateDownloadResult extends Equatable {
 
   @override
   String toString() {
-    return 'TemplateDownloadResult(success: $success, error: $error, localPath: $localPath, version: $version)';
+    return 'TemplateDownloadResult(success: $success, error: $error, '
+        'localPath: $localPath, version: $version)';
   }
 }
