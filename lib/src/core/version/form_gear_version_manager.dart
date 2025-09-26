@@ -212,35 +212,37 @@ class FormGearVersionManager {
         actionText = 'Re-download';
     }
 
-    showDialog<void>(
-      context: context,
-      barrierDismissible: !isForced,
-      builder: (context) => PopScope(
-        canPop: !isForced,
-        child: AlertDialog(
-          title: Text(title),
-          content: Text(content),
-          actions: [
-            // Only show Cancel button if not forced
-            if (!isForced)
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
+    unawaited(
+      showDialog<void>(
+        context: context,
+        barrierDismissible: !isForced,
+        builder: (context) => PopScope(
+          canPop: !isForced,
+          child: AlertDialog(
+            title: Text(title),
+            content: Text(content),
+            actions: [
+              // Only show Cancel button if not forced
+              if (!isForced)
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _downloadFormEngine(context, result.formEngine);
+                },
+                style: isForced
+                    ? ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                      )
+                    : null,
+                child: Text(actionText),
               ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _downloadFormEngine(context, result.formEngine);
-              },
-              style: isForced
-                  ? ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                    )
-                  : null,
-              child: Text(actionText),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -248,17 +250,19 @@ class FormGearVersionManager {
 
   /// Shows error notification
   void _showErrorNotification(BuildContext context, String message) {
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Error'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
+    unawaited(
+      showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -447,7 +451,6 @@ class FormGearVersionManager {
     final engineName = formEngine.formEngineId == FormEngineType.formGear.id
         ? 'FormGear'
         : 'FasihForm';
-
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
