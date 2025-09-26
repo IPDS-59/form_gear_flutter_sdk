@@ -92,7 +92,7 @@ class ZipRepositoryImpl implements ZipRepository {
       }
 
       return const Success(null);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       FormGearLogger.sdkError('ZIP extraction failed: $e');
       return Failure(e, stackTrace);
     }
@@ -117,7 +117,7 @@ class ZipRepositoryImpl implements ZipRepository {
       final signature = bytes[0];
       // ZIP files start with "PK" (0x504B)
       return signature[0] == 0x50 && signature[1] == 0x4B;
-    } catch (e) {
+    } on Exception catch (e) {
       FormGearLogger.sdkError('Error checking ZIP file validity: $e');
       return false;
     }
@@ -140,7 +140,7 @@ class ZipRepositoryImpl implements ZipRepository {
       final filePaths = archive.map((file) => file.name).toList();
 
       return Success(filePaths);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       FormGearLogger.sdkError('Failed to list ZIP contents: $e');
       return Failure(e, stackTrace);
     }
@@ -184,7 +184,7 @@ class ZipRepositoryImpl implements ZipRepository {
       );
 
       return writeResult;
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       FormGearLogger.sdkError('Failed to extract specific file: $e');
       return Failure(e, stackTrace);
     }
@@ -212,7 +212,7 @@ class ZipRepositoryImpl implements ZipRepository {
       }
 
       return Success(totalSize);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       FormGearLogger.sdkError('Failed to get uncompressed size: $e');
       return Failure(e, stackTrace);
     }
