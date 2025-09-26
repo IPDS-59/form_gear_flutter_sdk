@@ -25,7 +25,8 @@ class DownloadTemplateParams {
 @LazySingleton()
 /// Use case for downloading template ZIP files
 ///
-/// This use case handles the download logic for templates following FASIH patterns:
+/// This use case handles the download logic for templates following
+/// FASIH patterns:
 /// 1. Downloads ZIP file from provided URL (usually template ZIP endpoint)
 /// 2. Validates download success
 /// 3. Returns download result with local path

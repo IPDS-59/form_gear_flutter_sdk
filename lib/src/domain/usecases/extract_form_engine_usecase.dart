@@ -20,7 +20,8 @@ class ExtractFormEngineParams {
 @LazySingleton()
 /// Use case for extracting form engine ZIP files
 ///
-/// This use case handles the extraction logic for form engines following FASIH patterns:
+/// This use case handles the extraction logic for form engines following
+/// FASIH patterns:
 /// 1. Validates ZIP file exists and is valid
 /// 2. Creates target directory if needed
 /// 3. Extracts ZIP contents to form engine directory

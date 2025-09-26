@@ -17,7 +17,8 @@ class SaveTemplateVersionParams {
 @LazySingleton()
 /// Use case for saving template version information
 ///
-/// This use case handles saving version information for templates following FASIH patterns:
+/// This use case handles saving version information for templates
+/// following FASIH patterns:
 /// 1. Creates {templateId}_template.json file in FASIH format with version info
 /// 2. Stores version in the correct template directory
 /// 3. Follows FASIH directory structure: BPS/Template/{templateId}/{templateId}_template.json
