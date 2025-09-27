@@ -97,7 +97,6 @@ class FormEngineUpdateScreen extends StatelessWidget {
                       loadingText: 'Downloading...',
                       progress: state.progress,
                       isCompleted: state.isCompleted,
-                      completedText: 'Unduhan Selesai!',
                     ),
                     AnimatedSize(
                       duration: const Duration(milliseconds: 400),
@@ -112,7 +111,6 @@ class FormEngineUpdateScreen extends StatelessWidget {
                                   UpdateSkipButtonWidget(
                                     onPressed: () =>
                                         Navigator.of(context).pop(),
-                                    text: 'Lewati untuk sekarang',
                                   ),
                                 ],
                               )

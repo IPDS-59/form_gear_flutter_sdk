@@ -69,7 +69,7 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
 
     _buttonAnimation =
         Tween<double>(
-          begin: 1.0,
+          begin: 1,
           end: 0.95,
         ).animate(
           CurvedAnimation(
@@ -80,8 +80,8 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
 
     _progressAnimation =
         Tween<double>(
-          begin: 0.0,
-          end: 1.0,
+          begin: 0,
+          end: 1,
         ).animate(
           CurvedAnimation(
             parent: _progressController,
@@ -91,8 +91,8 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
 
     _completionAnimation =
         Tween<double>(
-          begin: 0.0,
-          end: 1.0,
+          begin: 0,
+          end: 1,
         ).animate(
           CurvedAnimation(
             parent: _completionController,
@@ -102,8 +102,8 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
 
     _checkScaleAnimation =
         Tween<double>(
-          begin: 0.0,
-          end: 1.0,
+          begin: 0,
+          end: 1,
         ).animate(
           CurvedAnimation(
             parent: _completionController,
@@ -297,7 +297,9 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     AnimatedSwitcher(
-                                      duration: const Duration(milliseconds: 500),
+                                      duration: const Duration(
+                                        milliseconds: 500,
+                                      ),
                                       child: Text(
                                         _loadingTexts[_currentTextIndex],
                                         key: ValueKey(_currentTextIndex),

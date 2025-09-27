@@ -67,17 +67,21 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
             version = localVersion;
           }
         } catch (e) {
-          debugPrint('Could not get local version for engine ${config['id']}: $e');
+          debugPrint(
+            'Could not get local version for engine ${config['id']}: $e',
+          );
         }
 
-        engines.add(FormEngineMetadata(
-          id: config['id'] as String,
-          name: config['name'] as String,
-          version: version,
-          type: config['type'] as String,
-          description: config['description'] as String,
-          jsFile: config['jsFile'] as String,
-        ));
+        engines.add(
+          FormEngineMetadata(
+            id: config['id'] as String,
+            name: config['name'] as String,
+            version: version,
+            type: config['type'] as String,
+            description: config['description'] as String,
+            jsFile: config['jsFile'] as String,
+          ),
+        );
       }
 
       if (mounted) {

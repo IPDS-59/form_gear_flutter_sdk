@@ -26,7 +26,6 @@ class UpdateVersionInfoWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: const Color(0xFF1E88E5).withValues(alpha: 0.3),
-          width: 1,
         ),
       ),
       child: Row(
@@ -81,7 +80,6 @@ class UpdateVersionInfoWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: const Color(0xFFE5E7EB),
-          width: 1,
         ),
       ),
       child: Column(

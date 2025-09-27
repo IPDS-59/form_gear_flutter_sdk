@@ -31,8 +31,8 @@ class _UpdateSkipButtonWidgetState extends State<UpdateSkipButtonWidget>
 
     _fadeAnimation =
         Tween<double>(
-          begin: 0.0,
-          end: 1.0,
+          begin: 0,
+          end: 1,
         ).animate(
           CurvedAnimation(
             parent: _animationController,
@@ -79,7 +79,6 @@ class _UpdateSkipButtonWidgetState extends State<UpdateSkipButtonWidget>
                 borderRadius: BorderRadius.circular(24),
                 side: BorderSide(
                   color: const Color(0xFF6B7280).withValues(alpha: 0.3),
-                  width: 1,
                 ),
               ),
             ),
