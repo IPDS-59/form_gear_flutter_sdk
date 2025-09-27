@@ -45,6 +45,26 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- Audio Recording Permissions -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs access to the microphone to record audio for form submissions and data collection purposes.</string>
+
+	<!-- Photo Library Permissions -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to attach images to forms and surveys.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app needs access to save photos taken during form completion to your photo library.</string>
+
+	<!-- Camera Permissions -->
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs access to the camera to take photos for form submissions and data collection.</string>
+
+	<!-- Location Permissions -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs access to your location to associate geographic data with form responses.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs access to your location to associate geographic data with form responses.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
