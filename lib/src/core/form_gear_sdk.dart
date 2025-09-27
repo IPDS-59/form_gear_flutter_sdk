@@ -344,6 +344,31 @@ class FormGearSDK {
     // Individual action handlers following web_view pattern
     final actionCameraHandler = ActionHandler();
     final executeHandler = ExecuteHandler();
+    final mobileExitHandler = MobileExitHandler();
+
+    // Client action handlers for FormGear JavaScript integration
+    final clientActionHandler = ClientActionHandler(
+      onCameraCapture: (fileName, result) async {
+        FormGearLogger.webview('Camera captured: $fileName -> $result');
+        return result;
+      },
+      onFileUpload: (fileData, updateCallback, {required bool isReload}) async {
+        FormGearLogger.webview('File upload: $fileData (reload: $isReload)');
+        return 'upload_completed';
+      },
+      onLocationUpdate: (locationData) async {
+        FormGearLogger.webview('Location updated: $locationData');
+      },
+      onMapOpen: (coordinates) async {
+        FormGearLogger.webview('Map opened with coordinates: $coordinates');
+      },
+      onResponseSave: (response, media, remark, principal, reference) async {
+        FormGearLogger.webview('Response saved to mobile storage');
+      },
+      onSubmitSave: (response, media, remark, principal, reference) async {
+        FormGearLogger.webview('Submission saved to mobile storage');
+      },
+    );
 
     // Get only save/submit handlers from the factory
     final saveSubmitHandlers = actionHandler
@@ -359,6 +384,8 @@ class FormGearSDK {
       ...dataHandler.createHandlers(),
       actionCameraHandler, // Individual action handler
       executeHandler, // Individual execute handler
+      mobileExitHandler, // Mobile exit handler
+      ...clientActionHandler.createHandlers(), // Client action handlers
       ...saveSubmitHandlers,
     ];
   }

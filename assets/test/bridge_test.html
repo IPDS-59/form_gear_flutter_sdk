@@ -25,13 +25,19 @@
             margin-bottom: 30px;
         }
         .debug-badge {
-            background: #ff6b6b;
+            background: #28a745;
             color: white;
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 12px;
             font-weight: bold;
             margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
         }
         .handler-section {
             margin-bottom: 20px;
@@ -61,6 +67,21 @@
         }
         button:hover {
             background: #0056b3;
+        }
+        button.new-feature {
+            background: #17a2b8;
+            border: 2px solid #138496;
+            position: relative;
+        }
+        button.new-feature::after {
+            content: '🆕';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 10px;
+        }
+        button.new-feature:hover {
+            background: #138496;
         }
         button.test-all {
             background: #28a745;
@@ -112,7 +133,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🔧 FormGear SDK Bridge Test <span class="debug-badge">DEBUG ONLY</span></h1>
+        <h1>🔧 FormGear SDK Bridge Test <span class="debug-badge">v2.0 - ENHANCED</span></h1>
 
         <div id="bridge-info" class="status">
             <strong>Bridge Status:</strong> <span id="bridge-status">Initializing...</span>
@@ -193,7 +214,8 @@
                     'getReference', 'getTemplate', 'getPreset', 'getResponse', 'getValidation',
                     'getMedia', 'getRemark', 'getUserName', 'getFormMode', 'getIsNew',
                     'getPrincipalCollection', 'getRolePetugas', 'getUserRole',
-                    'action', 'execute', 'saveOrSubmit', 'saveOrSubmitFasihForm'
+                    'action', 'execute', 'saveOrSubmit', 'saveOrSubmitFasihForm', 'mobileExit',
+                    'cameraHandler', 'fileUploadHandler', 'gpsHandler', 'openMap', 'setResponseMobile', 'setSubmitMobile'
                 ];
                 console.log('Available Android methods:', availableHandlers);
 
@@ -223,6 +245,10 @@
             const saveSubmitHandlers = availableHandlers.filter(h =>
                 h.includes('submit') || h.includes('Save') || h.includes('saveOr')
             );
+            const exitHandlers = availableHandlers.filter(h => h === 'mobileExit');
+            const clientActionHandlers = availableHandlers.filter(h =>
+                ['cameraHandler', 'fileUploadHandler', 'gpsHandler', 'openMap', 'setResponseMobile', 'setSubmitMobile'].includes(h)
+            );
 
             if (dataHandlers.length > 0) {
                 const dataSection = createHandlerSection('📊 Data Methods', dataHandlers);
@@ -236,6 +262,16 @@
             if (saveSubmitHandlers.length > 0) {
                 const saveSection = createHandlerSection('💾 Save/Submit Methods', saveSubmitHandlers);
                 container.appendChild(saveSection);
+            }
+
+            if (exitHandlers.length > 0) {
+                const exitSection = createHandlerSection('🚪 Exit/Navigation Methods', exitHandlers);
+                container.appendChild(exitSection);
+            }
+
+            if (clientActionHandlers.length > 0) {
+                const clientSection = createHandlerSection('🎯 Client Action Methods', clientActionHandlers);
+                container.appendChild(clientSection);
             }
 
             // Show total count
@@ -284,8 +320,12 @@
             // Create specific action buttons
             const actions = [
                 { name: 'Camera (FormGear)', method: 'action', args: ['CAMERA', 'camera_test', 'test_data'], icon: '📷' },
+                { name: 'Camera GPS (FormGear)', method: 'action', args: ['CAMERA_GPS', 'gps_test', 'true'], icon: '📷🌍' },
                 { name: 'File Picker (FormGear)', method: 'action', args: ['FILE_UPLOAD', 'file_test', 'test_data'], icon: '📁' },
+                { name: 'File Reload (FormGear)', method: 'action', args: ['FILE_RELOAD', 'reload_test', '{"files": ["test.jpg"]}'], icon: '🔄' },
                 { name: 'Location (FormGear)', method: 'action', args: ['LOCATION', 'location_test', 'test_data'], icon: '📍' },
+                { name: 'Open Maps (FormGear)', method: 'action', args: ['OPEN_MAPS', 'maps_test', '-6.2088,106.8456'], icon: '🗺️' },
+                { name: 'Signature (FormGear)', method: 'action', args: ['SIGNATURE', 'signature_test', 'test_data'], icon: '✍️' },
                 { name: 'Camera (FasihForm)', method: 'execute', args: ['CAMERA', 'camera_test', 'test_data'], icon: '📷' },
                 { name: 'File Picker (FasihForm)', method: 'execute', args: ['FILE_UPLOAD', 'file_test', 'test_data'], icon: '📁' },
                 { name: 'Location (FasihForm)', method: 'execute', args: ['LOCATION', 'location_test', 'test_data'], icon: '📍' }
@@ -294,6 +334,13 @@
             actions.forEach(action => {
                 const button = document.createElement('button');
                 button.innerHTML = action.icon + ' ' + action.name;
+
+                // Mark new features with special styling
+                const newFeatures = ['Camera GPS', 'File Reload', 'Open Maps', 'Signature'];
+                if (newFeatures.some(feature => action.name.includes(feature))) {
+                    button.className = 'new-feature';
+                }
+
                 button.onclick = () => {
                     // Show immediate feedback
                     displayMessage('🔄 Testing ' + action.name + '...');
@@ -366,6 +413,27 @@
                     result = await window.Android[methodName]('{}', '{}', '{}', '{}', '{}', 'SAVE');
                 } else if (methodName === 'saveOrSubmitFasihForm') {
                     result = await window.Android[methodName]('{}', '{}', '{}', 'SUBMIT');
+                } else if (methodName === 'mobileExit') {
+                    // Mobile exit method - no arguments needed
+                    result = await window.Android[methodName]();
+                } else if (methodName === 'cameraHandler') {
+                    // Camera handler - needs callback and filename
+                    result = await window.Android[methodName](function() {}, 'test_camera_' + Date.now());
+                } else if (methodName === 'fileUploadHandler') {
+                    // File upload handler - needs file data and callback
+                    result = await window.Android[methodName]({name: 'test.jpg', size: 1024}, function() {}, false);
+                } else if (methodName === 'gpsHandler') {
+                    // GPS handler - needs callback function
+                    result = await window.Android[methodName](function(location) { console.log('GPS:', location); });
+                } else if (methodName === 'openMap') {
+                    // Open map - needs coordinates
+                    result = await window.Android[methodName]('-6.2088,106.8456');
+                } else if (methodName === 'setResponseMobile') {
+                    // Set response mobile - needs 5 JSON parameters
+                    result = await window.Android[methodName]('{}', '{}', '{}', '{}', '{}');
+                } else if (methodName === 'setSubmitMobile') {
+                    // Set submit mobile - needs 5 JSON parameters
+                    result = await window.Android[methodName]('{}', '{}', '{}', '{}', '{}');
                 } else {
                     // Data methods - no arguments needed
                     result = await window.Android[methodName]();
@@ -482,8 +550,12 @@
             // Test specific actions
             const actions = [
                 { name: 'Camera (FormGear)', method: 'action', args: ['CAMERA', 'camera_test', 'test_data'] },
+                { name: 'Camera GPS (FormGear)', method: 'action', args: ['CAMERA_GPS', 'gps_test', 'true'] },
                 { name: 'File Picker (FormGear)', method: 'action', args: ['FILE_UPLOAD', 'file_test', 'test_data'] },
+                { name: 'File Reload (FormGear)', method: 'action', args: ['FILE_RELOAD', 'reload_test', '{"files": ["test.jpg"]}'] },
                 { name: 'Location (FormGear)', method: 'action', args: ['LOCATION', 'location_test', 'test_data'] },
+                { name: 'Open Maps (FormGear)', method: 'action', args: ['OPEN_MAPS', 'maps_test', '-6.2088,106.8456'] },
+                { name: 'Signature (FormGear)', method: 'action', args: ['SIGNATURE', 'signature_test', 'test_data'] },
                 { name: 'Camera (FasihForm)', method: 'execute', args: ['CAMERA', 'camera_test', 'test_data'] },
                 { name: 'File Picker (FasihForm)', method: 'execute', args: ['FILE_UPLOAD', 'file_test', 'test_data'] },
                 { name: 'Location (FasihForm)', method: 'execute', args: ['LOCATION', 'location_test', 'test_data'] }
@@ -499,6 +571,22 @@
             for (const method of availableHandlers.filter(h => h.includes('submit') || h.includes('Save'))) {
                 await testHandler(method);
                 await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            // Test exit methods
+            for (const method of availableHandlers.filter(h => h === 'mobileExit')) {
+                displayMessage('🚪 Testing ' + method + '...');
+                await testHandler(method);
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            // Test client action methods
+            for (const method of availableHandlers.filter(h =>
+                ['cameraHandler', 'fileUploadHandler', 'gpsHandler', 'openMap', 'setResponseMobile', 'setSubmitMobile'].includes(h)
+            )) {
+                displayMessage('🎯 Testing ' + method + '...');
+                await testHandler(method);
+                await new Promise(resolve => setTimeout(resolve, 200));
             }
 
             updateBridgeStatus('success', 'Completed testing all methods and actions');
