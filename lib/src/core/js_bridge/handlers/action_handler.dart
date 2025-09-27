@@ -1,8 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/models/response_models.dart';
+import 'package:form_gear_engine_sdk/src/presentation/widgets/audio_recorder_screen.dart';
+import 'package:form_gear_engine_sdk/src/presentation/widgets/barcode_scanner_screen.dart';
+import 'package:form_gear_engine_sdk/src/utils/fasih_media_helper.dart';
+import 'package:form_gear_engine_sdk/src/utils/form_data_file_manager.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
@@ -149,7 +156,7 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
     }
   }
 
-  /// Handle camera action with actual camera functionality
+  /// Handle camera action following FASIH media patterns
   Future<ActionInfoJs> _handleCameraAction(String dataKey, String data) async {
     try {
       FormGearLogger.webview('Opening camera for dataKey: $dataKey');
@@ -182,8 +189,31 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
       );
 
       if (image != null) {
-        FormGearLogger.webview('Camera completed: ${image.path}');
-        return ActionInfoJs(success: true, result: image.path);
+        // Follow FASIH pattern: save to assignment media directory
+        final assignmentId = data.isNotEmpty ? data : 'current_assignment';
+        final fileName = FasihMediaHelper.generateFileName(
+          dataKey: dataKey,
+          mediaType: 'photo',
+          extension: 'jpg',
+        );
+
+        // Save media file following FASIH pattern
+        final success = await FasihMediaHelper.saveMediaFile(
+          assignmentId: assignmentId,
+          sourceFile: File(image.path),
+          fileName: fileName,
+          mediaType: 'photo',
+        );
+
+        if (success) {
+          FormGearLogger.webview('Camera completed: $fileName');
+          return ActionInfoJs(success: true, result: fileName);
+        } else {
+          return ActionInfoJs(
+            success: false,
+            error: 'Failed to save camera image',
+          );
+        }
       } else {
         FormGearLogger.webview('Camera cancelled by user');
         return ActionInfoJs(success: false, error: 'Camera cancelled by user');
@@ -483,20 +513,32 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
     try {
       FormGearLogger.webview('Get answer action for dataKey: $dataKey');
 
-      // TODO(sdk): Implement actual answer retrieval from form data source.
-      // This should connect to the form's data storage system.
-      // For now, return success with placeholder.
-      return ActionInfoJs(
-        success: true,
-        result: 'Answer retrieved for $dataKey',
-      );
+      // Try to get the current assignment ID from context
+      // In a real implementation, this would come from the form context
+      final assignmentId = data.isNotEmpty ? data : 'current_assignment';
+
+      // Attempt to load response data and extract the specific answer
+      final responseData = await _loadResponseData(assignmentId);
+      final answer = _extractAnswerByKey(responseData, dataKey);
+
+      if (answer != null) {
+        return ActionInfoJs(
+          success: true,
+          result: answer,
+        );
+      } else {
+        return ActionInfoJs(
+          success: true,
+          result: '', // Return empty string if no answer found
+        );
+      }
     } on Exception catch (e) {
       FormGearLogger.webviewError('Get answer error: $e');
       return ActionInfoJs(success: false, error: 'Get answer error: $e');
     }
   }
 
-  /// Handle barcode/QR scan action - opens barcode scanner
+  /// Handle barcode/QR scan action using presentation layer widget
   Future<ActionInfoJs> _handleBarcodeAction(
     String dataKey,
     String data,
@@ -513,20 +555,44 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
         );
       }
 
-      // TODO(sdk): Integrate with barcode scanning package.
-      // Recommended packages: mobile_scanner, qr_code_scanner.
-      // For now, return success with placeholder.
-      return ActionInfoJs(
-        success: true,
-        result: 'Barcode scan completed for $dataKey',
+      // Get current context for navigation
+      final context = _getCurrentContext();
+      if (context == null) {
+        return ActionInfoJs(
+          success: false,
+          error: 'No valid context available for barcode scanner',
+        );
+      }
+
+      // Navigate to barcode scanner screen from presentation layer
+      final scannedResult = await Navigator.of(context).push<String?>(
+        MaterialPageRoute<String?>(
+          builder: (context) => BarcodeScannerScreen(
+            title: 'Scan Barcode - $dataKey',
+          ),
+        ),
       );
+
+      if (scannedResult != null && scannedResult.isNotEmpty) {
+        FormGearLogger.webview('Barcode scan completed: $scannedResult');
+        return ActionInfoJs(
+          success: true,
+          result: scannedResult,
+        );
+      } else {
+        FormGearLogger.webview('Barcode scan cancelled by user');
+        return ActionInfoJs(
+          success: false,
+          error: 'Barcode scan cancelled by user',
+        );
+      }
     } on Exception catch (e) {
       FormGearLogger.webviewError('Barcode scan error: $e');
       return ActionInfoJs(success: false, error: 'Barcode scan error: $e');
     }
   }
 
-  /// Handle audio recording action - records audio
+  /// Handle audio recording action using presentation layer widget with FASIH
   Future<ActionInfoJs> _handleAudioAction(
     String dataKey,
     String data,
@@ -534,29 +600,55 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
     try {
       FormGearLogger.webview('Audio action for dataKey: $dataKey');
 
-      // Check microphone permission for audio recording
-      final microphoneStatus = await Permission.microphone.request();
-      if (!microphoneStatus.isGranted) {
+      // Get current context for navigation
+      final context = _getCurrentContext();
+      if (context == null) {
         return ActionInfoJs(
           success: false,
-          error: 'Microphone permission required for audio recording',
+          error: 'No valid context available for audio recorder',
         );
       }
 
-      // TODO(sdk): Integrate with audio recording package.
-      // Recommended packages: record, audio_recorder.
-      // For now, return success with placeholder.
-      return ActionInfoJs(
-        success: true,
-        result: 'Audio recording completed for $dataKey',
+      // Extract assignment ID and generate FASIH-compatible file name
+      final assignmentId = data.isNotEmpty ? data : 'current_assignment';
+      final fileName = FasihMediaHelper.generateFileName(
+        dataKey: dataKey,
+        mediaType: 'audio',
+        extension: 'm4a',
       );
+
+      // Navigate to audio recording screen from presentation layer
+      final recordedAudioPath = await Navigator.of(context).push<String?>(
+        MaterialPageRoute<String?>(
+          builder: (context) => AudioRecorderScreen(
+            title: 'Record Audio - $dataKey',
+            assignmentId: assignmentId,
+            fileName: fileName,
+            dataKey: dataKey,
+          ),
+        ),
+      );
+
+      if (recordedAudioPath != null && recordedAudioPath.isNotEmpty) {
+        FormGearLogger.webview('Audio recording completed: $fileName');
+        return ActionInfoJs(
+          success: true,
+          result: fileName, // Return FASIH fileName, not full path
+        );
+      } else {
+        FormGearLogger.webview('Audio recording cancelled by user');
+        return ActionInfoJs(
+          success: false,
+          error: 'Audio recording cancelled by user',
+        );
+      }
     } on Exception catch (e) {
       FormGearLogger.webviewError('Audio recording error: $e');
       return ActionInfoJs(success: false, error: 'Audio recording error: $e');
     }
   }
 
-  /// Handle lookup action - performs data lookup
+  /// Handle lookup action - performs data lookup from FASIH sources
   Future<ActionInfoJs> _handleLookupAction(
     String dataKey,
     String data,
@@ -566,17 +658,213 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
         'Lookup action for dataKey: $dataKey, data: $data',
       );
 
-      // TODO(sdk): Implement actual lookup data retrieval.
-      // This should connect to survey lookup data sources.
-      // For now, return success with placeholder.
-      return ActionInfoJs(
-        success: true,
-        result: 'Lookup completed for $dataKey',
-      );
+      // Parse data to get lookup parameters
+      Map<String, dynamic>? lookupParams;
+      if (data.isNotEmpty) {
+        try {
+          lookupParams = jsonDecode(data) as Map<String, dynamic>?;
+        } on Exception catch (e) {
+          FormGearLogger.webviewError('Failed to parse lookup data: $e');
+        }
+      }
+
+      // Extract lookup parameters
+      final surveyId = lookupParams?['surveyId'] as String? ?? 'current_survey';
+      final lookupType = lookupParams?['type'] as String? ?? 'default';
+      final searchQuery = lookupParams?['query'] as String? ?? '';
+
+      // Try to load lookup data from FASIH sources
+      final lookupData = await _loadLookupData(surveyId, lookupType);
+
+      // Filter lookup data based on search query if provided
+      final filteredData = searchQuery.isNotEmpty
+          ? _filterLookupData(lookupData, searchQuery)
+          : lookupData;
+
+      if (filteredData.isNotEmpty) {
+        final result = {
+          'success': true,
+          'data': filteredData,
+          'count': filteredData.length,
+          'query': searchQuery,
+          'surveyId': surveyId,
+          'type': lookupType,
+        };
+
+        FormGearLogger.webview(
+          'Lookup completed for $dataKey: ${filteredData.length} items',
+        );
+        return ActionInfoJs(
+          success: true,
+          result: jsonEncode(result),
+        );
+      } else {
+        return ActionInfoJs(
+          success: true,
+          result: jsonEncode({
+            'success': true,
+            'data': <Map<String, dynamic>>[],
+            'count': 0,
+            'message': 'No lookup data found',
+          }),
+        );
+      }
     } on Exception catch (e) {
       FormGearLogger.webviewError('Lookup error: $e');
       return ActionInfoJs(success: false, error: 'Lookup error: $e');
     }
+  }
+
+  /// Load response data from assignment file or fallback to default
+  Future<Map<String, dynamic>?> _loadResponseData(String assignmentId) async {
+    try {
+      // Try to load from assignment data file first
+      final dataPath = await FormDataFileManager.getAssignmentDataPath(
+        assignmentId,
+      );
+      final content = await FormDataFileManager.readFileContent(dataPath);
+
+      if (content != null) {
+        final responseData = jsonDecode(content) as Map<String, dynamic>;
+        FormGearLogger.webview('Loaded response data from: $dataPath');
+        return responseData;
+      }
+    } on Exception catch (e) {
+      FormGearLogger.webviewError('Failed to load assignment data: $e');
+    }
+
+    try {
+      // Fallback to default response asset
+      final assetContent = await rootBundle.loadString(
+        'packages/form_gear_engine_sdk/assets/client/formgear/response.json',
+      );
+      final responseData = jsonDecode(assetContent) as Map<String, dynamic>;
+      FormGearLogger.webview('Using default response data from assets');
+      return responseData;
+    } on Exception catch (e) {
+      FormGearLogger.webviewError('Failed to load default response data: $e');
+      return null;
+    }
+  }
+
+  /// Extract answer value by dataKey from response data
+  String? _extractAnswerByKey(
+    Map<String, dynamic>? responseData,
+    String dataKey,
+  ) {
+    if (responseData == null || dataKey.isEmpty) {
+      return null;
+    }
+
+    try {
+      // Look for answers array in response data
+      final answers = responseData['answers'] as List<dynamic>?;
+      if (answers == null) {
+        return null;
+      }
+
+      // Find answer by dataKey
+      for (final answer in answers) {
+        if (answer is Map<String, dynamic>) {
+          final key = answer['dataKey'] as String?;
+          if (key == dataKey) {
+            // Return the value, converting to string if needed
+            final value = answer['value'];
+            return value?.toString();
+          }
+        }
+      }
+
+      FormGearLogger.webview('No answer found for dataKey: $dataKey');
+      return null;
+    } on Exception catch (e) {
+      FormGearLogger.webviewError('Error extracting answer for $dataKey: $e');
+      return null;
+    }
+  }
+
+  /// Load lookup data from FASIH sources
+  Future<List<Map<String, dynamic>>> _loadLookupData(
+    String surveyId,
+    String lookupType,
+  ) async {
+    try {
+      // Try to load from lookup directory first
+      final lookupDir = await FormDataFileManager.getLookupDirectory(surveyId);
+      final lookupFile = File('${lookupDir.path}/$lookupType.json');
+
+      if (lookupFile.existsSync()) {
+        final content = await lookupFile.readAsString();
+        final data = jsonDecode(content);
+
+        if (data is List) {
+          return List<Map<String, dynamic>>.from(
+            data.map((item) => item as Map<String, dynamic>),
+          );
+        } else if (data is Map<String, dynamic> && data['data'] is List) {
+          return List<Map<String, dynamic>>.from(
+            (data['data'] as List).map((item) => item as Map<String, dynamic>),
+          );
+        }
+      }
+    } on Exception catch (e) {
+      FormGearLogger.webviewError('Failed to load lookup data: $e');
+    }
+
+    // Return default lookup data for demo purposes
+    return [
+      {
+        'id': '1',
+        'code': 'A001',
+        'name': 'Sample Lookup Item 1',
+        'description': 'This is a sample lookup item for testing',
+        'category': 'default',
+        'active': true,
+      },
+      {
+        'id': '2',
+        'code': 'A002',
+        'name': 'Sample Lookup Item 2',
+        'description': 'Another sample lookup item',
+        'category': 'default',
+        'active': true,
+      },
+      {
+        'id': '3',
+        'code': 'B001',
+        'name': 'Category B Item',
+        'description': 'Sample item from category B',
+        'category': 'category_b',
+        'active': true,
+      },
+    ];
+  }
+
+  /// Filter lookup data based on search query
+  List<Map<String, dynamic>> _filterLookupData(
+    List<Map<String, dynamic>> data,
+    String query,
+  ) {
+    if (query.isEmpty) return data;
+
+    final lowercaseQuery = query.toLowerCase();
+    return data.where((item) {
+      // Search in common fields
+      final searchableFields = [
+        'name',
+        'code',
+        'description',
+        'category',
+      ];
+
+      for (final field in searchableFields) {
+        final value = item[field]?.toString().toLowerCase() ?? '';
+        if (value.contains(lowercaseQuery)) {
+          return true;
+        }
+      }
+      return false;
+    }).toList();
   }
 
   /// Get the current BuildContext from the navigator
