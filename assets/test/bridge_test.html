@@ -8,152 +8,217 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
         .container {
-            max-width: 600px;
+            max-width: 480px;
             margin: 0 auto;
             background: white;
+            padding: 0;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        .header {
+            background: #f8f9fb;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-bottom: 1px solid #e5e7eb;
         }
         h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 30px;
+            color: #1f2937;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
         }
-        .debug-badge {
-            background: #28a745;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-left: 10px;
-            animation: pulse 2s infinite;
+        .subtitle {
+            color: #6b7280;
+            font-size: 14px;
+            margin: 0 0 12px 0;
+            line-height: 1.5;
         }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
+        .debug-info {
+            color: #8b5cf6;
+            font-size: 13px;
+            font-style: italic;
+        }
+        .content {
+            padding: 16px;
         }
         .handler-section {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 5px;
-            border-left: 4px solid #007bff;
+            margin-bottom: 24px;
+            position: relative;
         }
         .handler-name {
-            font-weight: bold;
-            color: #007bff;
-            margin-bottom: 10px;
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .handler-name::before {
+            content: '';
+            width: 3px;
+            height: 20px;
+            background: #3b82f6;
+            border-radius: 2px;
         }
         .handler-buttons {
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
+            flex-direction: column;
+            gap: 8px;
         }
         button {
-            background: #007bff;
+            background: #3b82f6;
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
+            padding: 12px 16px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
+            font-weight: 500;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
         }
         button:hover {
-            background: #0056b3;
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(0);
         }
         button.new-feature {
-            background: #17a2b8;
-            border: 2px solid #138496;
+            background: #06b6d4;
             position: relative;
         }
         button.new-feature::after {
-            content: '🆕';
+            content: 'NEW';
             position: absolute;
-            top: -5px;
-            right: -5px;
-            font-size: 10px;
+            top: -4px;
+            right: -4px;
+            background: #10b981;
+            color: white;
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
         }
         button.new-feature:hover {
-            background: #138496;
+            background: #0891b2;
+        }
+        button.fasih-form {
+            background: #3b82f6;
+        }
+        button.save-submit {
+            background: #6b7280;
+        }
+        button.save-submit:hover {
+            background: #4b5563;
         }
         button.test-all {
-            background: #28a745;
-            margin: 20px auto;
-            display: block;
-            padding: 12px 24px;
-            font-size: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 16px 0;
+            width: 100%;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 8px;
         }
-        .results {
-            margin-top: 20px;
-            padding: 15px;
-            background: #e9ecef;
-            border-radius: 5px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        .result-item {
-            margin-bottom: 10px;
-            padding: 5px;
-            background: white;
-            border-radius: 3px;
-        }
-        .result-success {
-            border-left: 3px solid #28a745;
-        }
-        .result-error {
-            border-left: 3px solid #dc3545;
-            background: #fff5f5;
+        button.test-all:hover {
+            opacity: 0.9;
         }
         .status {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 5px;
-            text-align: center;
+            margin: 12px 0;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
         }
         .status.loading {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
+            background: #fef3c7;
+            border-color: #fbbf24;
+            color: #92400e;
         }
         .status.success {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
+            background: #d1fae5;
+            border-color: #10b981;
+            color: #065f46;
         }
         .status.error {
-            background: #f8d7da;
-            border: 1px solid #f1c2c7;
+            background: #fee2e2;
+            border-color: #f87171;
+            color: #991b1b;
+        }
+        .results {
+            margin-top: 16px;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .results h3 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 600;
+        }
+        .result-item {
+            margin-bottom: 8px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            font-size: 13px;
+        }
+        .result-success {
+            border-left: 3px solid #10b981;
+        }
+        .result-error {
+            border-left: 3px solid #ef4444;
+            background: #fef2f2;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔧 FormGear SDK Bridge Test <span class="debug-badge">v2.0 - ENHANCED</span></h1>
-
-        <div id="bridge-info" class="status">
-            <strong>Bridge Status:</strong> <span id="bridge-status">Initializing...</span>
+        <div class="header">
+            <h1>FormGear SDK Integration Test</h1>
+            <p class="subtitle">
+                SDK automatically provides: CAMERA, FILE_PICKER, LOCATION<br>
+                Custom handlers: <span id="custom-count">0</span>
+            </p>
+            <p class="debug-info">Bridge test HTML loaded from SDK assets (DEBUG ONLY)</p>
         </div>
 
-        <div id="jquery-info" class="status">
-            <strong>jQuery Status:</strong> <span id="jquery-status">Loading...</span>
-        </div>
+        <div class="content">
+            <div id="bridge-info" class="status">
+                <strong>Bridge Status:</strong> <span id="bridge-status">Initializing...</span>
+            </div>
 
-        <button class="test-all" onclick="testAllHandlers()">🧪 Test All Handlers</button>
+            <div id="jquery-info" class="status">
+                <strong>jQuery Status:</strong> <span id="jquery-status">Loading...</span>
+            </div>
 
-        <div id="handlers-container">
-            <!-- Handlers will be dynamically generated here -->
-        </div>
+            <button class="test-all" onclick="testAllHandlers()">🧪 Run All Tests</button>
 
-        <div id="results" class="results">
-            <h3>Test Results:</h3>
-            <div id="results-content">
-                <div class="result-item">
-                    <strong>Click any button above to test the handler and see results here</strong>
+            <div id="handlers-container">
+                <!-- Handlers will be dynamically generated here -->
+            </div>
+
+            <div id="results" class="results">
+                <h3>Test Results</h3>
+                <div id="results-content">
+                    <div class="result-item">
+                        Ready to test. Click any button above.
+                    </div>
                 </div>
             </div>
         </div>
@@ -219,6 +284,9 @@
                 ];
                 console.log('Available Android methods:', availableHandlers);
 
+                // Update custom handler count
+                document.getElementById('custom-count').textContent = availableHandlers.length;
+
                 generateHandlerButtons();
             } else {
                 updateBridgeStatus('error', 'FormGear SDK Bridge Not Available');
@@ -250,11 +318,6 @@
                 ['cameraHandler', 'fileUploadHandler', 'gpsHandler', 'openMap', 'setResponseMobile', 'setSubmitMobile'].includes(h)
             );
 
-            if (dataHandlers.length > 0) {
-                const dataSection = createHandlerSection('📊 Data Methods', dataHandlers);
-                container.appendChild(dataSection);
-            }
-
             // Create separate action buttons for different action types
             const actionSection = createActionSection();
             container.appendChild(actionSection);
@@ -264,13 +327,18 @@
                 container.appendChild(saveSection);
             }
 
+            if (dataHandlers.length > 0) {
+                const dataSection = createHandlerSection('📊 Data Methods', dataHandlers);
+                container.appendChild(dataSection);
+            }
+
             if (exitHandlers.length > 0) {
-                const exitSection = createHandlerSection('🚪 Exit/Navigation Methods', exitHandlers);
+                const exitSection = createHandlerSection('🚪 Exit Methods', exitHandlers);
                 container.appendChild(exitSection);
             }
 
             if (clientActionHandlers.length > 0) {
-                const clientSection = createHandlerSection('🎯 Client Action Methods', clientActionHandlers);
+                const clientSection = createHandlerSection('🎯 Client Methods', clientActionHandlers);
                 container.appendChild(clientSection);
             }
 
@@ -284,7 +352,7 @@
 
             const titleElement = document.createElement('div');
             titleElement.className = 'handler-name';
-            titleElement.textContent = title;
+            titleElement.innerHTML = title;
             section.appendChild(titleElement);
 
             const buttonsContainer = document.createElement('div');
@@ -293,8 +361,13 @@
             handlers.forEach(handler => {
                 const button = document.createElement('button');
                 button.textContent = handler;
+
+                // Style save/submit buttons differently
+                if (handler.includes('save') || handler.includes('Save') || handler.includes('submit')) {
+                    button.className = 'save-submit';
+                }
+
                 button.onclick = () => {
-                    // Show immediate feedback
                     displayMessage('🔄 Testing ' + handler + '...');
                     testHandler(handler);
                 };
@@ -311,38 +384,50 @@
 
             const titleElement = document.createElement('div');
             titleElement.className = 'handler-name';
-            titleElement.textContent = '⚡ Action Methods';
+            titleElement.innerHTML = '⚡ Action Methods';
             section.appendChild(titleElement);
 
             const buttonsContainer = document.createElement('div');
             buttonsContainer.className = 'handler-buttons';
 
-            // Create specific action buttons
-            const actions = [
-                { name: 'Camera (FormGear)', method: 'action', args: ['CAMERA', 'camera_test', 'test_data'], icon: '📷' },
-                { name: 'Camera GPS (FormGear)', method: 'action', args: ['CAMERA_GPS', 'gps_test', 'true'], icon: '📷🌍' },
-                { name: 'File Picker (FormGear)', method: 'action', args: ['FILE_UPLOAD', 'file_test', 'test_data'], icon: '📁' },
-                { name: 'File Reload (FormGear)', method: 'action', args: ['FILE_RELOAD', 'reload_test', '{"files": ["test.jpg"]}'], icon: '🔄' },
-                { name: 'Location (FormGear)', method: 'action', args: ['LOCATION', 'location_test', 'test_data'], icon: '📍' },
-                { name: 'Open Maps (FormGear)', method: 'action', args: ['OPEN_MAPS', 'maps_test', '-6.2088,106.8456'], icon: '🗺️' },
-                { name: 'Signature (FormGear)', method: 'action', args: ['SIGNATURE', 'signature_test', 'test_data'], icon: '✍️' },
-                { name: 'Camera (FasihForm)', method: 'execute', args: ['CAMERA', 'camera_test', 'test_data'], icon: '📷' },
-                { name: 'File Picker (FasihForm)', method: 'execute', args: ['FILE_UPLOAD', 'file_test', 'test_data'], icon: '📁' },
-                { name: 'Location (FasihForm)', method: 'execute', args: ['LOCATION', 'location_test', 'test_data'], icon: '📍' }
+            // FormGear actions (using 'action' handler)
+            const formGearActions = [
+                { name: '📷 Camera (FormGear)', method: 'action', args: ['CAMERA', 'camera_test', 'test_data'] },
+                { name: '📷 Camera GPS (FormGear)', method: 'action', args: ['CAMERA_GPS', 'gps_test', 'true'], new: true },
+                { name: '📁 File Picker (FormGear)', method: 'action', args: ['FILE_UPLOAD', 'file_test', 'test_data'] },
+                { name: '🔄 File Reload (FormGear)', method: 'action', args: ['FILE_RELOAD', 'reload_test', '{"files": ["test.jpg"]}'], new: true },
+                { name: '📍 Location (FormGear)', method: 'action', args: ['LOCATION', 'location_test', 'test_data'] },
+                { name: '🗺️ Open Maps (FormGear)', method: 'action', args: ['OPEN_MAPS', 'maps_test', '-6.2088,106.8456'], new: true },
+                { name: '✍️ Signature (FormGear)', method: 'action', args: ['SIGNATURE', 'signature_test', 'test_data'], new: true },
             ];
 
-            actions.forEach(action => {
-                const button = document.createElement('button');
-                button.innerHTML = action.icon + ' ' + action.name;
+            // FasihForm actions (using 'execute' handler)
+            const fasihFormActions = [
+                { name: '📷 Camera (FasihForm)', method: 'execute', args: ['CAMERA', 'camera_test', 'test_data'], fasih: true },
+                { name: '📁 File Picker (FasihForm)', method: 'execute', args: ['FILE_UPLOAD', 'file_test', 'test_data'], fasih: true },
+                { name: '📍 Location (FasihForm)', method: 'execute', args: ['LOCATION', 'location_test', 'test_data'], fasih: true }
+            ];
 
-                // Mark new features with special styling
-                const newFeatures = ['Camera GPS', 'File Reload', 'Open Maps', 'Signature'];
-                if (newFeatures.some(feature => action.name.includes(feature))) {
+            // Add FormGear buttons
+            formGearActions.forEach(action => {
+                const button = document.createElement('button');
+                button.innerHTML = action.name;
+                if (action.new) {
                     button.className = 'new-feature';
                 }
-
                 button.onclick = () => {
-                    // Show immediate feedback
+                    displayMessage('🔄 Testing ' + action.name + '...');
+                    testSpecificAction(action.method, action.args);
+                };
+                buttonsContainer.appendChild(button);
+            });
+
+            // Add FasihForm buttons
+            fasihFormActions.forEach(action => {
+                const button = document.createElement('button');
+                button.innerHTML = action.name;
+                button.className = 'fasih-form';
+                button.onclick = () => {
                     displayMessage('🔄 Testing ' + action.name + '...');
                     testSpecificAction(action.method, action.args);
                 };
