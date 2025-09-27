@@ -91,141 +91,189 @@ class _FormGearWebViewState extends State<FormGearWebView> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Column(
-          children: [
-            if (_currentError != null)
-              Container(
-                width: double.infinity,
-                color: Colors.red[100],
-                padding: const EdgeInsets.all(8),
-                child: Text(
-                  'Error: $_currentError',
-                  style: TextStyle(color: Colors.red[800]),
+    return PopScope(
+      canPop: false, // Always handle pop manually
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return; // Already popped, nothing to do
+
+        await _handleBackNavigation();
+      },
+      child: Stack(
+        children: [
+          Column(
+            children: [
+              if (_currentError != null)
+                Container(
+                  width: double.infinity,
+                  color: Colors.red[100],
+                  padding: const EdgeInsets.all(8),
+                  child: Text(
+                    'Error: $_currentError',
+                    style: TextStyle(color: Colors.red[800]),
+                  ),
                 ),
-              ),
-            Expanded(
-              child: SafeArea(
-                child: InAppWebView(
-                  initialSettings: _webViewSettings,
-                  initialUrlRequest: URLRequest(url: WebUri(widget.url)),
-                  initialData: widget.htmlContent != null
-                      ? InAppWebViewInitialData(data: widget.htmlContent!)
-                      : null,
-                  onWebViewCreated: (controller) async {
-                    _controller = controller;
-                    widget.onWebViewCreated?.call(controller);
+              Expanded(
+                child: SafeArea(
+                  child: InAppWebView(
+                    initialSettings: _webViewSettings,
+                    initialUrlRequest: URLRequest(url: WebUri(widget.url)),
+                    initialData: widget.htmlContent != null
+                        ? InAppWebViewInitialData(data: widget.htmlContent!)
+                        : null,
+                    onWebViewCreated: (controller) async {
+                      _controller = controller;
+                      widget.onWebViewCreated?.call(controller);
 
-                    // Register JS handlers directly on controller
-                    for (final handler in widget.jsHandlers) {
-                      controller.addJavaScriptHandler(
-                        handlerName: handler.handlerName,
-                        callback: (args) async {
-                          final result = await handler.callback(args);
+                      // Register JS handlers directly on controller
+                      for (final handler in widget.jsHandlers) {
+                        controller.addJavaScriptHandler(
+                          handlerName: handler.handlerName,
+                          callback: (args) async {
+                            final result = await handler.callback(args);
 
-                          // For data methods, return strings that
-                          // callAndroidFunction can parse
-                          if (handler.handlerName.startsWith('get') ||
-                              handler.handlerName.contains('Role')) {
-                            if (result is StringInfoJs) {
-                              return result.value ?? '';
-                            } else if (result is JsonInfoJs) {
-                              return jsonEncode(result.data ?? {});
-                            } else if (result is ListInfoJs) {
-                              return jsonEncode(result.data ?? []);
+                            // For data methods, return strings that
+                            // callAndroidFunction can parse
+                            if (handler.handlerName.startsWith('get') ||
+                                handler.handlerName.contains('Role')) {
+                              if (result is StringInfoJs) {
+                                return result.value ?? '';
+                              } else if (result is JsonInfoJs) {
+                                return jsonEncode(result.data ?? {});
+                              } else if (result is ListInfoJs) {
+                                return jsonEncode(result.data ?? []);
+                              }
                             }
-                          }
 
-                          // For action methods, return the full JSON response
-                          return (result as JsonCodable).toJson();
-                        },
-                      );
-                    }
-
-                    // iOS: Delay initial bridge injection for WebView
-                    // to be fully ready
-                    if (Platform.isIOS) {
-                      await Future<void>.delayed(
-                        const Duration(milliseconds: 200),
-                      );
-                    }
-
-                    // Inject Android bridge object using file-based approach
-                    await _injectAndroidBridgeFromFile(controller);
-                  },
-                  onLoadStart: (controller, url) {
-                    widget.onLoadStart?.call(controller, url?.toString() ?? '');
-                    setState(() {
-                      _currentError = null;
-                      _isLoading = true;
-                      _loadingProgress = 0;
-                    });
-                  },
-                  onProgressChanged: (controller, progress) {
-                    setState(() {
-                      _loadingProgress = progress;
-                      if (progress >= 100) {
-                        _isLoading = false;
+                            // For action methods, return the full JSON response
+                            return (result as JsonCodable).toJson();
+                          },
+                        );
                       }
-                    });
-                  },
-                  onLoadStop: (controller, url) async {
-                    widget.onLoadStop?.call(controller, url?.toString() ?? '');
-                    setState(() {
-                      _isLoading = false;
-                      _loadingProgress = 100;
-                    });
-                    // iOS: Re-inject bridge after page load
-                    // for better compatibility
-                    if (Platform.isIOS) {
-                      await Future<void>.delayed(
-                        const Duration(milliseconds: 1000),
-                      );
+
+                      // iOS: Delay initial bridge injection for WebView
+                      // to be fully ready
+                      if (Platform.isIOS) {
+                        await Future<void>.delayed(
+                          const Duration(milliseconds: 200),
+                        );
+                      }
+
+                      // Inject Android bridge object using file-based approach
                       await _injectAndroidBridgeFromFile(controller);
-                      // Additional delay for iOS to ensure bridge is fully
-                      // ready
-                      await Future<void>.delayed(
-                        const Duration(milliseconds: 500),
+                    },
+                    onLoadStart: (controller, url) {
+                      widget.onLoadStart?.call(
+                        controller,
+                        url?.toString() ?? '',
                       );
-                      await _verifyBridgeOnIOS(controller);
-                    }
-                  },
-                  onReceivedError: (controller, request, error) {
-                    final urlString = request.url.toString();
-                    final code = error.type.toNativeValue() ?? -1;
-                    final message = error.description;
+                      setState(() {
+                        _currentError = null;
+                        _isLoading = true;
+                        _loadingProgress = 0;
+                      });
+                    },
+                    onProgressChanged: (controller, progress) {
+                      setState(() {
+                        _loadingProgress = progress;
+                        if (progress >= 100) {
+                          _isLoading = false;
+                        }
+                      });
+                    },
+                    onLoadStop: (controller, url) async {
+                      widget.onLoadStop?.call(
+                        controller,
+                        url?.toString() ?? '',
+                      );
+                      setState(() {
+                        _isLoading = false;
+                        _loadingProgress = 100;
+                      });
+                      // iOS: Re-inject bridge after page load
+                      // for better compatibility
+                      if (Platform.isIOS) {
+                        await Future<void>.delayed(
+                          const Duration(milliseconds: 1000),
+                        );
+                        await _injectAndroidBridgeFromFile(controller);
+                        // Additional delay for iOS to ensure bridge is fully
+                        // ready
+                        await Future<void>.delayed(
+                          const Duration(milliseconds: 500),
+                        );
+                        await _verifyBridgeOnIOS(controller);
+                      }
+                    },
+                    onReceivedError: (controller, request, error) {
+                      final urlString = request.url.toString();
+                      final code = error.type.toNativeValue() ?? -1;
+                      final message = error.description;
 
-                    widget.onLoadError?.call(
-                      controller,
-                      urlString,
-                      code,
-                      message,
-                    );
+                      widget.onLoadError?.call(
+                        controller,
+                        urlString,
+                        code,
+                        message,
+                      );
 
-                    setState(() {
-                      _currentError = 'Load Error ($code): $message';
-                    });
-                  },
-                  onConsoleMessage: (controller, consoleMessage) {
-                    widget.onConsoleMessage?.call(controller, consoleMessage);
-                  },
-                  onPermissionRequest: (controller, request) async {
-                    return PermissionResponse(
-                      resources: request.resources,
-                      action: PermissionResponseAction.GRANT,
-                    );
-                  },
+                      setState(() {
+                        _currentError = 'Load Error ($code): $message';
+                      });
+                    },
+                    onConsoleMessage: (controller, consoleMessage) {
+                      widget.onConsoleMessage?.call(controller, consoleMessage);
+                    },
+                    onPermissionRequest: (controller, request) async {
+                      return PermissionResponse(
+                        resources: request.resources,
+                        action: PermissionResponseAction.GRANT,
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-        // Modern loading overlay with FormGear logo
-        if (_isLoading)
-          FormGearLoadingScreen(loadingProgress: _loadingProgress),
-      ],
+            ],
+          ),
+          // Modern loading overlay with FormGear logo
+          if (_isLoading)
+            FormGearLoadingScreen(loadingProgress: _loadingProgress),
+        ],
+      ),
     );
+  }
+
+  /// Handle back navigation - check if WebView can go back
+  Future<void> _handleBackNavigation() async {
+    if (_controller == null) {
+      // No WebView controller, allow normal back navigation
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+      return;
+    }
+
+    try {
+      // Check if WebView can go back
+      final canGoBack = await _controller!.canGoBack();
+
+      if (canGoBack) {
+        // WebView has history, navigate back within WebView
+        await _controller!.goBack();
+        FormGearLogger.webview('WebView navigated back');
+      } else {
+        // No WebView history, allow normal back navigation
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+      }
+    } on Exception catch (e) {
+      FormGearLogger.webviewError('Error checking WebView back navigation: $e');
+
+      // On error, allow normal back navigation
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    }
   }
 
   /// Inject Android bridge object using file-based injection
