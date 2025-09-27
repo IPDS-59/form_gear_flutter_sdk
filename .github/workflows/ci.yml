@@ -138,10 +138,31 @@ jobs:
 
     - name: Analyze example app
       if: needs.detect-changes.outputs.example-changed == 'true'
+      env:
+        BASE_URL: ${{ secrets.BASE_URL }}
+        ENDPOINT_VERIFY_VERSION: ${{ secrets.ENDPOINT_VERIFY_VERSION }}
+        ENDPOINT_TEMPLATE_ZIP: ${{ secrets.ENDPOINT_TEMPLATE_ZIP }}
+        ENDPOINT_LOOKUP: ${{ secrets.ENDPOINT_LOOKUP }}
+        WILKERSTAT_BPS_KEY: ${{ secrets.WILKERSTAT_BPS_KEY }}
+        WILKERSTAT_TOKEN: ${{ secrets.WILKERSTAT_TOKEN }}
       run: |
         echo "🔍 Analyzing example app..."
         cd example
+
+        # Prepare .env file from template
+        echo "📝 Setting up environment configuration..."
+        cp .env.example .env
+
+        # Replace placeholders with actual values from secrets
+        sed -i "s|BASE_URL=.*|BASE_URL=$BASE_URL|g" .env
+        sed -i "s|ENDPOINT_VERIFY_VERSION=.*|ENDPOINT_VERIFY_VERSION=$ENDPOINT_VERIFY_VERSION|g" .env
+        sed -i "s|ENDPOINT_TEMPLATE_ZIP=.*|ENDPOINT_TEMPLATE_ZIP=$ENDPOINT_TEMPLATE_ZIP|g" .env
+        sed -i "s|ENDPOINT_LOOKUP=.*|ENDPOINT_LOOKUP=$ENDPOINT_LOOKUP|g" .env
+        sed -i "s|WILKERSTAT_BPS_KEY=.*|WILKERSTAT_BPS_KEY=$WILKERSTAT_BPS_KEY|g" .env
+        sed -i "s|WILKERSTAT_TOKEN=.*|WILKERSTAT_TOKEN=$WILKERSTAT_TOKEN|g" .env
+
         flutter pub get
+        dart run build_runner build -d
         flutter analyze
 
   test:
@@ -162,70 +183,33 @@ jobs:
     - name: Get dependencies
       run: flutter pub get
 
-    - name: Run unit tests
+    - name: Run unit tests and generate coverage
       run: |
         echo "🧪 ${{ needs.detect-changes.outputs.test-summary }}"
 
-        # Check if test files exist
-        TEST_COUNT=$(find test -name '*_test.dart' 2>/dev/null | wc -l)
-
-        if [ "$TEST_COUNT" -gt 0 ]; then
-          echo "Found $TEST_COUNT test files. Running tests with coverage..."
-
-          # Run tests with coverage only if needed
-          if [ "${{ needs.detect-changes.outputs.core-changed }}" = "true" ] || [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "Running with coverage..."
-            flutter test --coverage --reporter=expanded
-          else
-            echo "Running without coverage (no core changes)..."
-            flutter test --reporter=expanded
-          fi
-
-          if [ -f "coverage/lcov.info" ]; then
-            echo "✅ Tests completed with coverage"
-          else
-            echo "✅ Tests completed"
-          fi
+        # Determine coverage scope based on changes
+        if [ "${{ needs.detect-changes.outputs.core-changed }}" = "true" ] || [ "${{ github.event_name }}" = "pull_request" ]; then
+          echo "Running full coverage analysis..."
+          ./scripts/generate_coverage_report.sh --full --format markdown
+        elif [ "${{ needs.detect-changes.outputs.dart-changed }}" = "true" ]; then
+          echo "Running coverage for changed files only..."
+          ./scripts/generate_coverage_report.sh --changed-only --base-branch develop --format markdown
         else
-          echo "⚠️ No test files found"
+          echo "No Dart changes detected, running minimal tests..."
+          ./scripts/generate_coverage_report.sh --format markdown
         fi
 
-    - name: Generate coverage report
-      if: always()
-      run: |
-        echo "## 📊 Test Results" > test_report.md
-        echo "" >> test_report.md
-        echo "${{ needs.detect-changes.outputs.test-summary }}" >> test_report.md
-        echo "" >> test_report.md
-
-        if [ -f "coverage/lcov.info" ] && [ -s "coverage/lcov.info" ]; then
-          # Fast coverage calculation without external tools
-          echo "📊 Calculating coverage from lcov.info..."
-
-          # Count total and hit lines using simple grep (much faster than lcov)
-          TOTAL_LINES=$(grep -c "^LF:" coverage/lcov.info 2>/dev/null || echo "0")
-          HIT_LINES=$(grep -c "^LH:" coverage/lcov.info 2>/dev/null || echo "0")
-
-          if [ "$TOTAL_LINES" -gt 0 ]; then
-            COVERAGE_PERCENT=$(awk "BEGIN {printf \"%.1f\", ($HIT_LINES/$TOTAL_LINES)*100}")
-            TOTAL_COVERAGE="${COVERAGE_PERCENT}%"
-          else
-            TOTAL_COVERAGE="0%"
-          fi
-
-          echo "### 🎯 Coverage: ${TOTAL_COVERAGE}" >> test_report.md
-          echo "" >> test_report.md
-          echo "| Component | Status |" >> test_report.md
-          echo "|-----------|--------|" >> test_report.md
-          echo "| Unit Tests | ✅ Passed |" >> test_report.md
-          echo "| Coverage | ${TOTAL_COVERAGE} |" >> test_report.md
-
-          if [ "${{ needs.detect-changes.outputs.core-changed }}" = "true" ]; then
-            echo "| Core Components | 🧪 Tested |" >> test_report.md
-          fi
+        # Rename the generated report for CI
+        if [ -f "coverage_report.md" ]; then
+          mv coverage_report.md test_report.md
         else
-          echo "### ⚠️ No Coverage Data" >> test_report.md
-          echo "Tests may not exist or failed to generate coverage." >> test_report.md
+          # Fallback report if script fails
+          echo "## 📊 Test Results" > test_report.md
+          echo "" >> test_report.md
+          echo "${{ needs.detect-changes.outputs.test-summary }}" >> test_report.md
+          echo "" >> test_report.md
+          echo "### ⚠️ Coverage Report Generation Failed" >> test_report.md
+          echo "The coverage script encountered an error. Please check the logs above." >> test_report.md
         fi
 
     - name: Comment PR with test results

@@ -242,10 +242,14 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
   ) async {
     if (!mounted) return;
 
+    // Capture context references at the start
+    final navigator = Navigator.of(context);
+    final contextForOperations = context;
+
     try {
       // Show loading dialog
       showDialog(
-        context: context,
+        context: contextForOperations,
         barrierDismissible: false,
         builder: (context) => const AlertDialog(
           content: Row(
@@ -312,30 +316,30 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
       if (!mounted) return;
 
       // Close loading dialog
-      if (Navigator.canPop(context)) {
-        Navigator.of(context).pop();
+      if (navigator.canPop()) {
+        navigator.pop();
       }
 
       if (!mounted) return;
 
       // Launch the prepared engine
       await FormGearSDK.instance.launchPreparedEngine(
-        context,
+        contextForOperations,
         title: template.title,
       );
     } catch (e) {
       if (!mounted) return;
 
       // Close loading dialog if it's open
-      if (Navigator.canPop(context)) {
-        Navigator.of(context).pop();
+      if (navigator.canPop()) {
+        navigator.pop();
       }
 
       if (!mounted) return;
 
       // Show error dialog
       showDialog(
-        context: context,
+        context: contextForOperations,
         builder: (context) => AlertDialog(
           title: const Text('Error'),
           content: Text('Failed to load form engine: $e'),

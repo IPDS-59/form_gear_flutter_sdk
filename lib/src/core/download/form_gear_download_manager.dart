@@ -205,7 +205,7 @@ class FormGearDownloadManager {
         onProgress: onProgress,
       );
     }
-    return _downloadFormEngineFromAssets(engineId);
+    return _downloadFormEngineFromAssets(engineId, onProgress: onProgress);
   }
 
   /// Downloads form engine from remote URL (FASIH pattern)
@@ -237,7 +237,10 @@ class FormGearDownloadManager {
   }
 
   /// Downloads FormGear engine files from local assets (fallback)
-  Future<bool> _downloadFormEngineFromAssets(String engineId) async {
+  Future<bool> _downloadFormEngineFromAssets(
+    String engineId, {
+    DownloadProgressCallback? onProgress,
+  }) async {
     try {
       // Use FASIH-compatible directory structure
       final engineDir = await DirectoryConstants.getFormEngineDirectory(
@@ -249,17 +252,31 @@ class FormGearDownloadManager {
         engineDir.createSync(recursive: true);
       }
 
+      // Determine the correct JS filename based on engine ID
+      String jsBasename;
+      switch (engineId) {
+        case '1':
+          jsBasename = 'form-gear';
+        case '2':
+          jsBasename = 'fasih-form';
+        default:
+          jsBasename = 'form-gear'; // Default fallback
+      }
+
       // Copy engine files from assets - include all required files
       final assetPaths = [
         'assets/formengine/$engineId/index.html',
-        'assets/formengine/$engineId/form-gear.es.js',
-        'assets/formengine/$engineId/form-gear.umd.js',
+        'assets/formengine/$engineId/$jsBasename.es.js',
+        'assets/formengine/$engineId/$jsBasename.umd.js',
         'assets/formengine/$engineId/style.css',
         'assets/formengine/$engineId/version.json',
       ];
 
       var filesDownloaded = 0;
-      for (final assetPath in assetPaths) {
+      final totalFiles = assetPaths.length;
+
+      for (var i = 0; i < assetPaths.length; i++) {
+        final assetPath = assetPaths[i];
         try {
           final content = await rootBundle.loadString(assetPath);
           final fileName = assetPath.split('/').last;
@@ -267,9 +284,15 @@ class FormGearDownloadManager {
           localFile.writeAsStringSync(content);
           filesDownloaded++;
 
+          // Report progress
+          if (onProgress != null) {
+            final progress = (filesDownloaded / totalFiles * 100).round();
+            onProgress(progress, totalFiles);
+          }
+
           FormGearLogger.sdk(
             'Downloaded engine file: $fileName for engine $engineId '
-            '(${content.length} chars)',
+            '(${content.length} chars) - Progress: $filesDownloaded/$totalFiles',
           );
         } on Exception catch (e) {
           final fileName = assetPath.split('/').last;
