@@ -12,6 +12,7 @@ dependencies:
   alice_dio: ^1.0.7
   archive: ^4.0.7
   camera: ^0.11.2
+  crypto: ^3.0.5
   dio: ^5.7.0
   equatable: ^2.0.7
   file_picker: ^10.3.3
@@ -54,6 +55,10 @@ flutter:
     - assets/js/android_bridge.js
     - assets/vendor/jquery-3.5.1.js
     - assets/logo/form-gear.svg
+    # FASIH client default data assets (exact structure from FASIH)
+    - assets/client/formgear/response.json
+    - assets/client/formgear/media.json
+    - assets/client/formgear/reference.json
 #
 # For details regarding assets in packages, see
 # https://flutter.dev/to/asset-from-package
