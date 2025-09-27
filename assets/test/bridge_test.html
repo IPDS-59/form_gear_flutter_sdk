@@ -214,7 +214,8 @@
                     'getReference', 'getTemplate', 'getPreset', 'getResponse', 'getValidation',
                     'getMedia', 'getRemark', 'getUserName', 'getFormMode', 'getIsNew',
                     'getPrincipalCollection', 'getRolePetugas', 'getUserRole',
-                    'action', 'execute', 'saveOrSubmit', 'saveOrSubmitFasihForm', 'mobileExit'
+                    'action', 'execute', 'saveOrSubmit', 'saveOrSubmitFasihForm', 'mobileExit',
+                    'cameraHandler', 'fileUploadHandler', 'gpsHandler', 'openMap', 'setResponseMobile', 'setSubmitMobile'
                 ];
                 console.log('Available Android methods:', availableHandlers);
 
@@ -245,6 +246,9 @@
                 h.includes('submit') || h.includes('Save') || h.includes('saveOr')
             );
             const exitHandlers = availableHandlers.filter(h => h === 'mobileExit');
+            const clientActionHandlers = availableHandlers.filter(h =>
+                ['cameraHandler', 'fileUploadHandler', 'gpsHandler', 'openMap', 'setResponseMobile', 'setSubmitMobile'].includes(h)
+            );
 
             if (dataHandlers.length > 0) {
                 const dataSection = createHandlerSection('📊 Data Methods', dataHandlers);
@@ -263,6 +267,11 @@
             if (exitHandlers.length > 0) {
                 const exitSection = createHandlerSection('🚪 Exit/Navigation Methods', exitHandlers);
                 container.appendChild(exitSection);
+            }
+
+            if (clientActionHandlers.length > 0) {
+                const clientSection = createHandlerSection('🎯 Client Action Methods', clientActionHandlers);
+                container.appendChild(clientSection);
             }
 
             // Show total count
@@ -407,6 +416,24 @@
                 } else if (methodName === 'mobileExit') {
                     // Mobile exit method - no arguments needed
                     result = await window.Android[methodName]();
+                } else if (methodName === 'cameraHandler') {
+                    // Camera handler - needs callback and filename
+                    result = await window.Android[methodName](function() {}, 'test_camera_' + Date.now());
+                } else if (methodName === 'fileUploadHandler') {
+                    // File upload handler - needs file data and callback
+                    result = await window.Android[methodName]({name: 'test.jpg', size: 1024}, function() {}, false);
+                } else if (methodName === 'gpsHandler') {
+                    // GPS handler - needs callback function
+                    result = await window.Android[methodName](function(location) { console.log('GPS:', location); });
+                } else if (methodName === 'openMap') {
+                    // Open map - needs coordinates
+                    result = await window.Android[methodName]('-6.2088,106.8456');
+                } else if (methodName === 'setResponseMobile') {
+                    // Set response mobile - needs 5 JSON parameters
+                    result = await window.Android[methodName]('{}', '{}', '{}', '{}', '{}');
+                } else if (methodName === 'setSubmitMobile') {
+                    // Set submit mobile - needs 5 JSON parameters
+                    result = await window.Android[methodName]('{}', '{}', '{}', '{}', '{}');
                 } else {
                     // Data methods - no arguments needed
                     result = await window.Android[methodName]();
@@ -551,6 +578,15 @@
                 displayMessage('🚪 Testing ' + method + '...');
                 await testHandler(method);
                 await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            // Test client action methods
+            for (const method of availableHandlers.filter(h =>
+                ['cameraHandler', 'fileUploadHandler', 'gpsHandler', 'openMap', 'setResponseMobile', 'setSubmitMobile'].includes(h)
+            )) {
+                displayMessage('🎯 Testing ' + method + '...');
+                await testHandler(method);
+                await new Promise(resolve => setTimeout(resolve, 200));
             }
 
             updateBridgeStatus('success', 'Completed testing all methods and actions');
