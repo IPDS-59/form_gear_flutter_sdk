@@ -44,31 +44,11 @@ class AndroidActionHandler {
   onSaveOrSubmitFasihForm;
 
   /// Creates individual JSHandlers for each Android action method
+  /// Note: 'action' and 'execute' handlers are provided by dedicated classes
   List<JSHandler<JsonCodable>> createHandlers() {
     return [
-      _AndroidActionMethodHandler('action', (args) async {
-        if (args.length >= 3) {
-          final result = await onAction?.call(
-            args[0].toString(),
-            args[1].toString(),
-            args[2].toString(),
-            args.length > 3 ? args[3].toString() : null,
-          );
-          return ActionInfoJs(success: true, result: result);
-        }
-        return ActionInfoJs(success: false, error: 'Invalid arguments');
-      }),
-      _AndroidActionMethodHandler('execute', (args) async {
-        if (args.length >= 3) {
-          final result = await onExecute?.call(
-            args[0].toString(),
-            args[1].toString(),
-            args[2].toString(),
-          );
-          return ActionInfoJs(success: true, result: result);
-        }
-        return ActionInfoJs(success: false, error: 'Invalid arguments');
-      }),
+      // Removed 'action' handler - provided by ActionHandler class instead
+      // Removed 'execute' handler - provided by ExecuteHandler class instead
       _AndroidActionMethodHandler('saveOrSubmit', (args) async {
         if (args.length >= 6) {
           final result = await onSaveOrSubmit?.call(

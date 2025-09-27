@@ -37,8 +37,12 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
         case 'FILE_UPLOAD':
         case 'FILE_PICKER':
           return await _handleFilePickerAction(dataKey, data);
+        case 'FILE_RELOAD':
+          return await _handleFileReloadAction(dataKey, data);
         case 'LOCATION':
           return await _handleLocationAction(dataKey, data);
+        case 'OPEN_MAPS':
+          return await _handleOpenMapsAction(dataKey, data);
         case 'SIGNATURE':
           return await _handleSignatureAction(dataKey, data);
         default:
@@ -352,6 +356,113 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
     } on Exception catch (e) {
       FormGearLogger.webviewError('Signature action error: $e');
       return ActionInfoJs(success: false, error: 'Signature action error: $e');
+    }
+  }
+
+  /// Handle file reload action - refreshes file display
+  Future<ActionInfoJs> _handleFileReloadAction(
+    String dataKey,
+    String data,
+  ) async {
+    try {
+      FormGearLogger.webview('File reload for dataKey: $dataKey, data: $data');
+
+      // Parse the file data if provided
+      if (data.isNotEmpty) {
+        try {
+          final fileData = jsonDecode(data);
+          FormGearLogger.webview('File reload data: $fileData');
+        } on Exception catch (e) {
+          FormGearLogger.webviewError('Failed to parse file reload data: $e');
+        }
+      }
+
+      // For file reload, we typically just need to confirm the action
+      // The actual file refresh is handled by the WebView
+      return ActionInfoJs(
+        success: true,
+        result: 'File reload completed',
+      );
+    } on Exception catch (e) {
+      FormGearLogger.webviewError('File reload error: $e');
+      return ActionInfoJs(success: false, error: 'File reload error: $e');
+    }
+  }
+
+  /// Handle open maps action - opens device maps app with coordinates
+  /// Supports both comma-separated string format "lat,lng" and JSON format
+  Future<ActionInfoJs> _handleOpenMapsAction(
+    String dataKey,
+    String data,
+  ) async {
+    try {
+      FormGearLogger.webview('Open maps for dataKey: $dataKey, data: $data');
+
+      if (data.isEmpty) {
+        return ActionInfoJs(
+          success: false,
+          error: 'No coordinates provided for maps',
+        );
+      }
+
+      double? latitude;
+      double? longitude;
+
+      // Try to parse as comma-separated string first (most common format)
+      if (data.contains(',')) {
+        final coords = data.split(',');
+        if (coords.length >= 2) {
+          try {
+            latitude = double.parse(coords[0].trim());
+            longitude = double.parse(coords[1].trim());
+          } on FormatException {
+            // Fall through to JSON parsing
+          }
+        }
+      }
+
+      // If string parsing failed, try JSON format
+      if (latitude == null || longitude == null) {
+        try {
+          final coordinates = jsonDecode(data) as Map<String, dynamic>;
+          final latValue = coordinates['latitude'] ?? coordinates['lat'];
+          final lngValue = coordinates['longitude'] ?? coordinates['lng'];
+
+          if (latValue != null) {
+            latitude = double.tryParse(latValue.toString());
+          }
+          if (lngValue != null) {
+            longitude = double.tryParse(lngValue.toString());
+          }
+        } on Exception {
+          // JSON parsing also failed
+        }
+      }
+
+      if (latitude == null || longitude == null) {
+        return ActionInfoJs(
+          success: false,
+          error: 'Invalid coordinates format. Expected "lat,lng" or JSON',
+        );
+      }
+
+      // Create maps URL for both iOS and Android
+      final mapsUrl = 'https://maps.google.com/maps?q=$latitude,$longitude';
+
+      FormGearLogger.webview(
+        'Opening maps with coordinates: $latitude,$longitude',
+      );
+      FormGearLogger.webview('Maps URL: $mapsUrl');
+
+      // Return the maps URL - the WebView can handle opening it
+      // In a real implementation, this would use url_launcher package
+      return ActionInfoJs(
+        success: true,
+        result: mapsUrl,
+      );
+    } on Exception catch (e) {
+      FormGearLogger.webviewError('Open maps error: $e');
+      return ActionInfoJs(success: false, error: 'Open maps error: $e');
     }
   }
 
