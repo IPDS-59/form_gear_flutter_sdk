@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
+import 'package:form_gear_engine_sdk/src/presentation/screens/form_engine_update_screen.dart';
 import 'template_selection_screen.dart';
 
 class FormEngineSelectionScreen extends StatefulWidget {
@@ -36,33 +37,47 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
   Future<void> _loadAvailableEngines() async {
     try {
       final engines = <FormEngineMetadata>[];
+      final engineConfigs = [
+        {
+          'id': '1',
+          'name': 'FormGear Engine',
+          'defaultVersion': '1.0',
+          'type': 'FormGear',
+          'description': 'Original FormGear Engine with ES6 modules',
+          'jsFile': 'form-gear.es.js',
+        },
+        {
+          'id': '2',
+          'name': 'FasihForm Engine',
+          'defaultVersion': '2.0',
+          'type': 'FasihForm',
+          'description': 'Enhanced FasihForm with improved validation',
+          'jsFile': 'fasih-form.es.js',
+        },
+      ];
 
-      // Check for FormGear Engine v1
-      if (await downloadManager.isEngineDownloaded('1')) {
-        engines.add(
-          const FormEngineMetadata(
-            id: '1',
-            name: 'FormGear Engine',
-            version: '1.0',
-            type: 'FormGear',
-            description: 'Original FormGear Engine with ES6 modules',
-            jsFile: 'form-gear.es.js',
-          ),
-        );
-      }
+      for (final config in engineConfigs) {
+        // Get actual version from local version.json if available
+        String version = config['defaultVersion'] as String;
+        try {
+          final localVersion = await downloadManager.getLocalFormEngineVersion(
+            config['id'] as String,
+          );
+          if (localVersion != null) {
+            version = localVersion;
+          }
+        } catch (e) {
+          debugPrint('Could not get local version for engine ${config['id']}: $e');
+        }
 
-      // Check for FasihForm Engine v2
-      if (await downloadManager.isEngineDownloaded('2')) {
-        engines.add(
-          const FormEngineMetadata(
-            id: '2',
-            name: 'FasihForm Engine',
-            version: '2.0',
-            type: 'FasihForm',
-            description: 'Enhanced FasihForm with improved validation',
-            jsFile: 'fasih-form.es.js',
-          ),
-        );
+        engines.add(FormEngineMetadata(
+          id: config['id'] as String,
+          name: config['name'] as String,
+          version: version,
+          type: config['type'] as String,
+          description: config['description'] as String,
+          jsFile: config['jsFile'] as String,
+        ));
       }
 
       if (mounted) {
@@ -141,26 +156,41 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
               itemCount: availableEngines.length,
               itemBuilder: (context, index) {
                 final engine = availableEngines[index];
+                final isDownloaded = downloadedEngines.contains(engine.id);
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
                     leading: Icon(
-                      Icons.engineering,
-                      color: engine.type == 'FormGear'
-                          ? Colors.blue
-                          : Colors.green,
+                      isDownloaded
+                          ? Icons.engineering
+                          : Icons.download_outlined,
+                      color: isDownloaded
+                          ? (engine.type == 'FormGear'
+                                ? Colors.blue
+                                : Colors.green)
+                          : Colors.grey,
                       size: 32,
                     ),
                     title: Text(
                       '${engine.name} v${engine.version}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: isDownloaded ? null : Colors.grey[600],
+                      ),
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(engine.description),
+                        Text(
+                          engine.description,
+                          style: TextStyle(
+                            color: isDownloaded ? null : Colors.grey[500],
+                          ),
+                        ),
                         const SizedBox(height: 4),
-                        Row(
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -168,42 +198,78 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: engine.type == 'FormGear'
-                                    ? Colors.blue[100]
-                                    : Colors.green[100],
+                                color: isDownloaded
+                                    ? (engine.type == 'FormGear'
+                                          ? Colors.blue[100]
+                                          : Colors.green[100])
+                                    : Colors.grey[100],
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
                                 engine.type,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: engine.type == 'FormGear'
-                                      ? Colors.blue[800]
-                                      : Colors.green[800],
+                                  color: isDownloaded
+                                      ? (engine.type == 'FormGear'
+                                            ? Colors.blue[800]
+                                            : Colors.green[800])
+                                      : Colors.grey[600],
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            if (!isDownloaded)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange[100],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'Belum Diunduh',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.orange[800],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
                             Text(
                               engine.jsFile,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey,
+                                color: isDownloaded
+                                    ? Colors.grey
+                                    : Colors.grey[400],
                               ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       ],
                     ),
-                    trailing: const Icon(Icons.arrow_forward_ios),
-                    onTap: () => _navigateToTemplateSelection(engine),
+                    trailing: Icon(
+                      isDownloaded ? Icons.arrow_forward_ios : Icons.download,
+                      color: isDownloaded ? null : Colors.orange,
+                    ),
+                    onTap: () => _handleEngineTap(engine, isDownloaded),
                     isThreeLine: true,
                   ),
                 );
               },
             ),
     );
+  }
+
+  void _handleEngineTap(FormEngineMetadata engine, bool isDownloaded) {
+    if (isDownloaded) {
+      _navigateToTemplateSelection(engine);
+    } else {
+      _showForceUpdateScreen(engine);
+    }
   }
 
   void _navigateToTemplateSelection(FormEngineMetadata engine) {
@@ -216,6 +282,53 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _showForceUpdateScreen(FormEngineMetadata engine) async {
+    final formEngine = FormEngineEntity(
+      formEngineId: int.parse(engine.id),
+      version: engine.version,
+      isForce: true, // Force download from bundled assets
+      linkDownload: 'bundled://assets/${engine.jsFile}',
+    );
+
+    final versionResult = VersionCheckResult(
+      state: VersionState.missing,
+      formEngine: formEngine,
+      localVersion: null,
+      remoteVersion: engine.version,
+    );
+
+    await FormEngineUpdateScreen.show(
+      context: context,
+      versionResult: versionResult,
+      onDownload: () => _downloadFromBundledAssets(engine),
+    );
+
+    // Refresh the engines list after potential download
+    await _loadEngines();
+  }
+
+  Future<void> _downloadFromBundledAssets(FormEngineMetadata engine) async {
+    debugPrint('Starting download for engine ${engine.id}');
+
+    try {
+      // Use the actual download manager to download the form engine
+      final success = await downloadManager.downloadFormEngine(engine.id);
+
+      if (success) {
+        debugPrint('Successfully downloaded ${engine.name} v${engine.version}');
+
+        // Refresh the downloaded engines list
+        await _loadDownloadedEngines();
+      } else {
+        debugPrint('Failed to download ${engine.name} v${engine.version}');
+        throw Exception('Download failed for ${engine.name}');
+      }
+    } catch (e) {
+      debugPrint('Error downloading engine: $e');
+      rethrow;
+    }
   }
 }
 
