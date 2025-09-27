@@ -334,6 +334,46 @@ jobs:
 
           echo "✅ GitHub Release created: $VERSION"
 
+      - name: Setup Java for Android build
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build example APK for release
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+          ENDPOINT_VERIFY_VERSION: ${{ secrets.ENDPOINT_VERIFY_VERSION }}
+          ENDPOINT_TEMPLATE_ZIP: ${{ secrets.ENDPOINT_TEMPLATE_ZIP }}
+          ENDPOINT_LOOKUP: ${{ secrets.ENDPOINT_LOOKUP }}
+          WILKERSTAT_BPS_KEY: ${{ secrets.WILKERSTAT_BPS_KEY }}
+          WILKERSTAT_TOKEN: ${{ secrets.WILKERSTAT_TOKEN }}
+        run: |
+          echo "🔨 Building example APK for release..."
+          cd example
+
+          # Prepare .env file from template
+          echo "📝 Setting up environment configuration..."
+          cp .env.example .env
+
+          # Replace placeholders with actual values from secrets
+          sed -i "s|BASE_URL=.*|BASE_URL=$BASE_URL|g" .env
+          sed -i "s|ENDPOINT_VERIFY_VERSION=.*|ENDPOINT_VERIFY_VERSION=$ENDPOINT_VERIFY_VERSION|g" .env
+          sed -i "s|ENDPOINT_TEMPLATE_ZIP=.*|ENDPOINT_TEMPLATE_ZIP=$ENDPOINT_TEMPLATE_ZIP|g" .env
+          sed -i "s|ENDPOINT_LOOKUP=.*|ENDPOINT_LOOKUP=$ENDPOINT_LOOKUP|g" .env
+          sed -i "s|WILKERSTAT_BPS_KEY=.*|WILKERSTAT_BPS_KEY=$WILKERSTAT_BPS_KEY|g" .env
+          sed -i "s|WILKERSTAT_TOKEN=.*|WILKERSTAT_TOKEN=$WILKERSTAT_TOKEN|g" .env
+
+          # Get dependencies and generate code
+          flutter pub get
+          dart run build_runner build -d
+
+          # Build release APK
+          flutter build apk --release
+
+          # Move APK to assets directory (will be created in next step)
+          echo "📱 APK built successfully"
+
       - name: Create release assets
         run: |
           VERSION="${{ needs.validate-package.outputs.version }}"
@@ -341,6 +381,9 @@ jobs:
 
           echo "📦 Creating release assets..."
           mkdir -p release_assets
+
+          # Copy example APK to release assets
+          cp example/build/app/outputs/flutter-apk/app-release.apk "release_assets/form-gear-sdk-example-v$CLEAN_VERSION.apk"
 
           # Create package archive
           tar -czf "release_assets/form_gear_engine_sdk-$CLEAN_VERSION.tar.gz" \
@@ -379,6 +422,16 @@ jobs:
           \`\`\`dart
           import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
           \`\`\`
+
+          ## Example App
+          This release includes a demo APK: \`form-gear-sdk-example-v$CLEAN_VERSION.apk\`
+
+          The example app demonstrates:
+          - Form engine configuration and initialization
+          - Version management and download flows
+          - Clean architecture patterns
+          - Endpoint testing capabilities
+          - Force update screens with animations
 
           ## Links
           - [pub.dev Package](https://pub.dev/packages/form_gear_engine_sdk)
