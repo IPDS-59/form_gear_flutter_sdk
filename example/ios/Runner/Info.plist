@@ -45,25 +45,6 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>fasih-sso-internal</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>id.go.bps</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>fasih-sso-eksternal</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>id.go.bps</string>
-			</array>
-		</dict>
-	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
