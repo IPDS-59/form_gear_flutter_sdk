@@ -1,0 +1,16 @@
+{
+    "details":[
+        {
+            "dataKey": "default_reference",
+            "label": "Default Reference",
+            "value": ""
+        }
+    ],
+    "sidebar":[
+        {
+            "dataKey": "default_sidebar",
+            "label": "Default Sidebar",
+            "value": ""
+        }
+    ]
+}

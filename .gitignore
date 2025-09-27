@@ -29,3 +29,9 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 /build/
 /coverage/
+/generated_html/
+
+# Documentation and analysis files
+CLAUDE.md
+FASIH_INTEGRATION_ANALYSIS.md
+FULL_LOG.txt

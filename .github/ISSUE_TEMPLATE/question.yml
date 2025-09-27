@@ -1,0 +1,102 @@
+name: ❓ Question or Support
+description: Ask a question about using FormGear Engine SDK
+title: "[QUESTION] "
+labels: ["question", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about using FormGear Engine SDK? We're here to help!
+
+        **Before asking**: Please check the documentation, README, and existing issues first.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission checklist
+      description: Please check the following before asking
+      options:
+        - label: I have searched existing issues for similar questions
+          required: true
+        - label: I have read the documentation and README
+          required: true
+        - label: I have tried to solve this issue myself first
+          required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Question Category
+      description: What type of question is this?
+      options:
+        - Getting started / Setup
+        - Integration with FASIH
+        - WebView and JavaScript bridge
+        - Form engine configuration
+        - API usage
+        - Best practices
+        - Troubleshooting
+        - Performance
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+      placeholder: Please describe your question clearly...
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Provide context about what you're trying to accomplish
+      placeholder: |
+        What are you trying to build or accomplish?
+        What have you already tried?
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment (if relevant)
+      description: Your development environment details
+      value: |
+        - FormGear Engine SDK version:
+        - Flutter version:
+        - Platform: [iOS/Android/Web]
+        - Integration: [FASIH/Standalone/Other]
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Relevant Code (if any)
+      description: Share any relevant code snippets
+      render: dart
+      placeholder: |
+        // Share your relevant code here
+        import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
+
+  - type: textarea
+    id: attempts
+    attributes:
+      label: What Have You Tried?
+      description: What solutions have you already attempted?
+      placeholder: |
+        - Tried approach A, but got result X
+        - Looked at documentation section Y
+        - Found similar issue #123 but it didn't apply
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Information
+      description: Any other details that might be helpful
+      placeholder: Screenshots, error messages, links to related documentation, etc.
