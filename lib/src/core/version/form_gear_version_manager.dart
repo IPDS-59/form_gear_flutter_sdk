@@ -200,7 +200,6 @@ class FormGearVersionManager {
     );
   }
 
-
   /// Performs the actual form engine download and ZIP extraction
   /// Following FASIH's workflow: download ZIP -> extract -> save version
   Future<void> _performFormEngineDownload(

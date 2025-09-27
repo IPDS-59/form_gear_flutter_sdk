@@ -754,7 +754,9 @@ class _EnhancedDownloadDemoPageState extends State<EnhancedDownloadDemoPage> {
                       decoration: BoxDecoration(
                         color: engineColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: engineColor.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: engineColor.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Text(
                         'Engine ID: ${engine.id}',

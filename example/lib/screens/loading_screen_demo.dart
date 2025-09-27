@@ -19,16 +19,15 @@ class _LoadingScreenDemoState extends State<LoadingScreenDemo> {
   }
 
   void _startProgressSimulation() {
-    _progressStream = Stream.periodic(
-      const Duration(milliseconds: 100),
-      (tick) {
-        final progress = (tick * 2).clamp(0, 100);
-        if (progress >= 100) {
-          return 100;
-        }
-        return progress;
-      },
-    ).take(51); // 51 ticks to reach 100
+    _progressStream = Stream.periodic(const Duration(milliseconds: 100), (
+      tick,
+    ) {
+      final progress = (tick * 2).clamp(0, 100);
+      if (progress >= 100) {
+        return 100;
+      }
+      return progress;
+    }).take(51); // 51 ticks to reach 100
 
     _progressStream.listen((progress) {
       if (mounted) {

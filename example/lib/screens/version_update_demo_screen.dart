@@ -12,9 +12,7 @@ class VersionUpdateDemoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Version Update Demo'),
-      ),
+      appBar: AppBar(title: const Text('Version Update Demo')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -25,89 +23,81 @@ class VersionUpdateDemoScreen extends StatelessWidget {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
-            _buildDemoSection(
-              context,
-              'Form Engine Updates',
-              [
-                _buildDemoCard(
+            _buildDemoSection(context, 'Form Engine Updates', [
+              _buildDemoCard(
+                context,
+                'Missing Engine (Forced)',
+                'Show forced download for missing form engine',
+                () => _showFormEngineUpdate(
                   context,
-                  'Missing Engine (Forced)',
-                  'Show forced download for missing form engine',
-                  () => _showFormEngineUpdate(
-                    context,
-                    VersionCheckResult(
-                      state: VersionState.missing,
-                      formEngine: _createMockFormEngine(isForced: true),
-                      remoteVersion: '2.1.0',
-                    ),
+                  VersionCheckResult(
+                    state: VersionState.missing,
+                    formEngine: _createMockFormEngine(isForced: true),
+                    remoteVersion: '2.1.0',
                   ),
                 ),
-                _buildDemoCard(
+              ),
+              _buildDemoCard(
+                context,
+                'Outdated Engine (Optional)',
+                'Show optional update for outdated form engine',
+                () => _showFormEngineUpdate(
                   context,
-                  'Outdated Engine (Optional)',
-                  'Show optional update for outdated form engine',
-                  () => _showFormEngineUpdate(
-                    context,
-                    VersionCheckResult(
-                      state: VersionState.outdated,
-                      formEngine: _createMockFormEngine(isForced: false),
-                      localVersion: '1.5.0',
-                      remoteVersion: '2.1.0',
-                    ),
+                  VersionCheckResult(
+                    state: VersionState.outdated,
+                    formEngine: _createMockFormEngine(isForced: false),
+                    localVersion: '1.5.0',
+                    remoteVersion: '2.1.0',
                   ),
                 ),
-                _buildDemoCard(
+              ),
+              _buildDemoCard(
+                context,
+                'Current Engine',
+                'Show re-download option for current engine',
+                () => _showFormEngineUpdate(
                   context,
-                  'Current Engine',
-                  'Show re-download option for current engine',
-                  () => _showFormEngineUpdate(
-                    context,
-                    VersionCheckResult(
-                      state: VersionState.current,
-                      formEngine: _createMockFormEngine(isForced: false),
-                      localVersion: '2.1.0',
-                      remoteVersion: '2.1.0',
-                    ),
+                  VersionCheckResult(
+                    state: VersionState.current,
+                    formEngine: _createMockFormEngine(isForced: false),
+                    localVersion: '2.1.0',
+                    remoteVersion: '2.1.0',
                   ),
                 ),
-              ],
-            ),
+              ),
+            ]),
             const SizedBox(height: 24),
-            _buildDemoSection(
-              context,
-              'Template Updates',
-              [
-                _buildDemoCard(
+            _buildDemoSection(context, 'Template Updates', [
+              _buildDemoCard(
+                context,
+                'Missing Template (Forced)',
+                'Show forced download for missing template',
+                () => _showTemplateUpdate(
                   context,
-                  'Missing Template (Forced)',
-                  'Show forced download for missing template',
-                  () => _showTemplateUpdate(
-                    context,
-                    VersionCheckResult(
-                      state: VersionState.missing,
-                      formEngine: _createMockFormEngine(isForced: true),
-                      remoteVersion: '1.2.0',
-                    ),
-                    'Survey Template',
+                  VersionCheckResult(
+                    state: VersionState.missing,
+                    formEngine: _createMockFormEngine(isForced: true),
+                    remoteVersion: '1.2.0',
                   ),
+                  'Survey Template',
                 ),
-                _buildDemoCard(
+              ),
+              _buildDemoCard(
+                context,
+                'Outdated Template (Optional)',
+                'Show optional update for outdated template',
+                () => _showTemplateUpdate(
                   context,
-                  'Outdated Template (Optional)',
-                  'Show optional update for outdated template',
-                  () => _showTemplateUpdate(
-                    context,
-                    VersionCheckResult(
-                      state: VersionState.outdated,
-                      formEngine: _createMockFormEngine(isForced: false),
-                      localVersion: '1.0.0',
-                      remoteVersion: '1.2.0',
-                    ),
-                    'Registration Form',
+                  VersionCheckResult(
+                    state: VersionState.outdated,
+                    formEngine: _createMockFormEngine(isForced: false),
+                    localVersion: '1.0.0',
+                    remoteVersion: '1.2.0',
                   ),
+                  'Registration Form',
                 ),
-              ],
-            ),
+              ),
+            ]),
           ],
         ),
       ),
@@ -124,9 +114,9 @@ class VersionUpdateDemoScreen extends StatelessWidget {
       children: [
         Text(
           title,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
         ...children,

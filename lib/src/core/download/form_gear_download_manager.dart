@@ -275,7 +275,7 @@ class FormGearDownloadManager {
       var filesDownloaded = 0;
       final totalFiles = assetPaths.length;
 
-      for (int i = 0; i < assetPaths.length; i++) {
+      for (var i = 0; i < assetPaths.length; i++) {
         final assetPath = assetPaths[i];
         try {
           final content = await rootBundle.loadString(assetPath);
