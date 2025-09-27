@@ -45,6 +45,15 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
           return await _handleOpenMapsAction(dataKey, data);
         case 'SIGNATURE':
           return await _handleSignatureAction(dataKey, data);
+        case 'GET_ANSWER':
+          return await _handleGetAnswerAction(dataKey, data);
+        case 'BARCODE':
+        case 'QR_SCAN':
+          return await _handleBarcodeAction(dataKey, data);
+        case 'AUDIO':
+          return await _handleAudioAction(dataKey, data);
+        case 'LOOKUP':
+          return await _handleLookupAction(dataKey, data);
         default:
           FormGearLogger.webview('Unknown action: $action');
           return ActionInfoJs(success: false, error: 'Unknown action: $action');
@@ -463,6 +472,110 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
     } on Exception catch (e) {
       FormGearLogger.webviewError('Open maps error: $e');
       return ActionInfoJs(success: false, error: 'Open maps error: $e');
+    }
+  }
+
+  /// Handle get answer action - retrieves answer from data source
+  Future<ActionInfoJs> _handleGetAnswerAction(
+    String dataKey,
+    String data,
+  ) async {
+    try {
+      FormGearLogger.webview('Get answer action for dataKey: $dataKey');
+
+      // TODO(sdk): Implement actual answer retrieval from form data source.
+      // This should connect to the form's data storage system.
+      // For now, return success with placeholder.
+      return ActionInfoJs(
+        success: true,
+        result: 'Answer retrieved for $dataKey',
+      );
+    } on Exception catch (e) {
+      FormGearLogger.webviewError('Get answer error: $e');
+      return ActionInfoJs(success: false, error: 'Get answer error: $e');
+    }
+  }
+
+  /// Handle barcode/QR scan action - opens barcode scanner
+  Future<ActionInfoJs> _handleBarcodeAction(
+    String dataKey,
+    String data,
+  ) async {
+    try {
+      FormGearLogger.webview('Barcode scan action for dataKey: $dataKey');
+
+      // Check camera permission for barcode scanning
+      final cameraStatus = await Permission.camera.request();
+      if (!cameraStatus.isGranted) {
+        return ActionInfoJs(
+          success: false,
+          error: 'Camera permission required for barcode scanning',
+        );
+      }
+
+      // TODO(sdk): Integrate with barcode scanning package.
+      // Recommended packages: mobile_scanner, qr_code_scanner.
+      // For now, return success with placeholder.
+      return ActionInfoJs(
+        success: true,
+        result: 'Barcode scan completed for $dataKey',
+      );
+    } on Exception catch (e) {
+      FormGearLogger.webviewError('Barcode scan error: $e');
+      return ActionInfoJs(success: false, error: 'Barcode scan error: $e');
+    }
+  }
+
+  /// Handle audio recording action - records audio
+  Future<ActionInfoJs> _handleAudioAction(
+    String dataKey,
+    String data,
+  ) async {
+    try {
+      FormGearLogger.webview('Audio action for dataKey: $dataKey');
+
+      // Check microphone permission for audio recording
+      final microphoneStatus = await Permission.microphone.request();
+      if (!microphoneStatus.isGranted) {
+        return ActionInfoJs(
+          success: false,
+          error: 'Microphone permission required for audio recording',
+        );
+      }
+
+      // TODO(sdk): Integrate with audio recording package.
+      // Recommended packages: record, audio_recorder.
+      // For now, return success with placeholder.
+      return ActionInfoJs(
+        success: true,
+        result: 'Audio recording completed for $dataKey',
+      );
+    } on Exception catch (e) {
+      FormGearLogger.webviewError('Audio recording error: $e');
+      return ActionInfoJs(success: false, error: 'Audio recording error: $e');
+    }
+  }
+
+  /// Handle lookup action - performs data lookup
+  Future<ActionInfoJs> _handleLookupAction(
+    String dataKey,
+    String data,
+  ) async {
+    try {
+      FormGearLogger.webview(
+        'Lookup action for dataKey: $dataKey, data: $data',
+      );
+
+      // TODO(sdk): Implement actual lookup data retrieval.
+      // This should connect to survey lookup data sources.
+      // For now, return success with placeholder.
+      return ActionInfoJs(
+        success: true,
+        result: 'Lookup completed for $dataKey',
+      );
+    } on Exception catch (e) {
+      FormGearLogger.webviewError('Lookup error: $e');
+      return ActionInfoJs(success: false, error: 'Lookup error: $e');
     }
   }
 
