@@ -78,11 +78,9 @@ class _CleanArchitectureDemoScreenState
     );
 
     // Also update the API config with the new auth token
-    final updatedApiConfig = currentConfig.apiConfig?.copyWith(
-      authToken: token,
-    ) ?? FormGearApiConfig(
-      authToken: token,
-    );
+    final updatedApiConfig =
+        currentConfig.apiConfig?.copyWith(authToken: token) ??
+        FormGearApiConfig(authToken: token);
 
     final updatedConfig = FormGearConfig(
       clientMode: currentConfig.clientMode,
@@ -461,7 +459,8 @@ class _CleanArchitectureDemoScreenState
       final config = FormGearSDK.instance.config;
       final apiConfig = config?.apiConfig;
 
-      if (apiConfig?.baseUrl == null || apiConfig?.templateZipEndpoint == null) {
+      if (apiConfig?.baseUrl == null ||
+          apiConfig?.templateZipEndpoint == null) {
         throw Exception('Template endpoint not configured');
       }
 
