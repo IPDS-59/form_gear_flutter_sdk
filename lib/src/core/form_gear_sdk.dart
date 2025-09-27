@@ -344,6 +344,7 @@ class FormGearSDK {
     // Individual action handlers following web_view pattern
     final actionCameraHandler = ActionHandler();
     final executeHandler = ExecuteHandler();
+    final mobileExitHandler = MobileExitHandler();
 
     // Get only save/submit handlers from the factory
     final saveSubmitHandlers = actionHandler
@@ -359,6 +360,7 @@ class FormGearSDK {
       ...dataHandler.createHandlers(),
       actionCameraHandler, // Individual action handler
       executeHandler, // Individual execute handler
+      mobileExitHandler, // Mobile exit handler
       ...saveSubmitHandlers,
     ];
   }
