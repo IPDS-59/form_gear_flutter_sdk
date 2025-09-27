@@ -142,6 +142,7 @@ jobs:
         echo "🔍 Analyzing example app..."
         cd example
         flutter pub get
+        dart run build_runner build -d
         flutter analyze
 
   test:
