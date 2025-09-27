@@ -93,6 +93,51 @@ jobs:
             echo "⚠️ No tests found, skipping test execution"
           fi
 
+      - name: Setup Java for Android build
+        if: steps.check_tag.outputs.tag_exists == 'false'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build example APK
+        if: steps.check_tag.outputs.tag_exists == 'false'
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+          ENDPOINT_VERIFY_VERSION: ${{ secrets.ENDPOINT_VERIFY_VERSION }}
+          ENDPOINT_TEMPLATE_ZIP: ${{ secrets.ENDPOINT_TEMPLATE_ZIP }}
+          ENDPOINT_LOOKUP: ${{ secrets.ENDPOINT_LOOKUP }}
+          WILKERSTAT_BPS_KEY: ${{ secrets.WILKERSTAT_BPS_KEY }}
+          WILKERSTAT_TOKEN: ${{ secrets.WILKERSTAT_TOKEN }}
+        run: |
+          echo "🔨 Building example APK..."
+          cd example
+
+          # Prepare .env file from template
+          echo "📝 Setting up environment configuration..."
+          cp .env.example .env
+
+          # Replace placeholders with actual values from secrets
+          sed -i "s|BASE_URL=.*|BASE_URL=$BASE_URL|g" .env
+          sed -i "s|ENDPOINT_VERIFY_VERSION=.*|ENDPOINT_VERIFY_VERSION=$ENDPOINT_VERIFY_VERSION|g" .env
+          sed -i "s|ENDPOINT_TEMPLATE_ZIP=.*|ENDPOINT_TEMPLATE_ZIP=$ENDPOINT_TEMPLATE_ZIP|g" .env
+          sed -i "s|ENDPOINT_LOOKUP=.*|ENDPOINT_LOOKUP=$ENDPOINT_LOOKUP|g" .env
+          sed -i "s|WILKERSTAT_BPS_KEY=.*|WILKERSTAT_BPS_KEY=$WILKERSTAT_BPS_KEY|g" .env
+          sed -i "s|WILKERSTAT_TOKEN=.*|WILKERSTAT_TOKEN=$WILKERSTAT_TOKEN|g" .env
+
+          # Get dependencies and generate code
+          flutter pub get
+          dart run build_runner build -d
+
+          # Build release APK
+          flutter build apk --release
+
+          # Rename APK with version for clarity
+          VERSION="${{ steps.version.outputs.clean_version }}"
+          mv build/app/outputs/flutter-apk/app-release.apk ../form-gear-sdk-example-v${VERSION}.apk
+
+          echo "✅ Example APK built successfully: form-gear-sdk-example-v${VERSION}.apk"
+
       - name: Get previous tag for changelog
         id: previous_tag
         run: |
