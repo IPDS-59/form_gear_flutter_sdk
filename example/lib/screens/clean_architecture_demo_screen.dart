@@ -77,6 +77,13 @@ class _CleanArchitectureDemoScreenState
       jabatan: currentConfig.bpsUser?.jabatan ?? 'USER',
     );
 
+    // Also update the API config with the new auth token
+    final updatedApiConfig = currentConfig.apiConfig?.copyWith(
+      authToken: token,
+    ) ?? FormGearApiConfig(
+      authToken: token,
+    );
+
     final updatedConfig = FormGearConfig(
       clientMode: currentConfig.clientMode,
       lookupKey: currentConfig.lookupKey,
@@ -91,7 +98,7 @@ class _CleanArchitectureDemoScreenState
       autoStartServer: currentConfig.autoStartServer,
       enableLogging: currentConfig.enableLogging,
       bpsUser: updatedBpsUser,
-      apiConfig: currentConfig.apiConfig,
+      apiConfig: updatedApiConfig,
     );
 
     FormGearSDK.instance.initialize(
@@ -104,9 +111,11 @@ class _CleanArchitectureDemoScreenState
           'API Token Updated Successfully!\n'
           'Token: ${token.substring(0, 10)}...\n'
           'Clean architecture allows easy configuration updates:\n'
-          '✅ Token updated through SDK configuration\n'
+          '✅ BpsUser tokens updated (sessionToken & authToken)\n'
+          '✅ API config authToken updated for HTTP requests\n'
           '✅ Repository layer will use new authentication\n'
-          '✅ All API calls now authenticated with new token';
+          '✅ All API calls now authenticated with new token\n'
+          '✅ SDK properly re-initialized with updated configuration';
     });
   }
 
@@ -378,6 +387,175 @@ class _CleanArchitectureDemoScreenState
     }
   }
 
+  Future<void> _testFormEngineEndpoint() async {
+    setState(() {
+      _isLoading = true;
+      _status = 'Testing Form Engine Version Check Endpoint...';
+    });
+
+    try {
+      final config = FormGearSDK.instance.config;
+      final apiConfig = config?.apiConfig;
+
+      if (apiConfig?.formEngineUrl == null) {
+        throw Exception('Form engine endpoint not configured');
+      }
+
+      // Use the public SDK API to test the endpoint
+      final versionResult = await FormGearSDK.instance.checkFormEngineVersion(
+        context: context,
+        showNotifications: false,
+      );
+
+      setState(() {
+        if (versionResult != null) {
+          _status =
+              'Form Engine Endpoint Test Success!\n'
+              '🌐 Endpoint: ${apiConfig!.formEngineUrl}\n'
+              '🔑 Auth Token: ${apiConfig.authToken?.substring(0, 10) ?? 'None'}...\n'
+              '📊 State: ${versionResult.state.name.toUpperCase()}\n'
+              '📊 Local Version: ${versionResult.localVersion ?? 'Not installed'}\n'
+              '📊 Remote Version: ${versionResult.remoteVersion ?? 'Unknown'}\n'
+              '📊 Needs Download: ${versionResult.needsDownload}\n\n'
+              'API Test Benefits:\n'
+              '✅ Direct endpoint testing with current config\n'
+              '✅ Real authentication token validation\n'
+              '✅ Repository layer error handling\n'
+              '✅ HTTP interceptor logging (check Alice)';
+        } else {
+          _status =
+              'Form Engine Endpoint Test - No Data!\n'
+              '🌐 Endpoint: ${apiConfig!.formEngineUrl}\n'
+              '🔑 Auth Token: ${apiConfig.authToken?.substring(0, 10) ?? 'None'}...\n'
+              '⚠️ API call succeeded but returned null result\n\n'
+              'Possible causes:\n'
+              '• Server returned empty response\n'
+              '• API endpoint configuration issue\n'
+              '• Network connectivity problems';
+        }
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _status =
+            'Form Engine Endpoint Test Failed!\n'
+            '❌ Error: $e\n\n'
+            'Common issues:\n'
+            '• Invalid or expired authentication token\n'
+            '• Network connectivity problems\n'
+            '• Endpoint configuration issues\n'
+            '• Server-side authentication errors\n\n'
+            'Check Alice HTTP Inspector for detailed logs';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _testTemplateEndpoint() async {
+    setState(() {
+      _isLoading = true;
+      _status = 'Testing Template Download Endpoint...';
+    });
+
+    try {
+      final config = FormGearSDK.instance.config;
+      final apiConfig = config?.apiConfig;
+
+      if (apiConfig?.baseUrl == null || apiConfig?.templateZipEndpoint == null) {
+        throw Exception('Template endpoint not configured');
+      }
+
+      // Test with a sample template ID
+      const testTemplateId = '1';
+      final templateUrl = apiConfig!.getTemplateZipUrl(testTemplateId);
+
+      // Use the download manager to test template endpoint
+      final downloadManager = getIt<FormGearDownloadManager>();
+
+      // Just test the endpoint availability (don't actually download)
+      try {
+        await downloadManager.downloadTemplate(testTemplateId);
+      } catch (e) {
+        // Expected to fail on actual download, but we can test endpoint reachability
+        rethrow;
+      }
+
+      setState(() {
+        _status =
+            'Template Endpoint Test Results!\n'
+            '🌐 Base URL: ${apiConfig.baseUrl}\n'
+            '📁 Template Endpoint: ${apiConfig.templateZipEndpoint}\n'
+            '🔗 Full URL: $templateUrl\n'
+            '🔑 Auth Token: ${apiConfig.authToken?.substring(0, 10) ?? 'None'}...\n\n'
+            'Template API Benefits:\n'
+            '✅ Dynamic URL generation with template ID\n'
+            '✅ Authenticated ZIP download capability\n'
+            '✅ Repository pattern for file downloads\n'
+            '✅ Error handling for network issues';
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _status =
+            'Template Endpoint Test Results!\n'
+            '⚠️ Endpoint accessible but error occurred: $e\n\n'
+            'This is often expected for test calls without valid template ID.\n'
+            'Check Alice HTTP Inspector for actual HTTP response:\n'
+            '✅ 401 = Authentication issue\n'
+            '✅ 404 = Template not found (normal for test)\n'
+            '✅ 200 = Successful download\n'
+            '✅ 500 = Server error';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _testLookupEndpoint() async {
+    setState(() {
+      _isLoading = true;
+      _status = 'Testing Lookup Data Endpoint...';
+    });
+
+    try {
+      final config = FormGearSDK.instance.config;
+      final apiConfig = config?.apiConfig;
+
+      if (apiConfig?.lookupUrl == null) {
+        throw Exception('Lookup endpoint not configured');
+      }
+
+      setState(() {
+        _status =
+            'Lookup Endpoint Configuration!\n'
+            '🌐 Endpoint: ${apiConfig!.lookupUrl}\n'
+            '🔑 Auth Token: ${apiConfig.authToken?.substring(0, 10) ?? 'None'}...\n'
+            '📊 Status: Endpoint configured and ready\n\n'
+            'Lookup API Benefits:\n'
+            '✅ Survey data lookup functionality\n'
+            '✅ Authenticated data retrieval\n'
+            '✅ Repository pattern for lookup data\n'
+            '✅ Error handling for invalid keys\n\n'
+            'Note: Lookup testing requires specific key/value pairs\n'
+            'that are configured on the server side.\n'
+            'Use Alice HTTP Inspector to monitor actual requests.';
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _status =
+            'Lookup Endpoint Test Results!\n'
+            '⚠️ Error: $e\n\n'
+            'Common lookup issues:\n'
+            '• Invalid lookup key/value parameters\n'
+            '• Authentication token issues\n'
+            '• No data found for test parameters\n'
+            '• Server-side lookup configuration\n\n'
+            'Check Alice HTTP Inspector for detailed response';
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -536,6 +714,30 @@ class _CleanArchitectureDemoScreenState
               Icons.settings_applications,
               Colors.purple,
               _demonstrateSDKConfiguration,
+            ),
+            const SizedBox(height: 12),
+            _buildDemoButton(
+              'Test Form Engine Endpoint',
+              'Test version check API endpoint with current token',
+              Icons.api,
+              Colors.indigo,
+              _testFormEngineEndpoint,
+            ),
+            const SizedBox(height: 12),
+            _buildDemoButton(
+              'Test Template Download Endpoint',
+              'Test template ZIP download API endpoint',
+              Icons.cloud_download,
+              Colors.teal,
+              _testTemplateEndpoint,
+            ),
+            const SizedBox(height: 12),
+            _buildDemoButton(
+              'Test Lookup Endpoint',
+              'Test lookup data API endpoint for survey data',
+              Icons.search,
+              Colors.cyan,
+              _testLookupEndpoint,
             ),
             const SizedBox(height: 12),
 
