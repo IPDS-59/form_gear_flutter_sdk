@@ -317,7 +317,7 @@ EOF
 EOF
 
   # Parse LCOV file for per-file coverage
-  awk -v base_dir="$(pwd)" '
+  awk '
   BEGIN {
     file = "";
     lines_found = 0; lines_hit = 0;
@@ -328,13 +328,15 @@ EOF
       line_coverage = (lines_hit / lines_found) * 100;
       func_coverage = (funcs_found > 0) ? (funcs_hit / funcs_found) * 100 : 0;
 
-      # Shorten path
+      # Extract display filename
       display_file = file;
-      gsub(base_dir "/", "", display_file);
-      if (match(display_file, /^lib\//)) {
-        display_file = display_file;
-      } else if (match(display_file, /lib\//)) {
+      # Remove full path, keep lib/ prefix if it exists
+      if (match(display_file, /lib\//)) {
         display_file = substr(display_file, match(display_file, /lib\//));
+      } else {
+        # For files outside lib/, show basename only
+        n = split(display_file, parts, "/");
+        display_file = parts[n];
       }
 
       printf "| `%s` | **%.1f%%** | %d/%d | %d/%d |\n",
@@ -343,21 +345,40 @@ EOF
     file = $0; gsub(/^SF:/, "", file);
     lines_found = 0; lines_hit = 0; funcs_found = 0; funcs_hit = 0;
   }
-  /^LF:/ { lines_found = $2; gsub(/^LF:/, "", lines_found); }
-  /^LH:/ { lines_hit = $2; gsub(/^LH:/, "", lines_hit); }
-  /^FNF:/ { funcs_found = $2; gsub(/^FNF:/, "", funcs_found); }
-  /^FNH:/ { funcs_hit = $2; gsub(/^FNH:/, "", funcs_hit); }
+  /^LF:/ {
+    lines_found = $0;
+    gsub(/^LF:/, "", lines_found);
+    lines_found = int(lines_found);
+  }
+  /^LH:/ {
+    lines_hit = $0;
+    gsub(/^LH:/, "", lines_hit);
+    lines_hit = int(lines_hit);
+  }
+  /^FNF:/ {
+    funcs_found = $0;
+    gsub(/^FNF:/, "", funcs_found);
+    funcs_found = int(funcs_found);
+  }
+  /^FNH:/ {
+    funcs_hit = $0;
+    gsub(/^FNH:/, "", funcs_hit);
+    funcs_hit = int(funcs_hit);
+  }
   END {
     if (file != "" && lines_found > 0) {
       line_coverage = (lines_hit / lines_found) * 100;
       func_coverage = (funcs_found > 0) ? (funcs_hit / funcs_found) * 100 : 0;
 
+      # Extract display filename
       display_file = file;
-      gsub(base_dir "/", "", display_file);
-      if (match(display_file, /^lib\//)) {
-        display_file = display_file;
-      } else if (match(display_file, /lib\//)) {
+      # Remove full path, keep lib/ prefix if it exists
+      if (match(display_file, /lib\//)) {
         display_file = substr(display_file, match(display_file, /lib\//));
+      } else {
+        # For files outside lib/, show basename only
+        n = split(display_file, parts, "/");
+        display_file = parts[n];
       }
 
       printf "| `%s` | **%.1f%%** | %d/%d | %d/%d |\n",
