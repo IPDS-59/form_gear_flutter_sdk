@@ -460,12 +460,12 @@ class AudioRecorderBloc extends Bloc<AudioRecorderEvent, AudioRecorderState> {
         // Set up audio source
         await _audioPlayer.setFilePath(currentState.filePath);
 
-        // Set up position stream with emit.isDone check
-        _positionSubscription = _audioPlayer.positionStream.listen((position) {
-          if (!isClosed && !emit.isDone) {
-            add(UpdatePlaybackPosition(position));
-          }
-        });
+        // Set up position stream with emit.isDone check and throttling
+        _positionSubscription = _audioPlayer.positionStream
+            .where((position) => !isClosed && !emit.isDone)
+            .listen((position) {
+              add(UpdatePlaybackPosition(position));
+            });
 
         // Set up duration stream with emit.isDone check
         _durationSubscription = _audioPlayer.durationStream.listen((duration) {
@@ -499,21 +499,19 @@ class AudioRecorderBloc extends Bloc<AudioRecorderEvent, AudioRecorderState> {
           }
         });
 
-        // Start playback first, then update UI state
-        await _audioPlayer.play();
+        // Update UI state to playing immediately before starting playback
+        emit(
+          AudioRecorderShowingConfirmation(
+            filePath: currentState.filePath,
+            duration: currentState.duration,
+            isPlaying: true,
+            playbackPosition: currentState.playbackPosition,
+            totalDuration: currentState.totalDuration,
+          ),
+        );
 
-        // Update UI state to show playing after all setup is complete
-        if (!emit.isDone) {
-          emit(
-            AudioRecorderShowingConfirmation(
-              filePath: currentState.filePath,
-              duration: currentState.duration,
-              isPlaying: true,
-              playbackPosition: currentState.playbackPosition,
-              totalDuration: currentState.totalDuration,
-            ),
-          );
-        }
+        // Start playback after UI state is updated
+        await _audioPlayer.play();
       }
     } on Exception catch (e) {
       if (!emit.isDone) {
@@ -591,7 +589,8 @@ class AudioRecorderBloc extends Bloc<AudioRecorderEvent, AudioRecorderState> {
     PlaybackCompleted event,
     Emitter<AudioRecorderState> emit,
   ) async {
-    // Cancel subscriptions
+    // Stop the player and cancel subscriptions
+    await _audioPlayer.stop();
     await _positionSubscription?.cancel();
     await _durationSubscription?.cancel();
     await _playerStateSubscription?.cancel();
