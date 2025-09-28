@@ -15,7 +15,7 @@ class UpdateMainMessageWidget extends StatelessWidget {
     final words = message.split(' ');
 
     return RichText(
-      textAlign: TextAlign.left,
+      textAlign: TextAlign.center,
       text: TextSpan(
         style: const TextStyle(
           fontSize: 28,
@@ -29,8 +29,8 @@ class UpdateMainMessageWidget extends StatelessWidget {
             text: '$word ',
             style: isHighlighted
                 ? const TextStyle(
-                    color: Color(0xFF1E88E5), // FormGear brand blue
-                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1E88E5),
+                    fontWeight: FontWeight.w800,
                   )
                 : null,
           );

@@ -166,9 +166,19 @@ class VersionUpdateDemoScreen extends StatelessWidget {
   }
 
   Future<void> _simulateDownload() async {
-    // Simulate download process with delays
-    await Future.delayed(const Duration(seconds: 2));
-    debugPrint('Download simulation completed');
+    final downloadManager = getIt<FormGearDownloadManager>();
+
+    // Simulate download process with delays for better progress visibility
+    await Future.delayed(const Duration(seconds: 1));
+
+    // Attempt actual download - for demo, we'll use FormGear engine
+    final success = await downloadManager.downloadFormEngine('1');
+
+    if (success) {
+      debugPrint('Form engine download completed successfully');
+    } else {
+      debugPrint('Form engine download failed');
+    }
   }
 
   FormEngineEntity _createMockFormEngine({required bool isForced}) {
