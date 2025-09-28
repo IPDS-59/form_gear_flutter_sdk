@@ -70,12 +70,9 @@ class FormEngineUpdateScreen extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Spacer(),
-                    Center(
-                      child: UpdateGreetingWidget(emoji: _getGreetingEmoji()),
-                    ),
+                    UpdateGreetingWidget(emoji: _getGreetingEmoji()),
                     const SizedBox(height: 32),
                     UpdateMainMessageWidget(
                       message: _getMainMessage(),
@@ -84,7 +81,7 @@ class FormEngineUpdateScreen extends StatelessWidget {
                     const SizedBox(height: 24),
                     UpdateVersionInfoWidget(versionResult: versionResult),
                     const SizedBox(height: 40),
-                    const Center(child: UpdateSignatureWidget()),
+                    const UpdateSignatureWidget(),
                     const Spacer(flex: 2),
                     UpdateActionButtonWidget(
                       onPressed: state.isDownloading
@@ -97,13 +94,17 @@ class FormEngineUpdateScreen extends StatelessWidget {
                       loadingText: 'Downloading...',
                       progress: state.progress,
                       isCompleted: state.isCompleted,
+                      isForced: versionResult.isForced,
                     ),
                     AnimatedSize(
                       duration: const Duration(milliseconds: 400),
                       curve: Curves.easeInOut,
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
-                        child: (!versionResult.isForced && !state.isDownloading)
+                        child:
+                            (!versionResult.isForced &&
+                                !state.isDownloading &&
+                                !state.isCompleted)
                             ? Column(
                                 key: const ValueKey('skip-section'),
                                 children: [

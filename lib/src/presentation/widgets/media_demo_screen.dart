@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:form_gear_engine_sdk/src/presentation/bloc/barcode_scanner_bloc.dart';
 import 'package:form_gear_engine_sdk/src/presentation/helpers/modern_dialog_helper.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/audio_recorder_screen.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/barcode_scanner_screen.dart';
@@ -141,8 +143,12 @@ class MediaDemoScreen extends StatelessWidget {
     Navigator.of(context)
         .push<String?>(
           MaterialPageRoute<String?>(
-            builder: (context) => const BarcodeScannerScreen(
-              title: 'Demo Barcode Scanner',
+            builder: (context) => BlocProvider(
+              create: (context) =>
+                  BarcodeScannerBloc()..add(const InitializeScanner()),
+              child: const BarcodeScannerScreen(
+                title: 'Demo Barcode Scanner',
+              ),
             ),
           ),
         )
