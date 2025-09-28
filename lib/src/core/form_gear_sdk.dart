@@ -42,14 +42,23 @@ class FormGearSDK {
     _config = config;
 
     if (!_isInitialized) {
-      // Configure dependency injection with config
+      // Initial configuration of dependency injection
       await configureDependencies(
         apiConfig: config.apiConfig,
+        formGearConfig: config,
+        additionalInterceptors: dioInterceptors,
+      );
+    } else {
+      // Re-initialization: update existing configuration in DI container
+      // This ensures AuthInterceptor gets fresh config through ConfigProvider
+      await configureDependencies(
+        apiConfig: config.apiConfig,
+        formGearConfig: config,
         additionalInterceptors: dioInterceptors,
       );
     }
 
-    // Initialize version manager
+    // Initialize version manager (or get existing instance)
     _versionManager = getIt<FormGearVersionManager>();
 
     // Note: Dio interceptors are now configured in the DI container
@@ -62,7 +71,10 @@ class FormGearSDK {
     if (!_isInitialized) {
       FormGearLogger.sdk('FormGear SDK initialized successfully');
     } else {
-      FormGearLogger.sdk('FormGear SDK configuration updated successfully');
+      FormGearLogger.sdk(
+        'FormGear SDK configuration updated successfully - '
+        'AuthInterceptor will use new tokens on next request',
+      );
     }
 
     _isInitialized = true;

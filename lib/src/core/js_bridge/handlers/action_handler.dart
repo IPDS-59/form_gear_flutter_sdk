@@ -10,8 +10,8 @@ import 'package:form_gear_engine_sdk/src/presentation/widgets/audio_recorder_scr
 import 'package:form_gear_engine_sdk/src/presentation/widgets/barcode_scanner_screen.dart';
 import 'package:form_gear_engine_sdk/src/utils/fasih_media_helper.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_data_file_manager.dart';
+import 'package:form_gear_engine_sdk/src/utils/location_service_helper.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -79,59 +79,28 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
     try {
       FormGearLogger.webview('Getting GPS location for dataKey: $dataKey');
 
-      // First check location services availability
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
+      // Ensure location access using helper
+      final accessResult = await LocationServiceHelper.ensureLocationAccess(
+        contextDescription: 'camera GPS',
+      );
+
+      if (!accessResult.success) {
         return ActionInfoJs(
           success: false,
-          error:
-              'Location services are disabled. '
-              'Please enable location services.',
+          error: accessResult.errorMessage ?? 'Location access failed',
         );
       }
 
-      // Request location permission
-      var locationPermission = await Geolocator.checkPermission();
-      if (locationPermission == LocationPermission.denied) {
-        locationPermission = await Geolocator.requestPermission();
-        if (locationPermission == LocationPermission.denied) {
-          return ActionInfoJs(
-            success: false,
-            error: 'Location permission denied',
-          );
-        }
-      }
-
-      if (locationPermission == LocationPermission.deniedForever) {
-        // Try to open app settings for user
-        try {
-          await Geolocator.openAppSettings();
-        } on Exception catch (e) {
-          FormGearLogger.webviewError('Failed to open app settings: $e');
-        }
+      // Get current location using helper
+      final locationResult = await LocationServiceHelper.getCurrentLocation();
+      if (!locationResult.success) {
         return ActionInfoJs(
           success: false,
-          error:
-              'Location permission permanently denied. Please enable location '
-              'access for this app in your device settings.',
+          error: locationResult.errorMessage ?? 'Failed to get location',
         );
       }
 
-      // Get current location
-      late Position position;
-      try {
-        position = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.high,
-            timeLimit: Duration(seconds: 10),
-          ),
-        );
-      } on Exception catch (e) {
-        return ActionInfoJs(
-          success: false,
-          error: 'Failed to get location: $e',
-        );
-      }
+      final position = locationResult.position!;
 
       // Return GPS coordinates in FormGear expected format
       final result = {
@@ -273,62 +242,27 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
     try {
       FormGearLogger.webview('Getting location for dataKey: $dataKey');
 
-      // Check if location services are enabled
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        // Try to open location settings
-        try {
-          await Geolocator.openLocationSettings();
-          // Wait a bit and check again
-          await Future<void>.delayed(const Duration(seconds: 1));
-          final newServiceEnabled = await Geolocator.isLocationServiceEnabled();
-          if (!newServiceEnabled) {
-            return ActionInfoJs(
-              success: false,
-              error:
-                  'Location services are disabled. Please enable location '
-                  'services in settings.',
-            );
-          }
-        } on Exception {
-          return ActionInfoJs(
-            success: false,
-            error:
-                'Location services are disabled. Please enable location '
-                'services manually in your device settings.',
-          );
-        }
-      }
-
-      // Request location permission
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          return ActionInfoJs(
-            success: false,
-            error: 'Location permission denied',
-          );
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
+      // Ensure location access using helper
+      final accessResult = await LocationServiceHelper.ensureLocationAccess(
+        contextDescription: 'location',
+      );
+      if (!accessResult.success) {
         return ActionInfoJs(
           success: false,
-          error:
-              'Location permission permanently denied. '
-              'Please enable in settings.',
+          error: accessResult.errorMessage ?? 'Location access failed',
         );
       }
 
-      // Get current position with proper settings
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 10),
-        ),
-      );
+      // Get current location using helper
+      final locationResult = await LocationServiceHelper.getCurrentLocation();
+      if (!locationResult.success) {
+        return ActionInfoJs(
+          success: false,
+          error: locationResult.errorMessage ?? 'Failed to get location',
+        );
+      }
 
+      final position = locationResult.position!;
       final locationData = '${position.latitude},${position.longitude}';
       FormGearLogger.webview('Location completed: $locationData');
       return ActionInfoJs(success: true, result: locationData);
