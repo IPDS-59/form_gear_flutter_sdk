@@ -1503,152 +1503,158 @@ class _AudioRecorderViewState extends State<_AudioRecorderView>
         ),
         const SizedBox(height: 32),
 
-        // Playback section
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              const Text(
-                'Preview Rekaman',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1F2937),
+        // Playback section with smooth size animation
+        AnimatedSize(
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
-              ),
-              const SizedBox(height: 20),
-
-              // Progress bar (only show if audio has duration)
-              if (state.totalDuration != null) ...[
-                Column(
-                  children: [
-                    // Time display
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          _formatDuration(state.playbackPosition),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF6B7280),
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                        Text(
-                          _formatDuration(state.totalDuration!),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF6B7280),
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    // Progress bar
-                    Container(
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(3),
-                        child: LinearProgressIndicator(
-                          value:
-                              (state.playbackPosition.inMilliseconds /
-                                      state.totalDuration!.inMilliseconds)
-                                  .clamp(0.0, 1.0),
-                          backgroundColor: Colors.transparent,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            state.isPlaying
-                                ? const Color(0xFF1E88E5)
-                                : const Color(0xFF6B7280),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
               ],
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  'Preview Rekaman',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1F2937),
+                  ),
+                ),
+                const SizedBox(height: 20),
 
-              // Playback button
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: state.isPlaying
-                        ? [
-                            const Color(0xFFEF4444),
-                            const Color(0xFFDC2626),
-                          ]
-                        : [
-                            const Color(0xFF1E88E5),
-                            const Color(0xFF1976D2),
-                          ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                // Progress bar (only show if audio has duration)
+                if (state.totalDuration != null) ...[
+                  Column(
+                    children: [
+                      // Time display
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _formatDuration(state.playbackPosition),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF6B7280),
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                          Text(
+                            _formatDuration(state.totalDuration!),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF6B7280),
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      // Progress bar
+                      Container(
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(3),
+                          child: LinearProgressIndicator(
+                            value:
+                                (state.playbackPosition.inMilliseconds /
+                                        state.totalDuration!.inMilliseconds)
+                                    .clamp(0.0, 1.0),
+                            backgroundColor: Colors.transparent,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              state.isPlaying
+                                  ? const Color(0xFF1E88E5)
+                                  : const Color(0xFF6B7280),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color:
-                          (state.isPlaying
-                                  ? const Color(0xFFEF4444)
-                                  : const Color(0xFF1E88E5))
-                              .withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+                  const SizedBox(height: 16),
+                ],
+
+                // Playback button
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: state.isPlaying
+                          ? [
+                              const Color(0xFFEF4444),
+                              const Color(0xFFDC2626),
+                            ]
+                          : [
+                              const Color(0xFF1E88E5),
+                              const Color(0xFF1976D2),
+                            ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(40),
-                    onTap: () {
-                      if (state.isPlaying) {
-                        context.read<AudioRecorderBloc>().add(StopPlayback());
-                      } else {
-                        context.read<AudioRecorderBloc>().add(StartPlayback());
-                      }
-                    },
-                    child: Icon(
-                      state.isPlaying ? Icons.stop : Icons.play_arrow,
-                      color: Colors.white,
-                      size: 32,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color:
+                            (state.isPlaying
+                                    ? const Color(0xFFEF4444)
+                                    : const Color(0xFF1E88E5))
+                                .withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(40),
+                      onTap: () {
+                        if (state.isPlaying) {
+                          context.read<AudioRecorderBloc>().add(StopPlayback());
+                        } else {
+                          context.read<AudioRecorderBloc>().add(
+                            StartPlayback(),
+                          );
+                        }
+                      },
+                      child: Icon(
+                        state.isPlaying ? Icons.stop : Icons.play_arrow,
+                        color: Colors.white,
+                        size: 32,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                state.isPlaying
-                    ? (state.totalDuration != null
-                          ? 'Memutar ${_formatDuration(state.playbackPosition)} / ${_formatDuration(state.totalDuration!)}'
-                          : 'Sedang memutar...')
-                    : 'Tap untuk memutar',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
+                const SizedBox(height: 12),
+                Text(
+                  state.isPlaying
+                      ? (state.totalDuration != null
+                            ? 'Memutar ${_formatDuration(state.playbackPosition)} / ${_formatDuration(state.totalDuration!)}'
+                            : 'Sedang memutar...')
+                      : 'Tap untuk memutar',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         const Spacer(),
