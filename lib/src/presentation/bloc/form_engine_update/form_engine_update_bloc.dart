@@ -29,7 +29,25 @@ class FormEngineUpdateBloc
     emit(state.copyWith(isDownloading: true, progress: 0));
 
     try {
-      await onDownload();
+      // Check if this is a server download by looking for download URL
+      final hasDownloadUrl =
+          versionResult.formEngine.linkDownload != null &&
+          versionResult.formEngine.linkDownload!.isNotEmpty;
+
+      if (hasDownloadUrl) {
+        // For server downloads, execute immediately without simulation
+        // The download manager will handle real progress updates
+        await onDownload();
+      } else {
+        // Only for asset downloads (demo mode), simulate progress
+        // This provides better UX when copying from bundled assets
+        for (var i = 1; i <= 10; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          add(FormEngineUpdateProgressEvent(i * 10));
+        }
+        await onDownload();
+      }
+
       add(const FormEngineDownloadCompletedEvent());
     } on Exception catch (e) {
       add(FormEngineDownloadFailedEvent(e.toString()));

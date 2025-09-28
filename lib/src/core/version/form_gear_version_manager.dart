@@ -176,6 +176,11 @@ class FormGearVersionManager {
           result.formEngine,
           result.formEngine.formEngineId?.toString() ??
               FormEngineType.formGear.id.toString(),
+          onProgress: (progress) {
+            // Progress callback will be passed to the download manager
+            // The update screen will handle progress updates through its bloc
+            FormGearLogger.sdk('Download progress: $progress%');
+          },
         ),
       ),
     );
@@ -205,13 +210,18 @@ class FormGearVersionManager {
   Future<void> _performFormEngineDownload(
     BuildContext context,
     FormEngineEntity formEngine,
-    String engineId,
-  ) async {
+    String engineId, {
+    void Function(int progress)? onProgress,
+  }) async {
     try {
       FormGearLogger.sdk('Starting form engine download for ID: $engineId');
 
-      // Step 1: Download ZIP file
-      final zipFilePath = await _downloadFormEngineZip(formEngine, engineId);
+      // Step 1: Download ZIP file with progress tracking
+      final zipFilePath = await _downloadFormEngineZip(
+        formEngine,
+        engineId,
+        onProgress: onProgress,
+      );
       if (zipFilePath == null) {
         _handleDownloadError(
           context,
@@ -266,8 +276,9 @@ class FormGearVersionManager {
   /// Returns the path to the downloaded ZIP file, or null if download failed
   Future<String?> _downloadFormEngineZip(
     FormEngineEntity formEngine,
-    String engineId,
-  ) async {
+    String engineId, {
+    void Function(int progress)? onProgress,
+  }) async {
     try {
       final downloadUrl = formEngine.linkDownload;
       if (downloadUrl == null || downloadUrl.isEmpty) {
@@ -286,7 +297,7 @@ class FormGearVersionManager {
       final zipFileName = '${engineId}_formengine.zip';
       final zipFilePath = path.join(engineDir.path, zipFileName);
 
-      // Download the ZIP file using injected Dio
+      // Download the ZIP file using injected Dio with progress tracking
       final response = await _dio.download(
         downloadUrl,
         zipFilePath,
@@ -295,6 +306,12 @@ class FormGearVersionManager {
           followRedirects: true,
           validateStatus: (status) => status! < 500,
         ),
+        onReceiveProgress: (received, total) {
+          if (onProgress != null && total > 0) {
+            final progress = ((received / total) * 100).round();
+            onProgress(progress);
+          }
+        },
       );
 
       if (response.statusCode == 200) {
@@ -354,32 +371,27 @@ class FormGearVersionManager {
     BuildContext context,
     FormEngineEntity formEngine,
   ) {
-    Navigator.of(context).pop(); // Close progress dialog
+    // Removed Navigator.pop() - let update screen handle its own UI state
+    // The update screen manages its own navigation and progress display
 
     final engineName = formEngine.formEngineId == FormEngineType.formGear.id
         ? 'FormGear'
         : 'FasihForm';
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Download Complete'),
-        content: Text(
-          '$engineName Engine has been downloaded and installed successfully!',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
+
+    // Success dialog removed - let calling code handle UI feedback
+    // The download/update screen and engine selection screen will handle
+    // showing appropriate success feedback to users
+    FormGearLogger.sdk(
+      '$engineName Engine has been downloaded and installed successfully!',
     );
   }
 
   /// Handles download errors
   void _handleDownloadError(BuildContext context, String error) {
-    Navigator.of(context).pop(); // Close progress dialog
+    // Removed Navigator.pop() - let update screen handle its own UI state
+    // The update screen manages its own navigation and error display
 
+    // Show error dialog without attempting to close any existing dialogs
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(

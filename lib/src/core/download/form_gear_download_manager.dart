@@ -347,13 +347,47 @@ class FormGearDownloadManager {
   /// Gets the local version of a form engine
   Future<String?> getLocalFormEngineVersion(String engineId) async {
     try {
-      final dataDir = await getFormGearDataDirectory();
-      final versionFile = File('${dataDir.path}/formengine/$engineId/version');
+      // Use DirectoryConstants for FASIH-compliant path
+      final versionFile = await DirectoryConstants.getFormEngineVersionFile(
+        engineId,
+      );
 
       if (versionFile.existsSync()) {
         final versionContent = versionFile.readAsStringSync();
-        return versionContent.trim();
+
+        // Try to parse as JSON first (FASIH format: version.json)
+        try {
+          final versionData =
+              jsonDecode(versionContent) as Map<String, dynamic>;
+          final version = versionData['version'] as String?;
+          if (version != null) {
+            return version;
+          }
+        } on Exception {
+          // Fallback to plain text format (legacy)
+          return versionContent.trim();
+        }
       }
+
+      // Fallback: Check legacy version file without .json extension
+      try {
+        final dataDir = await getFormGearDataDirectory();
+        final legacyVersionFile = File(
+          '${dataDir.path}/formengine/$engineId/version',
+        );
+
+        if (legacyVersionFile.existsSync()) {
+          final versionContent = legacyVersionFile.readAsStringSync();
+          FormGearLogger.sdk(
+            'Using legacy version file for engine $engineId, '
+            'consider migration',
+          );
+          return versionContent.trim();
+        }
+      } on Exception {
+        // Ignore legacy file errors
+      }
+
       return null;
     } on Exception catch (e) {
       FormGearLogger.sdkError('Failed to read engine $engineId version: $e');
@@ -468,10 +502,47 @@ class FormGearDownloadManager {
           .whereType<Directory>()
           .toList();
 
-      return templateDirs.map((dir) => dir.path.split('/').last).toList();
+      final templateIds = <String>[];
+      for (final dir in templateDirs) {
+        final templateId = dir.path.split('/').last;
+
+        // Verify template has required files (same as TemplateDownloadManager)
+        final hasTemplateFiles = await _hasTemplateFiles(templateId);
+        if (hasTemplateFiles) {
+          templateIds.add(templateId);
+        }
+      }
+
+      return templateIds;
     } on Exception catch (e) {
       FormGearLogger.sdkError('Failed to list downloaded templates: $e');
       return [];
+    }
+  }
+
+  /// Checks if template directory has required FASIH files
+  Future<bool> _hasTemplateFiles(String templateId) async {
+    try {
+      final templateDir = await DirectoryConstants.getTemplateDirectory(
+        templateId,
+      );
+
+      // Check for FASIH-style files
+      final templateMetadataFile = File(
+        '${templateDir.path}/${templateId}_template.json',
+      );
+      final validationFile = File(
+        '${templateDir.path}/${templateId}_validation.json',
+      );
+      final formDefinitionFile = File('${templateDir.path}/$templateId.json');
+      final versionFile = File('${templateDir.path}/version.json');
+
+      return templateMetadataFile.existsSync() ||
+          validationFile.existsSync() ||
+          formDefinitionFile.existsSync() ||
+          versionFile.existsSync();
+    } on Exception {
+      return false;
     }
   }
 
