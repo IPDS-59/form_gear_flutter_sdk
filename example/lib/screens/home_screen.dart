@@ -6,6 +6,7 @@ import 'form_engine_selection_screen.dart';
 import 'clean_architecture_demo_screen.dart';
 import 'version_update_demo_screen.dart';
 import 'loading_screen_demo.dart';
+import 'assignment_demo_screen.dart';
 import '../download_demo_page_enhanced.dart';
 import '../main.dart'; // For Alice access
 
@@ -110,6 +111,20 @@ class HomeScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const FormEngineSelectionScreen(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildDemoCard(
+              context,
+              title: 'Assignment-Based Configuration',
+              subtitle: 'Dynamic configuration per template/assignment',
+              icon: Icons.assignment,
+              gradientColors: [Color(0xFF9C27B0), Color(0xFF673AB7)],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AssignmentDemoScreen(),
                 ),
               ),
             ),
