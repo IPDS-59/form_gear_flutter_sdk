@@ -48,8 +48,11 @@ Future<void> configureDependencies({
     getIt.registerSingleton<List<Interceptor>>(additionalInterceptors);
   }
 
-  // Configure other dependencies
-  $initGetIt(getIt);
+  // Configure other dependencies only if not already initialized
+  // This prevents re-registering singletons like ConfigProvider
+  if (!getIt.isRegistered<ConfigProvider>()) {
+    $initGetIt(getIt);
+  }
 }
 
 /// Clean up the SDK's isolated GetIt instance
