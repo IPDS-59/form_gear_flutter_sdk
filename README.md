@@ -16,6 +16,14 @@ Originally developed for BPS - Statistics Indonesia's data collection needs, now
 
 ### Version 0.1.0 Latest Improvements
 
+**🎯 Assignment-Based Dynamic Configuration (NEW)**
+- Dynamic configuration loading per template/assignment (matches FASIH architecture)
+- Global SDK initialization with assignment-specific form configurations
+- Template-specific lookup modes (online, offline, local) configurable per assignment
+- Assignment-aware JavaScript handlers with context-specific data
+- Dynamic engine selection (FormGear vs FasihForm) based on template requirements
+- Comprehensive assignment demo showcasing all configuration patterns
+
 **Modern UI/UX Enhancements**
 - SVG logo integration replacing PNG throughout SDK and example app
 - Animated loading screens with FormGear logo and gradient backgrounds
@@ -39,6 +47,7 @@ Originally developed for BPS - Statistics Indonesia's data collection needs, now
 - [Architecture](#architecture)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Assignment-Based Configuration](#assignment-based-configuration)
 - [FASIH App Integration](#fasih-app-integration)
 - [API Reference](#api-reference)
 - [Examples](#examples)
@@ -52,12 +61,22 @@ Originally developed for BPS - Statistics Indonesia's data collection needs, now
 - **30+ input controls**: Text, number, date, dropdown, radio, checkbox, and more
 - **Nested forms**: Support for complex hierarchical form structures
 - **Dynamic validation**: Real-time form validation with custom rules
+- **Assignment-based configuration**: Dynamic per-template configuration (NEW)
 - **Offline capability**: Forms work without internet connection
 - **File uploads**: Support for image, document, and media uploads
 - **Location services**: GPS coordinate capture and location-based features
 - **Camera integration**: Photo capture with GPS tagging
 - **Signature capture**: Digital signature collection
 - **Multi-engine support**: FormGear v1 and FasihForm v2 engines
+
+### 🎯 Assignment-Based Configuration Features (NEW)
+- **Global SDK initialization**: Separate global configuration from assignment-specific settings
+- **Dynamic lookup modes**: Online, offline, or local data sources per assignment
+- **Template-specific configurations**: Different form behaviors per template
+- **Assignment context**: Rich metadata and data structures for each assignment
+- **Dynamic engine selection**: Automatic FormGear vs FasihForm selection based on template
+- **Context-aware handlers**: JavaScript bridge receives assignment-specific data
+- **FASIH-compatible architecture**: Matches native Android FASIH patterns
 
 ### 📱 Mobile Features
 - **WebView integration**: Seamless web-to-native bridge
@@ -319,7 +338,166 @@ Add to `ios/Runner/Info.plist`:
 
 ## 🚀 Quick Start
 
-### 1. Initialize the SDK with Clean Architecture
+### 1. Assignment-Based Configuration (NEW - Recommended for FASIH)
+
+```dart
+import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 1. Initialize global configuration (API endpoints, authentication)
+  final apiConfig = FormGearApiConfig(
+    baseUrl: 'https://fasih-api.bps.go.id',
+    templateZipEndpoint: '/mobile/assignment-sync/api/mobile/template/zip/{templateId}',
+    templateEndpoint: '/mobile/assignment-sync/api/mobile/template/custom-data/{templateId}',
+    formEngineEndpoint: '/mobile/notification-service/api/mobile/check-form-engine-release',
+    lookupEndpoint: '/api/lookup/{surveyId}',
+    authToken: 'your-auth-token',
+  );
+
+  final globalConfig = FormGearGlobalConfig.fasih(
+    apiConfig: apiConfig,
+    bpsUser: BpsUser(
+      nipBaru: '123456789',
+      jabatan: 'ENUMERATOR',
+      org: 'BPS Jawa Barat',
+    ),
+    username: 'demo_user',
+    enableDebugMode: true,
+  );
+
+  // Initialize SDK with global configuration
+  await FormGearSDK.instance.initializeGlobal(globalConfig);
+
+  runApp(MyApp());
+}
+
+// 2. Open forms with assignment-specific configuration
+class AssignmentFormPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Assignment Form')),
+      body: Column(
+        children: [
+          // New assignment with empty data
+          ElevatedButton(
+            onPressed: () => _openNewAssignment(context),
+            child: Text('New Assignment (Online Lookup)'),
+          ),
+
+          // Existing assignment with response data
+          ElevatedButton(
+            onPressed: () => _openExistingAssignment(context),
+            child: Text('Existing Assignment (Offline Lookup)'),
+          ),
+
+          // Review assignment (read-only)
+          ElevatedButton(
+            onPressed: () => _openReviewAssignment(context),
+            child: Text('Review Assignment (Read-only)'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openNewAssignment(BuildContext context) async {
+    final assignment = AssignmentContext(
+      assignmentId: 'new_assignment_001',
+      templateId: 'demo_template',
+      surveyId: 'family_characteristics_2024',
+      config: AssignmentConfig(
+        lookupMode: FormGearLookupMode.online,  // Online lookup for real-time data
+        formMode: FormGearFormMode.open,
+        clientMode: FormGearClientMode.capi,
+        allowEdit: true,
+        autoSave: true,
+        requireValidation: true,
+      ),
+      data: AssignmentData(
+        template: {/* loaded from local assets */},
+        validation: {/* validation rules */},
+        response: {/* empty - new assignment */},
+        media: {/* empty - new assignment */},
+        userInfo: {'name': 'Field Enumerator', 'role': 'ENUMERATOR'},
+        // ... other assignment data
+      ),
+    );
+
+    await FormGearSDK.instance.openFormWithAssignment(
+      context: context,
+      assignment: assignment,
+      title: 'New Assignment',
+    );
+  }
+
+  Future<void> _openExistingAssignment(BuildContext context) async {
+    final assignment = AssignmentContext(
+      assignmentId: 'existing_assignment_002',
+      templateId: 'demo_template',
+      surveyId: 'family_characteristics_2024',
+      config: AssignmentConfig(
+        lookupMode: FormGearLookupMode.offline, // Offline lookup for existing data
+        formMode: FormGearFormMode.open,
+        clientMode: FormGearClientMode.capi,
+        allowEdit: true,
+        autoSave: true,
+        isEncrypted: true,
+      ),
+      data: AssignmentData(
+        template: {/* loaded from local assets */},
+        validation: {/* validation rules */},
+        response: {/* existing response data */},
+        media: {/* existing media files */},
+        remark: {/* existing remarks */},
+        userInfo: {'name': 'Field Enumerator', 'role': 'ENUMERATOR'},
+        // ... other assignment data
+      ),
+    );
+
+    await FormGearSDK.instance.openFormWithAssignment(
+      context: context,
+      assignment: assignment,
+      title: 'Existing Assignment',
+    );
+  }
+
+  Future<void> _openReviewAssignment(BuildContext context) async {
+    final assignment = AssignmentContext(
+      assignmentId: 'review_assignment_003',
+      templateId: 'demo_template',
+      surveyId: 'family_characteristics_2024',
+      config: AssignmentConfig(
+        lookupMode: FormGearLookupMode.online,   // Online lookup for validation
+        formMode: FormGearFormMode.submitted,   // Read-only submitted form
+        clientMode: FormGearClientMode.capi,
+        allowEdit: false,                       // No editing in review mode
+        autoSave: false,
+        requireValidation: true,
+      ),
+      data: AssignmentData(
+        template: {/* loaded from local assets */},
+        validation: {/* validation rules */},
+        response: {/* complete responses for review */},
+        media: {/* all associated media */},
+        remark: {/* supervisor remarks */},
+        userInfo: {'name': 'Review Officer', 'role': 'SUPERVISOR'},
+        // ... other assignment data
+      ),
+    );
+
+    await FormGearSDK.instance.openFormWithAssignment(
+      context: context,
+      assignment: assignment,
+      title: 'Assignment Review',
+    );
+  }
+}
+```
+
+### 2. Legacy SDK Initialization (Backward Compatibility)
 
 ```dart
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
@@ -446,6 +624,211 @@ Navigator.push(
 - ✅ **Result Pattern**: Type-safe error handling
 - ✅ **Dependency Injection**: Automatic component wiring
 - ✅ **API Token Management**: Runtime configuration updates
+
+## 🎯 Assignment-Based Configuration
+
+The assignment-based configuration system allows different templates to have completely different configurations, matching FASIH's native Android architecture where each assignment can specify its own lookup mode, form behavior, and engine type.
+
+### Key Concepts
+
+#### Global Configuration vs Assignment Configuration
+
+```dart
+// Global Configuration (applies to all assignments)
+final globalConfig = FormGearGlobalConfig(
+  apiConfig: apiConfig,           // API endpoints
+  bpsUser: bpsUser,              // User authentication
+  username: 'demo_user',         // Session username
+  autoStartServer: true,         // Server settings
+  serverPort: 3310,              // Port configuration
+  enableDebugMode: true,         // Debug settings
+  defaultAssignmentConfig: AssignmentConfig.capi(), // Default fallback
+);
+
+// Assignment-Specific Configuration (per template/survey)
+final assignmentConfig = AssignmentConfig(
+  lookupMode: FormGearLookupMode.online,  // How to load lookup data
+  formMode: FormGearFormMode.open,        // Form accessibility mode
+  clientMode: FormGearClientMode.capi,    // Client operation mode
+  isEncrypted: false,                     // Data encryption
+  offlineCapable: true,                   // Offline support
+  allowEdit: true,                        // Edit permissions
+  autoSave: true,                         // Auto-save behavior
+  requireValidation: true,                // Validation requirements
+);
+```
+
+#### Assignment Context Structure
+
+```dart
+final assignment = AssignmentContext(
+  assignmentId: 'fasih_survey_001',    // Unique assignment identifier
+  templateId: 'fasih_template_v2',     // Template to use
+  surveyId: 'survey_2024_q1',          // Survey identifier
+
+  config: AssignmentConfig(/* assignment-specific settings */),
+
+  data: AssignmentData(
+    template: {/* form template data */},
+    validation: {/* validation rules */},
+    reference: {/* lookup reference data */},
+    response: {/* existing answers */},
+    preset: {/* pre-filled values */},
+    media: {/* media files */},
+    remark: {/* survey remarks */},
+    principals: [/* authorized users */],
+    userInfo: {/* current user info */},
+  ),
+
+  metadata: {
+    'created_at': '2024-01-01T10:00:00Z',
+    'priority': 'high',
+    'region': 'Jawa Barat',
+  },
+);
+```
+
+### Supported Configuration Patterns
+
+#### 1. New Assignment (Empty Data)
+```dart
+final newAssignment = AssignmentContext(
+  assignmentId: 'new_assignment_001',
+  templateId: 'demo_template',
+  surveyId: 'family_characteristics_2024',
+  config: AssignmentConfig(
+    lookupMode: FormGearLookupMode.online,    // Real-time lookup
+    formMode: FormGearFormMode.open,          // Open access
+    clientMode: FormGearClientMode.capi,      // CAPI mode
+    allowEdit: true,                          // Allow editing
+    autoSave: true,                           // Auto-save enabled
+    requireValidation: true,                  // Online validation
+  ),
+  // ... data and metadata with empty responses
+);
+```
+
+#### 2. Existing Assignment (With Data)
+```dart
+final existingAssignment = AssignmentContext(
+  assignmentId: 'existing_assignment_002',
+  templateId: 'demo_template',
+  surveyId: 'family_characteristics_2024',
+  config: AssignmentConfig(
+    lookupMode: FormGearLookupMode.offline,   // Cached lookup data
+    formMode: FormGearFormMode.open,          // Open access
+    clientMode: FormGearClientMode.capi,      // CAPI mode
+    isEncrypted: true,                        // Encrypted storage
+    allowEdit: true,                          // Allow editing
+    autoSave: true,                           // Auto-save enabled
+    offlineCapable: true,                     // Full offline support
+  ),
+  // ... data and metadata with existing responses
+);
+```
+
+#### 3. Review Assignment (Read-only)
+```dart
+final reviewAssignment = AssignmentContext(
+  assignmentId: 'review_assignment_003',
+  templateId: 'demo_template',
+  surveyId: 'family_characteristics_2024',
+  config: AssignmentConfig(
+    lookupMode: FormGearLookupMode.online,    // Online lookup for validation
+    formMode: FormGearFormMode.submitted,     // Read-only submitted form
+    clientMode: FormGearClientMode.capi,      // CAPI mode
+    isEncrypted: true,                        // Encrypted storage
+    allowEdit: false,                         // No editing allowed
+    autoSave: false,                          // No auto-save needed
+    requireValidation: true,                  // Validation for review
+  ),
+  // ... data and metadata with complete responses
+);
+```
+
+### Dynamic Engine Selection
+
+The SDK automatically selects the appropriate form engine based on template ID:
+
+```dart
+// Automatic engine selection logic
+FormEngineType _determineEngineTypeFromTemplate(String templateId) {
+  if (templateId.startsWith('fasih') ||
+      templateId.contains('fasih') ||
+      templateId.startsWith('survey')) {
+    return FormEngineType.fasihForm;  // FasihForm v2 engine
+  }
+  return FormEngearType.formGear;     // FormGear v1 engine (default)
+}
+```
+
+### Assignment-Aware JavaScript Handlers
+
+JavaScript handlers automatically receive assignment context:
+
+```dart
+// Handler receives current assignment context
+class AndroidDataHandler {
+  final AssignmentContext? Function() getCurrentAssignment;
+
+  List<JSHandler> createHandlers() {
+    return [
+      _AndroidMethodHandler('getFormMode', () async {
+        final assignment = getCurrentAssignment();
+        if (assignment != null) {
+          // Use assignment-specific form mode
+          return StringInfoJs(
+            success: true,
+            value: assignment.config.formMode.value.toString()
+          );
+        }
+        // Fallback to default
+        return StringInfoJs(success: true, value: '0');
+      }),
+      // ... other handlers
+    ];
+  }
+}
+```
+
+### Migration from Legacy Configuration
+
+#### Before (Legacy):
+```dart
+// Static configuration for entire app
+final config = FormGearConfig(
+  lookupMode: FormGearLookupMode.offline,  // Fixed for all forms
+  formMode: FormGearFormMode.open,         // Fixed for all forms
+  clientMode: FormGearClientMode.capi,     // Fixed for all forms
+);
+
+await FormGearSDK.instance.initialize(config);
+await FormGearSDK.instance.launchPreparedEngine(context);
+```
+
+#### After (Assignment-Based):
+```dart
+// Global configuration (authentication, API)
+final globalConfig = FormGearGlobalConfig.fasih(/*...*/);
+await FormGearSDK.instance.initializeGlobal(globalConfig);
+
+// Per-assignment configuration (dynamic)
+final assignment = AssignmentContext(/*...*/);
+await FormGearSDK.instance.openFormWithAssignment(
+  context: context,
+  assignment: assignment,
+);
+```
+
+### Benefits for FASIH Integration
+
+✅ **Template Flexibility**: Different surveys can use different lookup modes
+✅ **Dynamic Behavior**: Form behavior changes based on assignment requirements
+✅ **Context Awareness**: JavaScript handlers receive assignment-specific data
+✅ **Engine Selection**: Automatic FormGear vs FasihForm selection
+✅ **Offline Support**: Per-assignment offline capabilities
+✅ **User Permissions**: Different user roles per assignment
+✅ **Metadata Support**: Rich assignment metadata for tracking
 
 ## 📱 FASIH App Integration
 
