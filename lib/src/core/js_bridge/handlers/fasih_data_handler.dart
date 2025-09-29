@@ -56,6 +56,7 @@ class FasihDataHandler {
   /// Create AndroidDataHandler with FASIH use case implementations
   AndroidDataHandler createAndroidDataHandler() {
     return AndroidDataHandler(
+      getCurrentAssignment: () => null, // No assignment context in FASIH
       onGetTemplate: _getTemplate,
       onGetValidation: _getValidation,
       onGetResponse: _getResponse,
