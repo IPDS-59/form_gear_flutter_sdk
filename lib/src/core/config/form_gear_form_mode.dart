@@ -10,7 +10,10 @@ enum FormGearFormMode {
   submitted(3),
 
   /// Form has been approved
-  approved(4);
+  approved(4),
+
+  /// Form is in debug/development mode
+  debug(5);
 
   const FormGearFormMode(this.value);
   final int value;
