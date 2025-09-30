@@ -48,6 +48,7 @@ Originally developed for BPS - Statistics Indonesia's data collection needs, now
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Assignment-Based Configuration](#assignment-based-configuration)
+- [SaveOrSubmit Listener Architecture](#saveorsubmit-listener-architecture)
 - [FASIH App Integration](#fasih-app-integration)
 - [API Reference](#api-reference)
 - [Examples](#examples)
@@ -68,6 +69,7 @@ Originally developed for BPS - Statistics Indonesia's data collection needs, now
 - **Camera integration**: Photo capture with GPS tagging
 - **Signature capture**: Digital signature collection
 - **Multi-engine support**: FormGear v1 and FasihForm v2 engines
+- **SaveOrSubmit listener architecture**: Comprehensive data persistence system (NEW)
 
 ### 🎯 Assignment-Based Configuration Features (NEW)
 - **Global SDK initialization**: Separate global configuration from assignment-specific settings
@@ -77,6 +79,24 @@ Originally developed for BPS - Statistics Indonesia's data collection needs, now
 - **Dynamic engine selection**: Automatic FormGear vs FasihForm selection based on template
 - **Context-aware handlers**: JavaScript bridge receives assignment-specific data
 - **FASIH-compatible architecture**: Matches native Android FASIH patterns
+
+### 💾 SaveOrSubmit Listener Architecture (NEW)
+- **Custom data persistence**: Implement your own caching strategies following FASIH patterns
+- **Multiple example implementations**: Simple, file-based, and database listeners provided
+- **FASIH compliance**: Direct mapping to native Android saveOrSubmit and saveOrSubmitFasihForm methods
+- **Advanced error handling**: Retry logic with exponential backoff and circuit breaker patterns
+- **Assignment context integration**: Full assignment metadata and survey information
+- **Lifecycle management**: onStarted, onCompleted, and onError callbacks for operation tracking
+- **Legacy compatibility**: Backward compatibility with existing callback patterns
+- **Type-safe architecture**: Complete data models for FormGear v1 (6 params) and FasihForm v2 (4 params)
+
+### 📷 Media Handling & JavaScript Callbacks (NEW)
+- **FASIH-compatible media handling**: Camera and file picker with proper FormGear JS integration
+- **Engine-specific callbacks**: Different JavaScript patterns for FormGear v1 vs FasihForm v2
+- **Automatic file management**: FASIH-compliant media storage in assignment-specific directories
+- **Real-time JS notifications**: Proper media selection events for immediate form display
+- **Global executor service**: Centralized JavaScript execution across all handlers
+- **File path compatibility**: Native Android FASIH directory structure compliance
 
 ### 📱 Mobile Features
 - **WebView integration**: Seamless web-to-native bridge
@@ -829,6 +849,186 @@ await FormGearSDK.instance.openFormWithAssignment(
 ✅ **Offline Support**: Per-assignment offline capabilities
 ✅ **User Permissions**: Different user roles per assignment
 ✅ **Metadata Support**: Rich assignment metadata for tracking
+
+## 💾 SaveOrSubmit Listener Architecture
+
+The SaveOrSubmit listener system allows you to implement custom data persistence strategies following FASIH patterns. Instead of relying on the SDK's default behavior, you can handle save/submit operations exactly how your application needs them.
+
+### 🎯 Key Benefits
+
+- **Custom Caching**: Implement your own data storage strategy (database, files, memory, etc.)
+- **FASIH Compliance**: Direct mapping to native Android FASIH saveOrSubmit patterns
+- **Error Recovery**: Advanced retry logic with exponential backoff
+- **Assignment Context**: Full access to assignment metadata and survey information
+- **Backward Compatible**: Works alongside existing callback patterns
+
+### 🏗️ Basic Usage
+
+```dart
+// 1. Create your custom listener
+class MyFormDataListener extends FormDataListener {
+  @override
+  Future<SaveSubmitResult> onSaveOrSubmit(SaveSubmitData data) async {
+    // Handle FormGear v1 save/submit
+    await myDatabase.saveFormData(data);
+    return SaveSubmitResult.success(submissionId: 'form_${data.assignmentId}');
+  }
+
+  @override
+  Future<SaveSubmitResult> onSaveOrSubmitFasihForm(SaveSubmitData data) async {
+    // Handle FasihForm v2 save/submit
+    await myDatabase.saveFasihFormData(data);
+    return SaveSubmitResult.success(submissionId: 'fasih_${data.assignmentId}');
+  }
+}
+
+// 2. Register your listener
+FormGearSDK.instance.setFormDataListener(MyFormDataListener());
+
+// 3. The SDK automatically calls your listener when save/submit occurs from WebView
+```
+
+### 📊 Data Model
+
+The `SaveSubmitData` contains all information from FASIH save/submit operations:
+
+```dart
+class SaveSubmitData {
+  final String assignmentId;        // Assignment identifier
+  final String templateId;          // Template identifier
+  final String surveyId;            // Survey identifier
+  final Map<String, dynamic> formData;     // Form responses
+  final Map<String, dynamic> remark;       // Comments/remarks
+  final List<dynamic> principal;           // User information
+  final Map<String, dynamic>? reference;   // Reference data (FormGear only)
+  final Map<String, dynamic>? media;       // Media files (FormGear only)
+  final String flag;                       // 'save' or 'submit'
+}
+```
+
+### 🔄 Example Implementations
+
+The SDK includes three ready-to-use example implementations:
+
+#### 1. **SimpleFormDataListener** - Basic logging and validation
+```dart
+// Basic implementation with logging
+final listener = SimpleFormDataListener();
+FormGearSDK.instance.setFormDataListener(listener);
+```
+
+#### 2. **FileSystemFormDataListener** - File-based persistence
+```dart
+// File-based storage with backup strategies
+final listener = FileSystemFormDataListener();
+FormGearSDK.instance.setFormDataListener(listener);
+```
+
+#### 3. **DatabaseFormDataListener** - SQLite/database storage
+```dart
+// Database storage with retry logic and transactions
+final listener = DatabaseFormDataListener();
+FormGearSDK.instance.setFormDataListener(listener);
+```
+
+### 🧪 Testing Your Listener
+
+To test your SaveOrSubmit listener implementation, use the **Form Data Listener Demo** in the example app:
+
+**Location**: `example/lib/screens/form_data_listener_demo_screen.dart`
+
+The demo provides:
+- ✅ **Test Buttons**: Simulate FormGear v1 and FasihForm v2 save/submit operations
+- ✅ **Live Logging**: See real-time listener calls and responses
+- ✅ **Error Simulation**: Test retry logic and error handling
+- ✅ **Multiple Listeners**: Switch between different listener implementations
+- ✅ **Assignment Context**: Full assignment metadata testing
+
+### 🔧 Advanced Features
+
+- **Lifecycle Callbacks**: `onStarted`, `onCompleted`, `onError` for operation tracking
+- **Error Handling**: Built-in retry logic with configurable policies
+- **Circuit Breaker**: Automatic fallback when errors exceed threshold
+- **Assignment Integration**: Full integration with assignment-based dynamic configuration
+- **Legacy Support**: Maintains compatibility with existing callback patterns
+
+## 📷 Media Handling & JavaScript Callbacks
+
+The FormGear SDK provides FASIH-compatible media handling for camera and file picker operations with proper JavaScript callback integration. This ensures that selected media files are immediately displayed in FormGear forms, matching the native Android FASIH app behavior.
+
+### 🎯 Key Features
+
+- **Engine-Specific JavaScript Callbacks**: Different callback patterns for FormGear v1 vs FasihForm v2
+- **FASIH-Compatible File Storage**: Uses exact native Android FASIH directory structure
+- **Real-Time Form Updates**: Immediate media display after camera/file selection
+- **Global JavaScript Executor**: Centralized WebView JavaScript execution service
+- **Assignment-Scoped Storage**: Media files organized by assignment for proper isolation
+
+### 🔧 How It Works
+
+#### 1. **Media Selection Process**
+1. User triggers camera or file picker from FormGear form
+2. Native ActionHandler processes the media selection
+3. File is saved to FASIH-compliant directory structure: `BPS/assignments/{assignmentId}/media/`
+4. JavaScript callback is executed to notify FormGear engine
+5. FormGear JS immediately displays the selected media
+
+#### 2. **JavaScript Callback Patterns**
+
+**For FormGear Engine (ID "1"):**
+```javascript
+// Simple action result callback
+android.actionResult('dataKey', true, 'photo_123.jpg')
+```
+
+**For FasihForm Engine (ID "2"):**
+```javascript
+// Event-based callback with file metadata
+fasihForm.event.emit(
+  "file-selected",
+  "dataKey",
+  '[{ "filename": "photo_123.jpg", "uri": "file:///path/to/file" }]'
+)
+```
+
+#### 3. **Directory Structure**
+```
+BPS/
+└── assignments/
+    └── {assignmentId}/
+        ├── media/
+        │   ├── photo_1698234567890_camera_capture.jpg
+        │   ├── audio_1698234568901_interview.m4a
+        │   └── document_1698234569012_attachment.pdf
+        └── media.json  # Media index file
+```
+
+### 🧪 Testing Media Features
+
+Use the **Media Demo Screen** in the example app to test camera and file picker functionality:
+
+**Location**: `example/lib/screens/` - Available from Home Screen → "Media Features"
+
+The demo provides:
+- ✅ **Camera Integration**: Test camera capture with immediate display
+- ✅ **File Picker**: Test document and image selection
+- ✅ **Audio Recording**: Test audio capture functionality
+- ✅ **Barcode Scanner**: Test QR/barcode scanning integration
+- ✅ **Assignment Context**: Test media storage in assignment directories
+
+### 🔧 Implementation Details
+
+The media system uses a global `JSExecutorService` that automatically detects the form engine type and executes the appropriate JavaScript callbacks:
+
+```dart
+// Automatic registration when WebView is created
+JSExecutorService.instance.registerController(controller, engineId);
+
+// Handlers automatically use the service for callbacks
+await JSExecutorService.instance.executeJavaScript(callbackCommand);
+```
+
+This ensures that all media operations properly notify the FormGear JavaScript engine, enabling immediate media display without requiring page refreshes or manual form reloading.
 
 ## 📱 FASIH App Integration
 
