@@ -31,16 +31,12 @@ import 'package:form_gear_engine_sdk/src/core/version/template_version_manager.d
     as _i1069;
 import 'package:form_gear_engine_sdk/src/data/datasources/form_engine_remote_data_source.dart'
     as _i242;
-import 'package:form_gear_engine_sdk/src/data/datasources/template_remote_data_source.dart'
-    as _i393;
 import 'package:form_gear_engine_sdk/src/data/repositories/download_repository_impl.dart'
     as _i323;
 import 'package:form_gear_engine_sdk/src/data/repositories/file_repository_impl.dart'
     as _i1070;
 import 'package:form_gear_engine_sdk/src/data/repositories/form_engine_repository_impl.dart'
     as _i1069;
-import 'package:form_gear_engine_sdk/src/data/repositories/template_repository_impl.dart'
-    as _i1019;
 import 'package:form_gear_engine_sdk/src/data/repositories/version_repository_impl.dart'
     as _i609;
 import 'package:form_gear_engine_sdk/src/data/repositories/zip_repository_impl.dart'
@@ -53,8 +49,6 @@ import 'package:form_gear_engine_sdk/src/domain/repositories/form_data_repositor
     as _i771;
 import 'package:form_gear_engine_sdk/src/domain/repositories/form_engine_repository.dart'
     as _i458;
-import 'package:form_gear_engine_sdk/src/domain/repositories/template_repository.dart'
-    as _i299;
 import 'package:form_gear_engine_sdk/src/domain/repositories/version_repository.dart'
     as _i906;
 import 'package:form_gear_engine_sdk/src/domain/repositories/zip_repository.dart'
@@ -71,14 +65,10 @@ import 'package:form_gear_engine_sdk/src/domain/usecases/extract_template_usecas
     as _i87;
 import 'package:form_gear_engine_sdk/src/domain/usecases/get_assignment_usecase.dart'
     as _i1048;
-import 'package:form_gear_engine_sdk/src/domain/usecases/get_custom_template_data_usecase.dart'
-    as _i732;
 import 'package:form_gear_engine_sdk/src/domain/usecases/get_local_form_engine_version_usecase.dart'
     as _i190;
 import 'package:form_gear_engine_sdk/src/domain/usecases/get_local_template_version_usecase.dart'
     as _i471;
-import 'package:form_gear_engine_sdk/src/domain/usecases/get_lookup_data_usecase.dart'
-    as _i560;
 import 'package:form_gear_engine_sdk/src/domain/usecases/is_form_engine_downloaded_usecase.dart'
     as _i186;
 import 'package:form_gear_engine_sdk/src/domain/usecases/save_form_engine_version_usecase.dart'
@@ -123,12 +113,6 @@ _i174.GetIt $initGetIt(
   gh.lazySingleton<_i361.Dio>(
     () => registerModule.dio(gh<_i931.ConfigProvider>()),
   );
-  gh.lazySingleton<_i393.TemplateRemoteDataSource>(
-    () => _i393.TemplateRemoteDataSourceImpl(
-      apiConfig: gh<_i100.FormGearApiConfig>(),
-      dio: gh<_i361.Dio>(),
-    ),
-  );
   gh.lazySingleton<_i242.FormEngineRemoteDataSource>(
     () => _i242.FormEngineRemoteDataSourceImpl(
       apiConfig: gh<_i100.FormGearApiConfig>(),
@@ -143,17 +127,6 @@ _i174.GetIt $initGetIt(
   );
   gh.lazySingleton<_i356.ExtractFormEngineUseCase>(
     () => _i356.ExtractFormEngineUseCase(gh<_i422.ZipRepository>()),
-  );
-  gh.lazySingleton<_i299.TemplateRepository>(
-    () => _i1019.TemplateRepositoryImpl(
-      remoteDataSource: gh<_i393.TemplateRemoteDataSource>(),
-    ),
-  );
-  gh.lazySingleton<_i560.GetLookupDataUseCase>(
-    () => _i560.GetLookupDataUseCase(gh<_i299.TemplateRepository>()),
-  );
-  gh.lazySingleton<_i732.GetCustomTemplateDataUseCase>(
-    () => _i732.GetCustomTemplateDataUseCase(gh<_i299.TemplateRepository>()),
   );
   gh.lazySingleton<_i471.GetLocalTemplateVersionUseCase>(
     () => _i471.GetLocalTemplateVersionUseCase(gh<_i906.VersionRepository>()),
