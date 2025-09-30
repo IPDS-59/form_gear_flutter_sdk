@@ -710,7 +710,9 @@ class FormGearDownloadManager {
 
   /// Extracts a ZIP file to the specified directory
   /// Follows FASIH ZipHelper.unZip pattern
-  /// After extraction, creates/updates version.json file if version info is available
+  /// Strips top-level directory if ZIP contains single root folder
+  /// After extraction, creates/updates version.json file if version info
+  /// is available
   Future<void> _extractZipFile(
     File zipFile,
     Directory targetDir, {
@@ -724,20 +726,55 @@ class FormGearDownloadManager {
         targetDir.createSync(recursive: true);
       }
 
-      String? detectedVersion;
+      // Detect if all files are under a single root directory
+      String? commonRootDir;
+      var hasCommonRoot = true;
 
       for (final file in archive) {
-        final filename = file.name;
+        if (file.name.contains('/')) {
+          final rootDir = file.name.split('/').first;
+          if (commonRootDir == null) {
+            commonRootDir = rootDir;
+          } else if (commonRootDir != rootDir) {
+            hasCommonRoot = false;
+            break;
+          }
+        } else {
+          // File at root level, no common directory
+          hasCommonRoot = false;
+          break;
+        }
+      }
+
+      String? detectedVersion;
+      var extractedFiles = 0;
+
+      for (final file in archive) {
+        var filename = file.name;
+
+        // Strip common root directory if detected (FASIH pattern)
+        if (hasCommonRoot && commonRootDir != null) {
+          if (filename.startsWith('$commonRootDir/')) {
+            filename = filename.substring(commonRootDir.length + 1);
+          }
+        }
+
+        // Skip empty filenames after stripping
+        if (filename.isEmpty) continue;
+
         final filePath = path.join(targetDir.path, filename);
 
         if (file.isFile) {
           final outFile = File(filePath);
           outFile.parent.createSync(recursive: true);
           outFile.writeAsBytesSync(file.content as List<int>);
+          extractedFiles++;
+
+          FormGearLogger.sdk('Extracted file: $filename');
 
           // Try to detect version from existing version.json in archive
           if (filename == DirectoryConstants.versionFileName ||
-              filename.endsWith('/version.json')) {
+              filename.endsWith('version.json')) {
             try {
               final content = String.fromCharCodes(file.content as List<int>);
               final versionJson = jsonDecode(content) as Map<String, dynamic>;
@@ -747,7 +784,11 @@ class FormGearDownloadManager {
             }
           }
         } else {
-          Directory(filePath).createSync(recursive: true);
+          final dir = Directory(filePath);
+          if (!dir.existsSync()) {
+            dir.createSync(recursive: true);
+            FormGearLogger.sdk('Created directory: $filename');
+          }
         }
       }
 
@@ -760,7 +801,11 @@ class FormGearDownloadManager {
         );
       }
 
-      FormGearLogger.sdk('Extracted ZIP to ${targetDir.path}');
+      FormGearLogger.sdk(
+        'ZIP extraction completed successfully. Extracted $extractedFiles '
+        'files${hasCommonRoot ? ' (stripped root: $commonRootDir)' : ''} '
+        'to ${targetDir.path}',
+      );
     } on Exception catch (e) {
       FormGearLogger.sdkError('Failed to extract ZIP file: $e');
       rethrow;
