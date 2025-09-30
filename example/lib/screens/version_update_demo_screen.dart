@@ -4,7 +4,6 @@ import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 // Import screens directly since they're not exported
 // This is acceptable for demo/example code
 import 'package:form_gear_engine_sdk/src/presentation/screens/form_engine_update_screen.dart';
-import 'package:form_gear_engine_sdk/src/presentation/screens/template_update_screen.dart';
 
 class VersionUpdateDemoScreen extends StatelessWidget {
   const VersionUpdateDemoScreen({super.key});
@@ -66,38 +65,6 @@ class VersionUpdateDemoScreen extends StatelessWidget {
                 ),
               ),
             ]),
-            const SizedBox(height: 24),
-            _buildDemoSection(context, 'Template Updates', [
-              _buildDemoCard(
-                context,
-                'Missing Template (Forced)',
-                'Show forced download for missing template',
-                () => _showTemplateUpdate(
-                  context,
-                  VersionCheckResult(
-                    state: VersionState.missing,
-                    formEngine: _createMockFormEngine(isForced: true),
-                    remoteVersion: '1.2.0',
-                  ),
-                  'Survey Template',
-                ),
-              ),
-              _buildDemoCard(
-                context,
-                'Outdated Template (Optional)',
-                'Show optional update for outdated template',
-                () => _showTemplateUpdate(
-                  context,
-                  VersionCheckResult(
-                    state: VersionState.outdated,
-                    formEngine: _createMockFormEngine(isForced: false),
-                    localVersion: '1.0.0',
-                    remoteVersion: '1.2.0',
-                  ),
-                  'Registration Form',
-                ),
-              ),
-            ]),
           ],
         ),
       ),
@@ -149,19 +116,6 @@ class VersionUpdateDemoScreen extends StatelessWidget {
       context: context,
       versionResult: versionResult,
       onDownload: (onProgress) => _simulateDownload(onProgress),
-    );
-  }
-
-  Future<void> _showTemplateUpdate(
-    BuildContext context,
-    VersionCheckResult versionResult,
-    String templateName,
-  ) async {
-    await TemplateUpdateScreen.show(
-      context: context,
-      versionResult: versionResult,
-      templateName: templateName,
-      onDownload: () => _simulateDownload((_) {}),
     );
   }
 
