@@ -1,5 +1,5 @@
-// dart format width=80
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format width=80
 
 // **************************************************************************
 // InjectableConfigGenerator
@@ -10,6 +10,8 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:dio/dio.dart' as _i361;
+import 'package:form_gear_engine_sdk/src/core/compression/compression_service.dart'
+    as _i60;
 import 'package:form_gear_engine_sdk/src/core/config/config_provider.dart'
     as _i931;
 import 'package:form_gear_engine_sdk/src/core/config/form_gear_api_config.dart'
@@ -19,6 +21,10 @@ import 'package:form_gear_engine_sdk/src/core/download/form_gear_download_manage
     as _i714;
 import 'package:form_gear_engine_sdk/src/core/download/template_download_manager.dart'
     as _i535;
+import 'package:form_gear_engine_sdk/src/core/retry/retry_service.dart'
+    as _i825;
+import 'package:form_gear_engine_sdk/src/core/security/encryption_service.dart'
+    as _i174;
 import 'package:form_gear_engine_sdk/src/core/version/form_gear_version_manager.dart'
     as _i771;
 import 'package:form_gear_engine_sdk/src/core/version/template_version_manager.dart'
@@ -86,6 +92,8 @@ _i174.GetIt $initGetIt(
 }) {
   final gh = _i526.GetItHelper(getIt, environment, environmentFilter);
   final registerModule = _$RegisterModule();
+  gh.lazySingleton<_i825.RetryService>(() => _i825.RetryService());
+  gh.lazySingleton<_i60.CompressionService>(() => _i60.CompressionService());
   gh.lazySingleton<_i931.ConfigProvider>(
     () => const _i931.FormGearConfigProvider(),
   );
@@ -96,6 +104,9 @@ _i174.GetIt $initGetIt(
   );
   gh.lazySingleton<_i422.ZipRepository>(
     () => _i542.ZipRepositoryImpl(fileRepository: gh<_i260.FileRepository>()),
+  );
+  gh.lazySingleton<_i174.EncryptionService>(
+    () => _i174.EncryptionService(customKey: gh<String>()),
   );
   gh.lazySingleton<_i361.Dio>(
     () => registerModule.dio(gh<_i931.ConfigProvider>()),

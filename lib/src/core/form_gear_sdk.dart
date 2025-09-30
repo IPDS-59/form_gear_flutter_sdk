@@ -122,6 +122,7 @@ class FormGearSDK {
     required FormEngineType engineType,
     String? baseUrl,
     String? historyUrl,
+    void Function(int received, int total)? onProgress,
   }) async {
     if (!_isInitialized) {
       throw Exception('FormGear SDK not initialized. Call initialize() first.');
@@ -133,7 +134,10 @@ class FormGearSDK {
 
     try {
       // Load engine assets internally based on FormEngineType
-      final engineAssets = await _loadEngineAssets(engineType);
+      final engineAssets = await _loadEngineAssets(
+        engineType,
+        onProgress: onProgress,
+      );
 
       // Inject CSS and JS into HTML template
       var processedHtml = engineAssets.htmlTemplate;
@@ -254,6 +258,7 @@ class FormGearSDK {
     required BuildContext context,
     required AssignmentContext assignment,
     String? title,
+    void Function(int received, int total)? onProgress,
   }) async {
     if (!_isInitialized) {
       throw Exception(
@@ -273,7 +278,10 @@ class FormGearSDK {
 
     // Prepare engine based on assignment template
     final engineType = _determineEngineTypeFromTemplate(assignment.templateId);
-    final preparedEngine = await prepareEngine(engineType: engineType);
+    final preparedEngine = await prepareEngine(
+      engineType: engineType,
+      onProgress: onProgress,
+    );
     _currentPreparedEngine = preparedEngine;
     _currentEngineType = engineType;
 
@@ -568,11 +576,17 @@ class FormGearSDK {
   // Engine asset loading methods
 
   /// Loads engine assets from local storage or falls back to bundle assets
-  Future<_EngineAssets> _loadEngineAssets(FormEngineType engineType) async {
+  Future<_EngineAssets> _loadEngineAssets(
+    FormEngineType engineType, {
+    void Function(int received, int total)? onProgress,
+  }) async {
     try {
       // Try to load from downloaded engine files first (using
       // DirectoryConstants)
-      final engineAssets = await _loadEngineFromLocal(engineType);
+      final engineAssets = await _loadEngineFromLocal(
+        engineType,
+        onProgress: onProgress,
+      );
       if (engineAssets != null) {
         FormGearLogger.sdk(
           'Loaded ${engineType.displayName} engine from local storage',
@@ -593,7 +607,10 @@ class FormGearSDK {
   }
 
   /// Loads engine assets from local downloaded files using DirectoryConstants
-  Future<_EngineAssets?> _loadEngineFromLocal(FormEngineType engineType) async {
+  Future<_EngineAssets?> _loadEngineFromLocal(
+    FormEngineType engineType, {
+    void Function(int received, int total)? onProgress,
+  }) async {
     try {
       final engineId = engineType.id.toString();
       final engineDir = await DirectoryConstants.getFormEngineDirectory(
@@ -608,7 +625,10 @@ class FormGearSDK {
           'Engine files not found locally, copying from assets...',
         );
         final downloadManager = getIt<FormGearDownloadManager>();
-        final downloaded = await downloadManager.downloadFormEngine(engineId);
+        final downloaded = await downloadManager.downloadFormEngine(
+          engineId,
+          onProgress: onProgress,
+        );
 
         if (!downloaded) {
           FormGearLogger.sdkError('Failed to copy engine files from assets');
