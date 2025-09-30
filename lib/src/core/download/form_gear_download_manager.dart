@@ -347,13 +347,47 @@ class FormGearDownloadManager {
   /// Gets the local version of a form engine
   Future<String?> getLocalFormEngineVersion(String engineId) async {
     try {
-      final dataDir = await getFormGearDataDirectory();
-      final versionFile = File('${dataDir.path}/formengine/$engineId/version');
+      // Use DirectoryConstants for FASIH-compliant path
+      final versionFile = await DirectoryConstants.getFormEngineVersionFile(
+        engineId,
+      );
 
       if (versionFile.existsSync()) {
         final versionContent = versionFile.readAsStringSync();
-        return versionContent.trim();
+
+        // Try to parse as JSON first (FASIH format: version.json)
+        try {
+          final versionData =
+              jsonDecode(versionContent) as Map<String, dynamic>;
+          final version = versionData['version'] as String?;
+          if (version != null) {
+            return version;
+          }
+        } on Exception {
+          // Fallback to plain text format (legacy)
+          return versionContent.trim();
+        }
       }
+
+      // Fallback: Check legacy version file without .json extension
+      try {
+        final dataDir = await getFormGearDataDirectory();
+        final legacyVersionFile = File(
+          '${dataDir.path}/formengine/$engineId/version',
+        );
+
+        if (legacyVersionFile.existsSync()) {
+          final versionContent = legacyVersionFile.readAsStringSync();
+          FormGearLogger.sdk(
+            'Using legacy version file for engine $engineId, '
+            'consider migration',
+          );
+          return versionContent.trim();
+        }
+      } on Exception {
+        // Ignore legacy file errors
+      }
+
       return null;
     } on Exception catch (e) {
       FormGearLogger.sdkError('Failed to read engine $engineId version: $e');
@@ -468,10 +502,47 @@ class FormGearDownloadManager {
           .whereType<Directory>()
           .toList();
 
-      return templateDirs.map((dir) => dir.path.split('/').last).toList();
+      final templateIds = <String>[];
+      for (final dir in templateDirs) {
+        final templateId = dir.path.split('/').last;
+
+        // Verify template has required files (same as TemplateDownloadManager)
+        final hasTemplateFiles = await _hasTemplateFiles(templateId);
+        if (hasTemplateFiles) {
+          templateIds.add(templateId);
+        }
+      }
+
+      return templateIds;
     } on Exception catch (e) {
       FormGearLogger.sdkError('Failed to list downloaded templates: $e');
       return [];
+    }
+  }
+
+  /// Checks if template directory has required FASIH files
+  Future<bool> _hasTemplateFiles(String templateId) async {
+    try {
+      final templateDir = await DirectoryConstants.getTemplateDirectory(
+        templateId,
+      );
+
+      // Check for FASIH-style files
+      final templateMetadataFile = File(
+        '${templateDir.path}/${templateId}_template.json',
+      );
+      final validationFile = File(
+        '${templateDir.path}/${templateId}_validation.json',
+      );
+      final formDefinitionFile = File('${templateDir.path}/$templateId.json');
+      final versionFile = File('${templateDir.path}/version.json');
+
+      return templateMetadataFile.existsSync() ||
+          validationFile.existsSync() ||
+          formDefinitionFile.existsSync() ||
+          versionFile.existsSync();
+    } on Exception {
+      return false;
     }
   }
 
@@ -639,7 +710,9 @@ class FormGearDownloadManager {
 
   /// Extracts a ZIP file to the specified directory
   /// Follows FASIH ZipHelper.unZip pattern
-  /// After extraction, creates/updates version.json file if version info is available
+  /// Strips top-level directory if ZIP contains single root folder
+  /// After extraction, creates/updates version.json file if version info
+  /// is available
   Future<void> _extractZipFile(
     File zipFile,
     Directory targetDir, {
@@ -653,20 +726,65 @@ class FormGearDownloadManager {
         targetDir.createSync(recursive: true);
       }
 
+      // Detect if all files are under a single root directory
+      String? commonRootDir;
+      var hasCommonRoot = true;
+
+      // First pass: detect common root directory
+      for (final file in archive) {
+        // Skip directory entries themselves
+        if (file.isDirectory) continue;
+
+        if (file.name.contains('/')) {
+          final rootDir = file.name.split('/').first;
+          if (commonRootDir == null) {
+            commonRootDir = rootDir;
+          } else if (commonRootDir != rootDir) {
+            hasCommonRoot = false;
+            break;
+          }
+        } else {
+          // File at root level, no common directory
+          hasCommonRoot = false;
+          break;
+        }
+      }
+
       String? detectedVersion;
+      var extractedFiles = 0;
 
       for (final file in archive) {
-        final filename = file.name;
+        // Skip the root directory entry itself BEFORE processing
+        // (e.g., "form-gear/" or "fasihform/")
+        if (hasCommonRoot &&
+            commonRootDir != null &&
+            file.name == '$commonRootDir/') {
+          continue;
+        }
+
+        var filename = file.name;
+
+        // Strip common root directory if detected (FASIH pattern)
+        if (hasCommonRoot && commonRootDir != null) {
+          if (filename.startsWith('$commonRootDir/')) {
+            filename = filename.substring(commonRootDir.length + 1);
+          }
+        }
+
+        // Skip empty filenames after stripping
+        if (filename.isEmpty) continue;
+
         final filePath = path.join(targetDir.path, filename);
 
         if (file.isFile) {
           final outFile = File(filePath);
           outFile.parent.createSync(recursive: true);
           outFile.writeAsBytesSync(file.content as List<int>);
+          extractedFiles++;
 
           // Try to detect version from existing version.json in archive
           if (filename == DirectoryConstants.versionFileName ||
-              filename.endsWith('/version.json')) {
+              filename.endsWith('version.json')) {
             try {
               final content = String.fromCharCodes(file.content as List<int>);
               final versionJson = jsonDecode(content) as Map<String, dynamic>;
@@ -675,8 +793,15 @@ class FormGearDownloadManager {
               // Ignore parsing errors
             }
           }
-        } else {
-          Directory(filePath).createSync(recursive: true);
+        } else if (file.isDirectory) {
+          // Only create subdirectories AFTER stripping root
+          // Skip if this is the root directory itself
+          if (filename.isNotEmpty) {
+            final dir = Directory(filePath);
+            if (!dir.existsSync()) {
+              dir.createSync(recursive: true);
+            }
+          }
         }
       }
 
@@ -689,7 +814,11 @@ class FormGearDownloadManager {
         );
       }
 
-      FormGearLogger.sdk('Extracted ZIP to ${targetDir.path}');
+      FormGearLogger.sdk(
+        'ZIP extraction completed successfully. Extracted $extractedFiles '
+        'files${hasCommonRoot ? ' (stripped root: $commonRootDir)' : ''} '
+        'to ${targetDir.path}',
+      );
     } on Exception catch (e) {
       FormGearLogger.sdkError('Failed to extract ZIP file: $e');
       rethrow;

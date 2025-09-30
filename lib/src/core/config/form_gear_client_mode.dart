@@ -4,7 +4,10 @@ enum FormGearClientMode {
   cawi(1),
 
   /// CAPI - Computer Assisted Personal Interviewing (Mobile app)
-  capi(2);
+  capi(2),
+
+  /// Test mode for development and testing
+  test(3);
 
   const FormGearClientMode(this.value);
   final int value;

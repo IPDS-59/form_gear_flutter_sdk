@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/constants/directory_constants.dart';
+import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
 import 'package:form_gear_engine_sdk/src/core/server/form_gear_server.dart';
 import 'package:form_gear_engine_sdk/src/core/version/form_gear_version_manager.dart';
 import 'package:form_gear_engine_sdk/src/models/models.dart';
@@ -22,17 +23,61 @@ class FormGearSDK {
   static FormGearSDK get instance => _instance;
 
   FormGearConfig? _config;
+  FormGearGlobalConfig? _globalConfig;
   FormGearServer? _server;
   bool _isInitialized = false;
 
-  // Current form configuration
+  // Current form configuration (legacy)
   FormConfig? _currentFormConfig;
   PreparedEngine? _currentPreparedEngine;
+  FormEngineType? _currentEngineType;
+
+  // Current assignment context (new assignment-based system)
+  AssignmentContext? _currentAssignment;
+
+  // FormDataListener for save/submit operations
+  FormDataListener? _formDataListener;
 
   // Version manager
   late FormGearVersionManager _versionManager;
 
-  /// Initializes the FormGear SDK with configuration
+  /// Initializes the FormGear SDK with global configuration
+  /// This is the new assignment-based initialization method
+  Future<void> initializeGlobal(
+    FormGearGlobalConfig globalConfig, {
+    List<Interceptor>? dioInterceptors,
+    String? userAgent,
+  }) async {
+    // Store global configuration
+    _globalConfig = globalConfig;
+
+    // Convert to legacy config for compatibility
+    _config = globalConfig.toLegacyConfig();
+
+    // Always call configureDependencies - it will handle updates
+    // The DI container now checks if ConfigProvider is already registered
+    await configureDependencies(
+      apiConfig: globalConfig.apiConfig,
+      formGearConfig: _config,
+      additionalInterceptors: dioInterceptors,
+    );
+
+    // Initialize version manager (or get existing instance)
+    _versionManager = getIt<FormGearVersionManager>();
+
+    if (!_isInitialized) {
+      FormGearLogger.sdk('FormGear SDK initialized with global configuration');
+    } else {
+      FormGearLogger.sdk(
+        'FormGear SDK global configuration updated successfully',
+      );
+    }
+
+    _isInitialized = true;
+  }
+
+  /// Initializes the FormGear SDK with configuration (legacy method)
+  /// For backward compatibility - use initializeGlobal for new projects
   Future<void> initialize(
     FormGearConfig config, {
     List<Interceptor>? dioInterceptors,
@@ -41,15 +86,15 @@ class FormGearSDK {
     // Allow re-initialization to update configuration
     _config = config;
 
-    if (!_isInitialized) {
-      // Configure dependency injection with config
-      await configureDependencies(
-        apiConfig: config.apiConfig,
-        additionalInterceptors: dioInterceptors,
-      );
-    }
+    // Always call configureDependencies - it will handle updates
+    // The DI container now checks if ConfigProvider is already registered
+    await configureDependencies(
+      apiConfig: config.apiConfig,
+      formGearConfig: config,
+      additionalInterceptors: dioInterceptors,
+    );
 
-    // Initialize version manager
+    // Initialize version manager (or get existing instance)
     _versionManager = getIt<FormGearVersionManager>();
 
     // Note: Dio interceptors are now configured in the DI container
@@ -60,9 +105,12 @@ class FormGearSDK {
     // to reduce resource usage when not needed
 
     if (!_isInitialized) {
-      FormGearLogger.sdk('FormGear SDK initialized successfully');
+      FormGearLogger.sdk('FormGear SDK initialized successfully (legacy mode)');
     } else {
-      FormGearLogger.sdk('FormGear SDK configuration updated successfully');
+      FormGearLogger.sdk(
+        'FormGear SDK configuration updated successfully - '
+        'AuthInterceptor will use new tokens on next request',
+      );
     }
 
     _isInitialized = true;
@@ -116,6 +164,7 @@ class FormGearSDK {
       );
 
       _currentPreparedEngine = preparedEngine;
+      _currentEngineType = engineType;
       FormGearLogger.sdk(
         'Engine ${engineType.displayName} prepared successfully with '
         '${processedHtml.length} chars HTML',
@@ -140,7 +189,125 @@ class FormGearSDK {
     FormGearLogger.sdk('Form config loaded for form: ${formConfig.formId}');
   }
 
-  /// Launches the prepared engine in a WebView page
+  /// Sets the FormDataListener for handling save/submit operations
+  ///
+  /// The FormDataListener provides a comprehensive interface for handling
+  /// save and submit operations from both FormGear v1 and FasihForm v2 engines.
+  ///
+  /// Usage:
+  /// ```dart
+  /// class MyFormDataListener extends BaseFormDataListener {
+  ///   @override
+  ///   Future<SaveSubmitResult> onSaveOrSubmit(SaveSubmitData data) async {
+  ///     // Handle FormGear v1 save/submit
+  ///     await myDatabase.saveFormData(data);
+  ///     return SaveSubmitResult.success(
+  ///       submissionId: 'form_${data.assignmentId}',
+  ///     );
+  ///   }
+  ///
+  ///   @override
+  ///   Future<SaveSubmitResult> onSaveOrSubmitFasihForm(
+  ///     SaveSubmitData data,
+  ///   ) async {
+  ///     // Handle FasihForm v2 save/submit
+  ///     await myDatabase.saveFasihFormData(data);
+  ///     return SaveSubmitResult.success(
+  ///       submissionId: 'fasih_${data.assignmentId}',
+  ///     );
+  ///   }
+  /// }
+  ///
+  /// FormGearSDK.instance.setFormDataListener(MyFormDataListener());
+  /// ```
+  void setFormDataListener(FormDataListener? listener) {
+    _formDataListener = listener;
+
+    if (listener != null) {
+      FormGearLogger.sdk(
+        'FormDataListener registered: ${listener.runtimeType}',
+      );
+    } else {
+      FormGearLogger.sdk('FormDataListener removed');
+    }
+  }
+
+  /// Gets the currently registered FormDataListener
+  ///
+  /// Returns null if no listener is registered.
+  FormDataListener? get formDataListener => _formDataListener;
+
+  /// Checks if a FormDataListener is currently registered
+  bool get hasFormDataListener => _formDataListener != null;
+
+  /// Removes the currently registered FormDataListener
+  ///
+  /// After calling this method, save/submit operations will fall back
+  /// to legacy callback behavior or default implementations.
+  void removeFormDataListener() {
+    setFormDataListener(null);
+  }
+
+  /// Opens form with assignment context (new assignment-based method)
+  /// This method uses dynamic configuration based on assignment context
+  Future<void> openFormWithAssignment({
+    required BuildContext context,
+    required AssignmentContext assignment,
+    String? title,
+  }) async {
+    if (!_isInitialized) {
+      throw Exception(
+        'FormGear SDK not initialized. Call initializeGlobal() first.',
+      );
+    }
+
+    // Store current assignment context
+    _currentAssignment = assignment;
+
+    // Update legacy config with assignment-specific settings for compatibility
+    if (_globalConfig != null) {
+      _config = _globalConfig!.toLegacyConfig(
+        assignmentConfig: assignment.config,
+      );
+    }
+
+    // Prepare engine based on assignment template
+    final engineType = _determineEngineTypeFromTemplate(assignment.templateId);
+    final preparedEngine = await prepareEngine(engineType: engineType);
+    _currentPreparedEngine = preparedEngine;
+    _currentEngineType = engineType;
+
+    // Start server if configured to auto-start
+    await _startServerIfNeeded();
+
+    // Create WebView with assignment-specific handlers
+    final webView = _createWebViewWithAssignment(assignment);
+
+    try {
+      // Check if context is still mounted before navigation
+      if (!context.mounted) return;
+
+      // Navigate to a full-screen page with the WebView
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (context) => _FormGearEnginePage(
+            title: title ?? 'FormGear - ${assignment.templateId}',
+            webView: webView,
+          ),
+        ),
+      );
+    } finally {
+      // Clear assignment context and stop server when done
+      _currentAssignment = null;
+      if (_server != null && _server!.isRunning) {
+        await _server!.stop();
+        FormGearLogger.sdk('FormGear server stopped - Assignment completed');
+      }
+    }
+  }
+
+  /// Launches the prepared engine in a WebView page (legacy method)
+  /// For backward compatibility - use openFormWithAssignment for new projects
   Future<void> launchPreparedEngine(
     BuildContext context, {
     String? title,
@@ -193,6 +360,11 @@ class FormGearSDK {
       jsHandlers: _createRequiredHandlers(),
       onWebViewCreated: (controller) {
         // WebView created - ready for JS bridge
+        // Register JavaScript executor service for action handlers
+        JSExecutorService().registerController(
+          controller,
+          _currentEngineType?.id.toString(),
+        );
       },
     );
   }
@@ -269,6 +441,7 @@ class FormGearSDK {
   /// Creates required handlers for FormGear and FasihForm compatibility
   List<JSHandler<dynamic>> _createRequiredHandlers() {
     final dataHandler = AndroidDataHandler(
+      getCurrentAssignment: () => _currentAssignment,
       onGetReference: () async =>
           _currentFormConfig?.reference ??
           {
@@ -339,6 +512,8 @@ class FormGearSDK {
         FormGearLogger.webview('FasihForm SaveOrSubmit: $action');
         return 'fasih_form_${DateTime.now().millisecondsSinceEpoch}';
       },
+      formDataListener: _formDataListener,
+      getCurrentAssignment: () => _currentAssignment,
     );
 
     // Individual action handlers following web_view pattern
@@ -716,6 +891,201 @@ class FormGearSDK {
     }
 
     return processedHtml;
+  }
+
+  /// Determines the FormEngineType based on template ID
+  FormEngineType _determineEngineTypeFromTemplate(String templateId) {
+    // Check if template ID indicates FasihForm usage
+    if (templateId.startsWith('fasih') ||
+        templateId.contains('fasih') ||
+        templateId.startsWith('survey')) {
+      return FormEngineType.fasihForm;
+    }
+
+    // Default to FormGear for other templates
+    return FormEngineType.formGear;
+  }
+
+  /// Starts server if needed based on global configuration
+  Future<void> _startServerIfNeeded() async {
+    final shouldStartServer = _globalConfig?.autoStartServer ?? true;
+
+    if (shouldStartServer && _server?.isRunning != true) {
+      await _startServer();
+    }
+  }
+
+  /// Creates WebView with assignment-specific handlers
+  FormGearWebView _createWebViewWithAssignment(AssignmentContext assignment) {
+    return FormGearWebView(
+      url: 'about:blank',
+      htmlContent: _currentPreparedEngine!.html,
+      jsHandlers: _createAssignmentAwareHandlers(assignment),
+      onWebViewCreated: (controller) {
+        FormGearLogger.sdk(
+          'WebView created for assignment: ${assignment.assignmentId}',
+        );
+        // Register JavaScript executor service for action handlers
+        JSExecutorService().registerController(
+          controller,
+          _currentEngineType?.id.toString(),
+        );
+      },
+    );
+  }
+
+  /// Creates handlers with assignment context awareness
+  List<JSHandler<dynamic>> _createAssignmentAwareHandlers(
+    AssignmentContext assignment,
+  ) {
+    final dataHandler = AndroidDataHandler(
+      getCurrentAssignment: () => _currentAssignment,
+      onGetReference: () async =>
+          _currentFormConfig?.reference ??
+          {
+            'details': <dynamic>[],
+            'sidebar': <dynamic>[],
+          },
+      onGetTemplate: () async =>
+          _currentFormConfig?.template ??
+          {
+            'components': <dynamic>[<dynamic>[]],
+          },
+      onGetPreset: () async =>
+          _currentFormConfig?.preset ??
+          {
+            'description': 'Default Preset',
+            'dataKey': 'default_preset',
+            'predata': <dynamic>[],
+          },
+      onGetResponse: () async =>
+          _currentFormConfig?.response ??
+          {
+            'details': {'answers': <dynamic>[]},
+          },
+      onGetValidation: () async =>
+          _currentFormConfig?.validation ??
+          {
+            'testFunctions': <dynamic>[],
+          },
+      onGetMedia: () async =>
+          _currentFormConfig?.media ??
+          {
+            'details': {'media': <dynamic>[]},
+          },
+      onGetRemark: () async =>
+          _currentFormConfig?.remark ??
+          {
+            'dataKey': 'default_remark',
+            'notes': <dynamic>[],
+          },
+      onGetUserName: () async => _config?.username ?? 'Default User',
+      onGetFormMode: () async => _currentFormConfig?.formMode ?? 1,
+      onGetIsNew: () async => _currentFormConfig?.isNew ?? 1,
+      onGetPrincipalCollection: () async =>
+          _currentFormConfig?.principals ?? [],
+      onGetRolePetugas: () async => _config?.bpsUser?.jabatan ?? 'USER',
+      onGetUserRole: () async => _config?.bpsUser?.jabatan ?? 'USER',
+    );
+
+    final actionHandler = AndroidActionHandler(
+      onAction: (action, dataKey, data, customData) async {
+        FormGearLogger.webview(
+          'FormGear Action for ${assignment.assignmentId}: $action, '
+          'DataKey: $dataKey',
+        );
+        return 'Action $action completed for assignment '
+            '${assignment.assignmentId}';
+      },
+      onExecute: (action, dataKey, data) async {
+        FormGearLogger.webview(
+          'FasihForm Execute for ${assignment.assignmentId}: $action, '
+          'DataKey: $dataKey',
+        );
+        return 'Execute $action completed for assignment '
+            '${assignment.assignmentId}';
+      },
+      onSaveOrSubmit:
+          (response, remark, principal, reference, media, action) async {
+            FormGearLogger.webview(
+              'FormGear SaveOrSubmit for ${assignment.assignmentId}: $action',
+            );
+            return 'form_${assignment.assignmentId}_'
+                '${DateTime.now().millisecondsSinceEpoch}';
+          },
+      onSaveOrSubmitFasihForm: (response, remark, principal, action) async {
+        FormGearLogger.webview(
+          'FasihForm SaveOrSubmit for ${assignment.assignmentId}: $action',
+        );
+        return 'fasih_form_${assignment.assignmentId}_'
+            '${DateTime.now().millisecondsSinceEpoch}';
+      },
+      formDataListener: _formDataListener,
+      getCurrentAssignment: () => _currentAssignment,
+    );
+
+    // Individual action handlers
+    final actionCameraHandler = ActionHandler();
+    final executeHandler = ExecuteHandler();
+    final mobileExitHandler = MobileExitHandler();
+
+    // Assignment-aware client action handlers
+    final clientActionHandler = ClientActionHandler(
+      onCameraCapture: (fileName, result) async {
+        FormGearLogger.webview(
+          'Camera captured for ${assignment.assignmentId}: '
+          '$fileName -> $result',
+        );
+        return result;
+      },
+      onFileUpload: (fileData, updateCallback, {required bool isReload}) async {
+        FormGearLogger.webview(
+          'File upload for ${assignment.assignmentId}: '
+          '$fileData (reload: $isReload)',
+        );
+        return 'upload_completed';
+      },
+      onLocationUpdate: (locationData) async {
+        FormGearLogger.webview(
+          'Location updated for ${assignment.assignmentId}: $locationData',
+        );
+      },
+      onMapOpen: (coordinates) async {
+        FormGearLogger.webview(
+          'Map opened for ${assignment.assignmentId} '
+          'with coordinates: $coordinates',
+        );
+      },
+      onResponseSave: (response, media, remark, principal, reference) async {
+        FormGearLogger.webview(
+          'Response saved for assignment ${assignment.assignmentId}',
+        );
+      },
+      onSubmitSave: (response, media, remark, principal, reference) async {
+        FormGearLogger.webview(
+          'Submission saved for assignment ${assignment.assignmentId}',
+        );
+      },
+    );
+
+    // Get only save/submit handlers from the factory
+    final saveSubmitHandlers = actionHandler
+        .createHandlers()
+        .where(
+          (handler) =>
+              handler.handlerName == 'saveOrSubmit' ||
+              handler.handlerName == 'saveOrSubmitFasihForm',
+        )
+        .toList();
+
+    return [
+      ...dataHandler.createHandlers(),
+      actionCameraHandler,
+      executeHandler,
+      mobileExitHandler,
+      ...clientActionHandler.createHandlers(),
+      ...saveSubmitHandlers,
+    ];
   }
 
   Future<void> _startServer() async {
