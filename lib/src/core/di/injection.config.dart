@@ -49,6 +49,8 @@ import 'package:form_gear_engine_sdk/src/domain/repositories/download_repository
     as _i170;
 import 'package:form_gear_engine_sdk/src/domain/repositories/file_repository.dart'
     as _i260;
+import 'package:form_gear_engine_sdk/src/domain/repositories/form_data_repository.dart'
+    as _i771;
 import 'package:form_gear_engine_sdk/src/domain/repositories/form_engine_repository.dart'
     as _i458;
 import 'package:form_gear_engine_sdk/src/domain/repositories/template_repository.dart'
@@ -67,6 +69,8 @@ import 'package:form_gear_engine_sdk/src/domain/usecases/extract_form_engine_use
     as _i356;
 import 'package:form_gear_engine_sdk/src/domain/usecases/extract_template_usecase.dart'
     as _i87;
+import 'package:form_gear_engine_sdk/src/domain/usecases/get_assignment_usecase.dart'
+    as _i1048;
 import 'package:form_gear_engine_sdk/src/domain/usecases/get_custom_template_data_usecase.dart'
     as _i732;
 import 'package:form_gear_engine_sdk/src/domain/usecases/get_local_form_engine_version_usecase.dart'
@@ -81,6 +85,8 @@ import 'package:form_gear_engine_sdk/src/domain/usecases/save_form_engine_versio
     as _i58;
 import 'package:form_gear_engine_sdk/src/domain/usecases/save_template_version_usecase.dart'
     as _i980;
+import 'package:form_gear_engine_sdk/src/domain/usecases/update_assignment_usecase.dart'
+    as _i518;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 
@@ -104,6 +110,12 @@ _i174.GetIt $initGetIt(
   );
   gh.lazySingleton<_i422.ZipRepository>(
     () => _i542.ZipRepositoryImpl(fileRepository: gh<_i260.FileRepository>()),
+  );
+  gh.lazySingleton<_i518.UpdateAssignmentUseCase>(
+    () => _i518.UpdateAssignmentUseCase(gh<_i771.FormDataRepository>()),
+  );
+  gh.lazySingleton<_i1048.GetAssignmentUseCase>(
+    () => _i1048.GetAssignmentUseCase(gh<_i771.FormDataRepository>()),
   );
   gh.lazySingleton<_i174.EncryptionService>(
     () => _i174.EncryptionService(customKey: gh<String>()),
