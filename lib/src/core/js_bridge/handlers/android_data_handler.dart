@@ -20,6 +20,10 @@ class AndroidDataHandler {
     this.onGetPrincipalCollection,
     this.onGetRolePetugas,
     this.onGetUserRole,
+    this.onGetGPSTimeout,
+    this.onGetServerUrl,
+    this.onLoadActivityTemplateData,
+    this.onGetUnique,
   });
 
   /// Function to get current assignment context for dynamic configuration
@@ -38,6 +42,10 @@ class AndroidDataHandler {
   final Future<List<dynamic>> Function()? onGetPrincipalCollection;
   final Future<String> Function()? onGetRolePetugas;
   final Future<String> Function()? onGetUserRole;
+  final Future<int> Function()? onGetGPSTimeout;
+  final Future<String> Function()? onGetServerUrl;
+  final Future<Map<String, dynamic>> Function()? onLoadActivityTemplateData;
+  final Future<String> Function()? onGetUnique;
 
   /// Creates individual JSHandlers for each Android method
   List<JSHandler<JsonCodable>> createHandlers() {
@@ -174,6 +182,52 @@ class AndroidDataHandler {
           return StringInfoJs(success: true, value: role.toString());
         }
         final value = await onGetUserRole?.call() ?? 'USER';
+        return StringInfoJs(success: true, value: value);
+      }),
+      _AndroidMethodHandler('getGPSTimeout', () async {
+        final assignment = getCurrentAssignment();
+        if (assignment != null) {
+          // Get GPS timeout from assignment metadata or config
+          final timeout = assignment.metadata?['gpsTimeout'] as int? ?? 30;
+          return StringInfoJs(success: true, value: timeout.toString());
+        }
+        final value = await onGetGPSTimeout?.call() ?? 30;
+        return StringInfoJs(success: true, value: value.toString());
+      }),
+      _AndroidMethodHandler('getServerUrl', () async {
+        final assignment = getCurrentAssignment();
+        if (assignment != null) {
+          // Get server URL from assignment metadata
+          final serverUrl = assignment.metadata?['serverUrl'] as String? ?? '';
+          return StringInfoJs(success: true, value: serverUrl);
+        }
+        final value = await onGetServerUrl?.call() ?? '';
+        return StringInfoJs(success: true, value: value);
+      }),
+      _AndroidMethodHandler('loadActivityTemplateData', () async {
+        final assignment = getCurrentAssignment();
+        if (assignment != null) {
+          // Load activity template data from assignment
+          final activityData =
+              assignment.metadata?['activityTemplateData']
+                  as Map<String, dynamic>? ??
+              <String, dynamic>{};
+          return JsonInfoJs(success: true, data: activityData);
+        }
+        final data = await onLoadActivityTemplateData?.call() ?? {};
+        return JsonInfoJs(success: true, data: data);
+      }),
+      _AndroidMethodHandler('getUnique', () async {
+        final assignment = getCurrentAssignment();
+        if (assignment != null) {
+          // Generate unique ID based on assignment context
+          final timestamp = DateTime.now().millisecondsSinceEpoch;
+          final unique = '${assignment.assignmentId}_$timestamp';
+          return StringInfoJs(success: true, value: unique);
+        }
+        final value =
+            await onGetUnique?.call() ??
+            DateTime.now().millisecondsSinceEpoch.toString();
         return StringInfoJs(success: true, value: value);
       }),
     ];
