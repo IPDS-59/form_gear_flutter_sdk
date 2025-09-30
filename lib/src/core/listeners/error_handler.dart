@@ -68,7 +68,8 @@ class FormDataErrorHandler {
 
         if (attempt > 1) {
           FormGearLogger.sdk(
-            'FormDataErrorHandler: Operation succeeded on attempt $attempt for assignment ${data.assignmentId}',
+            'FormDataErrorHandler: Operation succeeded on attempt '
+            '$attempt for assignment ${data.assignmentId}',
           );
         }
 
@@ -87,8 +88,8 @@ class FormDataErrorHandler {
         final errorInfo = categorizeError(e);
 
         FormGearLogger.sdkError(
-          'FormDataErrorHandler: Attempt $attempt failed for assignment ${data.assignmentId}: '
-          '${errorInfo.category.name} - $e',
+          'FormDataErrorHandler: Attempt $attempt failed for '
+          'assignment ${data.assignmentId}: ${errorInfo.category.name} - $e',
         );
 
         // Check if we should retry
@@ -106,12 +107,13 @@ class FormDataErrorHandler {
         // Log final failure
         if (attempt == maxRetries) {
           FormGearLogger.sdkError(
-            'FormDataErrorHandler: All retry attempts exhausted for assignment ${data.assignmentId}',
+            'FormDataErrorHandler: All retry attempts exhausted for '
+            'assignment ${data.assignmentId}',
           );
         } else {
           FormGearLogger.sdkError(
-            'FormDataErrorHandler: Non-retryable error for assignment ${data.assignmentId}: '
-            '${errorInfo.category.name}',
+            'FormDataErrorHandler: Non-retryable error for '
+            'assignment ${data.assignmentId}: ${errorInfo.category.name}',
           );
         }
 
@@ -154,8 +156,8 @@ class FormDataErrorHandler {
       );
     } on TimeoutException {
       FormGearLogger.sdkError(
-        'FormDataErrorHandler: Operation timed out after ${timeout.inSeconds}s '
-        'for assignment ${data.assignmentId}',
+        'FormDataErrorHandler: Operation timed out after '
+        '${timeout.inSeconds}s for assignment ${data.assignmentId}',
       );
 
       return SaveSubmitResult.failure(
@@ -168,7 +170,8 @@ class FormDataErrorHandler {
       );
     } catch (e, stackTrace) {
       FormGearLogger.sdkError(
-        'FormDataErrorHandler: Operation failed for assignment ${data.assignmentId}: $e',
+        'FormDataErrorHandler: Operation failed for '
+        'assignment ${data.assignmentId}: $e',
       );
 
       return SaveSubmitResult.fromException(e, stackTrace);
@@ -399,7 +402,8 @@ class CircuitBreaker {
       if (_failureCount >= failureThreshold) {
         _isOpen = true;
         FormGearLogger.sdkError(
-          'Circuit breaker opened - failure threshold ($failureThreshold) reached',
+          'Circuit breaker opened - failure threshold '
+          '($failureThreshold) reached',
         );
       }
 

@@ -89,7 +89,8 @@ class SimpleFormDataListener extends UnifiedFormDataListener {
       final submissionId = _generateSubmissionId(data);
 
       FormGearLogger.sdk(
-        'SimpleFormDataListener: Successfully processed assignment ${data.assignmentId}',
+        'SimpleFormDataListener: Successfully processed assignment '
+        '${data.assignmentId}',
       );
 
       return SaveSubmitResult.success(
@@ -105,7 +106,8 @@ class SimpleFormDataListener extends UnifiedFormDataListener {
       );
     } catch (e, stackTrace) {
       FormGearLogger.sdkError(
-        'SimpleFormDataListener: Failed to process assignment ${data.assignmentId}: $e',
+        'SimpleFormDataListener: Failed to process assignment '
+        '${data.assignmentId}: $e',
       );
 
       return SaveSubmitResult.fromException(e, stackTrace);
@@ -119,7 +121,8 @@ class SimpleFormDataListener extends UnifiedFormDataListener {
     StackTrace? stackTrace,
   ) async {
     FormGearLogger.sdkError(
-      'SimpleFormDataListener: Error processing assignment ${data.assignmentId}: $error',
+      'SimpleFormDataListener: Error processing assignment '
+      '${data.assignmentId}: $error',
     );
 
     // You can add custom error handling here, such as:
@@ -131,8 +134,8 @@ class SimpleFormDataListener extends UnifiedFormDataListener {
   @override
   Future<void> onSaveOrSubmitStarted(SaveSubmitData data) async {
     FormGearLogger.sdk(
-      'SimpleFormDataListener: Started processing assignment ${data.assignmentId} '
-      '(${data.flag} operation)',
+      'SimpleFormDataListener: Started processing assignment '
+      '${data.assignmentId} (${data.flag} operation)',
     );
 
     // You can add custom logic here, such as:
@@ -148,13 +151,13 @@ class SimpleFormDataListener extends UnifiedFormDataListener {
   ) async {
     if (result.isSuccess) {
       FormGearLogger.sdk(
-        'SimpleFormDataListener: Successfully completed assignment ${data.assignmentId} '
-        'with submission ID: ${result.submissionId}',
+        'SimpleFormDataListener: Successfully completed assignment '
+        '${data.assignmentId} with submission ID: ${result.submissionId}',
       );
     } else {
       FormGearLogger.sdk(
-        'SimpleFormDataListener: Failed to complete assignment ${data.assignmentId}: '
-        '${result.error}',
+        'SimpleFormDataListener: Failed to complete assignment '
+        '${data.assignmentId}: ${result.error}',
       );
     }
 
@@ -185,7 +188,9 @@ class SimpleFormDataListener extends UnifiedFormDataListener {
       FormGearLogger.sdk(
         '  - Reference: ${data.reference?.length ?? 0} characters',
       );
-      FormGearLogger.sdk('  - Media: ${data.media?.length ?? 0} characters');
+      FormGearLogger.sdk(
+        '  - Media: ${data.media?.length ?? 0} characters',
+      );
     }
 
     FormGearLogger.sdk('Configuration:');
@@ -193,7 +198,9 @@ class SimpleFormDataListener extends UnifiedFormDataListener {
     FormGearLogger.sdk('  - Form Mode: ${data.config.formMode.name}');
     FormGearLogger.sdk('  - Client Mode: ${data.config.clientMode.name}');
     FormGearLogger.sdk('  - Encrypted: ${data.config.isEncrypted}');
-    FormGearLogger.sdk('  - Offline Capable: ${data.config.offlineCapable}');
+    FormGearLogger.sdk(
+      '  - Offline Capable: ${data.config.offlineCapable}',
+    );
   }
 
   /// Saves data to a simple JSON file for inspection
@@ -244,7 +251,9 @@ class SimpleFormDataListener extends UnifiedFormDataListener {
       final prettyJson = const JsonEncoder.withIndent('  ').convert(jsonData);
       await file.writeAsString(prettyJson);
 
-      FormGearLogger.sdk('SimpleFormDataListener: Saved data to ${file.path}');
+      FormGearLogger.sdk(
+        'SimpleFormDataListener: Saved data to ${file.path}',
+      );
     } catch (e) {
       FormGearLogger.sdkError(
         'SimpleFormDataListener: Failed to save to file: $e',

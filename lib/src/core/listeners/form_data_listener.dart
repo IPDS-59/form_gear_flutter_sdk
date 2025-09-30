@@ -14,7 +14,8 @@ import 'package:form_gear_engine_sdk/src/core/listeners/save_submit_result.dart'
 ///     // Implement your custom save logic here
 ///     await myDatabase.saveFormData(data);
 ///     return SaveSubmitResult.success(
-///       submissionId: 'my_submission_${DateTime.now().millisecondsSinceEpoch}',
+///       submissionId:
+///           'my_submission_${DateTime.now().millisecondsSinceEpoch}',
 ///     );
 ///   }
 /// }
@@ -76,7 +77,8 @@ abstract class FormDataListener {
     SaveSubmitData data,
     SaveSubmitResult result,
   ) async {
-    // Default implementation - SDK users can override for custom completion handling
+    // Default implementation - SDK users can override for custom
+    // completion handling
   }
 }
 
@@ -95,7 +97,8 @@ abstract class FormDataListener {
 ///   }
 ///
 ///   @override
-///   Future<SaveSubmitResult> onSaveOrSubmitFasihForm(SaveSubmitData data) async {
+///   Future<SaveSubmitResult> onSaveOrSubmitFasihForm(
+///       SaveSubmitData data) async {
 ///     // Reuse same logic for both engines
 ///     return await handleSaveOrSubmit(data);
 ///   }
@@ -138,8 +141,8 @@ abstract class BaseFormDataListener implements FormDataListener {
   }
 }
 
-/// Simple FormDataListener implementation that handles both FormGear and FasihForm
-/// using the same logic
+/// Simple FormDataListener implementation that handles both FormGear
+/// and FasihForm using the same logic
 ///
 /// This is useful when you want to treat both engines the same way.
 ///
@@ -150,7 +153,8 @@ abstract class BaseFormDataListener implements FormDataListener {
 ///   Future<SaveSubmitResult> handleSaveOrSubmit(SaveSubmitData data) async {
 ///     // Handle both FormGear and FasihForm the same way
 ///     await myDatabase.saveFormData(data);
-///     return SaveSubmitResult.success(submissionId: 'unified_${DateTime.now().millisecondsSinceEpoch}');
+///     return SaveSubmitResult.success(
+///         submissionId: 'unified_${DateTime.now().millisecondsSinceEpoch}');
 ///   }
 /// }
 /// ```
