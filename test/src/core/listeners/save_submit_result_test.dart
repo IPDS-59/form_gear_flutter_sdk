@@ -7,7 +7,7 @@ void main() {
       test('should create successful result with submission ID', () {
         final result = SaveSubmitResult.success(
           submissionId: 'form_12345',
-          metadata: {'saved_at': '/path/to/file'},
+          metadata: const {'saved_at': '/path/to/file'},
         );
 
         expect(result.isSuccess, isTrue);
@@ -31,7 +31,7 @@ void main() {
         final result = SaveSubmitResult.failure(
           error: 'Database connection failed',
           errorCode: 'DB_ERROR',
-          metadata: {'retry_count': 3},
+          metadata: const {'retry_count': 3},
         );
 
         expect(result.isSuccess, isFalse);
@@ -125,7 +125,7 @@ void main() {
 
       test('getMetadata should return value by key with type safety', () {
         final result = SaveSubmitResult.success(
-          metadata: {
+          metadata: const {
             'count': 5,
             'name': 'test',
             'enabled': true,
@@ -231,7 +231,7 @@ void main() {
         final original = SaveSubmitResult.failure(
           error: 'Original error',
           errorCode: 'ERR_001',
-          metadata: {'count': 1},
+          metadata: const {'count': 1},
         );
 
         final copy = original.copyWith(error: 'Modified error');
@@ -246,11 +246,11 @@ void main() {
       test('should be equal when all properties match', () {
         final result1 = SaveSubmitResult.success(
           submissionId: 'form_123',
-          metadata: {'key': 'value'},
+          metadata: const {'key': 'value'},
         );
         final result2 = SaveSubmitResult.success(
           submissionId: 'form_123',
-          metadata: {'key': 'value'},
+          metadata: const {'key': 'value'},
         );
 
         // Note: timestamps will differ, so they won't be equal
@@ -294,7 +294,7 @@ void main() {
       test('should serialize success result to JSON', () {
         final result = SaveSubmitResult.success(
           submissionId: 'form_123',
-          metadata: {'saved_at': '/path/to/file'},
+          metadata: const {'saved_at': '/path/to/file'},
         );
 
         final json = result.toJson();
@@ -308,7 +308,7 @@ void main() {
         final result = SaveSubmitResult.failure(
           error: 'Network error',
           errorCode: 'NET_001',
-          metadata: {'retry_count': 3},
+          metadata: const {'retry_count': 3},
         );
 
         final json = result.toJson();

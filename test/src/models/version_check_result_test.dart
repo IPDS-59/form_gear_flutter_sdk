@@ -193,9 +193,7 @@ void main() {
       });
 
       test('should return FormGear as fallback when engineType is null', () {
-        const formEngine = FormEngineEntity(
-          formEngineId: null,
-        );
+        const formEngine = FormEngineEntity();
         const result = VersionCheckResult(
           state: VersionState.current,
           formEngine: formEngine,
