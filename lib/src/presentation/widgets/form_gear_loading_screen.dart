@@ -143,8 +143,12 @@ class _FormGearLoadingScreenState extends State<FormGearLoadingScreen> {
             ),
             const SizedBox(height: 40),
 
-            // Circular progress indicator with animated download icon
-            _CircularDownloadProgress(loadingProgress: widget.loadingProgress),
+            // Linear progress bar with gradient
+            _LinearProgressBar(loadingProgress: widget.loadingProgress),
+            const SizedBox(height: 16),
+
+            // Progress percentage
+            _ProgressPercentage(loadingProgress: widget.loadingProgress),
           ],
         ),
       ),
@@ -290,92 +294,79 @@ class _AnimatedLogoState extends State<_AnimatedLogo>
   }
 }
 
-/// Circular download progress indicator with animated download arrow
-class _CircularDownloadProgress extends StatefulWidget {
-  const _CircularDownloadProgress({
+/// Linear progress bar widget with FormGear brand colors
+/// using percent_indicator
+class _LinearProgressBar extends StatelessWidget {
+  const _LinearProgressBar({
     required this.loadingProgress,
   });
 
   final int loadingProgress;
 
   @override
-  State<_CircularDownloadProgress> createState() =>
-      _CircularDownloadProgressState();
+  Widget build(BuildContext context) {
+    final progress = loadingProgress / 100.0;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final progressWidth = screenWidth - 64; // 32px padding on each side
+
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: (screenWidth - progressWidth) / 2,
+      ),
+      child: LinearPercentIndicator(
+        width: progressWidth,
+        lineHeight: 8,
+        percent: progress,
+        backgroundColor: const Color(0xFFE5E7EB),
+        linearGradient: const LinearGradient(
+          colors: [
+            Color(0xFF1E88E5), // FormGear primary blue
+            Color(0xFF42D9FF), // FormGear light blue
+          ],
+        ),
+        barRadius: const Radius.circular(4),
+        animation: true,
+        animateFromLastPercent: true,
+      ),
+    );
+  }
 }
 
-class _CircularDownloadProgressState extends State<_CircularDownloadProgress>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _arrowController;
-  late Animation<double> _arrowAnimation;
+/// Progress percentage widget with FormGear brand colors
+class _ProgressPercentage extends StatelessWidget {
+  const _ProgressPercentage({
+    required this.loadingProgress,
+  });
 
-  @override
-  void initState() {
-    super.initState();
-    // Animated download arrow bouncing up and down
-    _arrowController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
-    _arrowAnimation =
-        Tween<double>(
-          begin: 0,
-          end: 8,
-        ).animate(
-          CurvedAnimation(
-            parent: _arrowController,
-            curve: Curves.easeInOut,
-          ),
-        );
-    _arrowController.repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _arrowController.dispose();
-    super.dispose();
-  }
+  final int loadingProgress;
 
   @override
   Widget build(BuildContext context) {
-    final progress = widget.loadingProgress / 100.0;
-    final isComplete = widget.loadingProgress >= 100;
-
-    return CircularPercentIndicator(
-      radius: 60,
-      lineWidth: 8,
-      percent: progress,
-      center: AnimatedBuilder(
-        animation: _arrowAnimation,
-        builder: (context, child) {
-          return Transform.translate(
-            offset: Offset(0, _arrowAnimation.value),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isComplete ? Icons.check_circle : Icons.download,
-                  size: 32,
-                  color: isComplete ? Colors.green : const Color(0xFF1E88E5),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${widget.loadingProgress}%',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E88E5),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF1E88E5).withValues(alpha: 0.1),
+            const Color(0xFF42D9FF).withValues(alpha: 0.1),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF1E88E5).withValues(alpha: 0.2),
+        ),
       ),
-      progressColor: const Color(0xFF1E88E5),
-      backgroundColor: const Color(0xFFE5E7EB),
-      circularStrokeCap: CircularStrokeCap.round,
-      animation: true,
-      animateFromLastPercent: true,
+      child: Text(
+        '$loadingProgress%',
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: const Color(0xFF1E88E5),
+          fontWeight: FontWeight.w700,
+          fontSize: 13,
+          letterSpacing: 0.5,
+        ),
+      ),
     );
   }
 }
