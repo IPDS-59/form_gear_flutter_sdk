@@ -66,6 +66,25 @@
             background: #3b82f6;
             border-radius: 2px;
         }
+
+        /* Engine-specific badges */
+        .engine-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .badge-formgear {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .badge-fasihform {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+
         .handler-buttons {
             display: flex;
             flex-direction: column;
@@ -85,6 +104,7 @@
             align-items: center;
             gap: 8px;
             transition: all 0.2s;
+            position: relative;
         }
         button:hover {
             background: #2563eb;
@@ -93,15 +113,57 @@
         button:active {
             transform: translateY(0);
         }
+
+        /* FormGear actions (using 'action' handler) - Blue theme */
+        button.formgear-action {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            border-left: 4px solid #1e40af;
+        }
+        button.formgear-action:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
+        }
+        button.formgear-action::after {
+            content: 'FormGear';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #dbeafe;
+            color: #1e40af;
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        /* FasihForm actions (using 'execute' handler) - Purple theme */
+        button.fasihform-action {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+            border-left: 4px solid #6d28d9;
+        }
+        button.fasihform-action:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+        }
+        button.fasihform-action::after {
+            content: 'FasihForm';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #e0e7ff;
+            color: #4338ca;
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
         button.new-feature {
-            background: #06b6d4;
             position: relative;
         }
-        button.new-feature::after {
+        button.new-feature::before {
             content: 'NEW';
             position: absolute;
             top: -4px;
-            right: -4px;
+            left: -4px;
             background: #10b981;
             color: white;
             font-size: 9px;
@@ -109,12 +171,7 @@
             border-radius: 10px;
             font-weight: bold;
         }
-        button.new-feature:hover {
-            background: #0891b2;
-        }
-        button.fasih-form {
-            background: #3b82f6;
-        }
+
         button.save-submit {
             background: #6b7280;
         }
@@ -185,6 +242,171 @@
             border-left: 3px solid #ef4444;
             background: #fef2f2;
         }
+
+        /* Dialog styles */
+        .dialog-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+        .dialog-overlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .dialog-container {
+            background: white;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .dialog-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .dialog-header h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .dialog-close {
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 4px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .dialog-close:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+        .dialog-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .dialog-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .summary-card {
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .summary-card.total {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .summary-card.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .summary-card.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .summary-number {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .summary-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        .dialog-results {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .dialog-result-item {
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 3px solid #3b82f6;
+        }
+        .dialog-result-item.success {
+            border-left-color: #10b981;
+        }
+        .dialog-result-item.error {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        .dialog-result-method {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        .dialog-result-time {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        .dialog-result-content {
+            font-size: 13px;
+            font-family: monospace;
+            background: white;
+            padding: 8px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .view-results-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            margin-top: 12px;
+        }
+        .view-results-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
     </style>
 </head>
 <body>
@@ -192,8 +414,9 @@
         <div class="header">
             <h1>FormGear SDK Integration Test</h1>
             <p class="subtitle">
-                SDK automatically provides: CAMERA, FILE_PICKER, LOCATION<br>
-                Custom handlers: <span id="custom-count">0</span>
+                Testing JavaScript Bridge Methods<br>
+                <span class="badge-formgear">FormGear (ID: 1) - action()</span>
+                <span class="badge-fasihform">FasihForm (ID: 2) - execute()</span>
             </p>
             <p class="debug-info">Bridge test HTML loaded from SDK assets (DEBUG ONLY)</p>
         </div>
@@ -220,6 +443,27 @@
                         Ready to test. Click any button above.
                     </div>
                 </div>
+                <button class="view-results-btn" onclick="showResultsDialog()" style="width: 100%;">
+                    📊 View Results Summary
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Dialog -->
+    <div id="results-dialog" class="dialog-overlay" onclick="hideResultsDialog()">
+        <div class="dialog-container" onclick="event.stopPropagation()">
+            <div class="dialog-header">
+                <h2>📊 Test Results Summary</h2>
+                <button class="dialog-close" onclick="hideResultsDialog()">×</button>
+            </div>
+            <div class="dialog-body">
+                <div class="dialog-summary" id="dialog-summary">
+                    <!-- Summary cards will be inserted here -->
+                </div>
+                <div class="dialog-results" id="dialog-results">
+                    <!-- Results will be inserted here -->
+                </div>
             </div>
         </div>
     </div>
@@ -240,7 +484,6 @@
         function checkJQueryLoading() {
             console.log('Checking jQuery loading...');
 
-            // Check if jQuery is available
             if (typeof window.$ !== 'undefined' && typeof window.jQuery !== 'undefined') {
                 updateJQueryStatus('success', 'jQuery Loaded Successfully (v' + $.fn.jquery + ')');
                 console.log('jQuery loaded successfully:', $.fn.jquery);
@@ -248,7 +491,6 @@
                 updateJQueryStatus('error', 'jQuery Failed to Load - Asset Loader Issue');
                 console.error('jQuery not available - this indicates asset loading problem');
 
-                // Try to load jQuery manually for comparison
                 setTimeout(() => {
                     if (typeof window.$ !== 'undefined') {
                         updateJQueryStatus('success', 'jQuery Loaded (Delayed)');
@@ -270,27 +512,23 @@
         function initializeBridge() {
             console.log('Initializing FormGear SDK Bridge test...');
 
-            // Check if Android bridge is available
             if (typeof window.Android !== 'undefined') {
                 updateBridgeStatus('success', 'FormGear SDK Bridge Available');
 
-                // Use default available Android methods
                 availableHandlers = [
                     'getReference', 'getTemplate', 'getPreset', 'getResponse', 'getValidation',
                     'getMedia', 'getRemark', 'getUserName', 'getFormMode', 'getIsNew',
-                    'getPrincipalCollection', 'getRolePetugas', 'getUserRole',
+                    'getPrincipalCollection', 'getRolePetugas', 'getUserRole', 'getGPSTimeout',
+                    'getServerUrl', 'getUnique', 'loadActivityTemplateData',
                     'action', 'execute', 'saveOrSubmit', 'saveOrSubmitFasihForm', 'mobileExit',
                     'cameraHandler', 'fileUploadHandler', 'gpsHandler', 'openMap', 'setResponseMobile', 'setSubmitMobile'
                 ];
                 console.log('Available Android methods:', availableHandlers);
 
-                // Update custom handler count
-                document.getElementById('custom-count').textContent = availableHandlers.length;
-
                 generateHandlerButtons();
             } else {
                 updateBridgeStatus('error', 'FormGear SDK Bridge Not Available');
-                setTimeout(initializeBridge, 1000); // Retry
+                setTimeout(initializeBridge, 1000);
             }
         }
 
@@ -308,7 +546,7 @@
 
             // Group handlers by type
             const dataHandlers = availableHandlers.filter(h =>
-                h.startsWith('get') || h.includes('Reference') || h.includes('Template') || h.includes('User')
+                h.startsWith('get') || h.includes('load') || h.includes('User') || h.includes('Role')
             );
             const saveSubmitHandlers = availableHandlers.filter(h =>
                 h.includes('submit') || h.includes('Save') || h.includes('saveOr')
@@ -318,7 +556,7 @@
                 ['cameraHandler', 'fileUploadHandler', 'gpsHandler', 'openMap', 'setResponseMobile', 'setSubmitMobile'].includes(h)
             );
 
-            // Create separate action buttons for different action types
+            // Create action section with clear FormGear vs FasihForm distinction
             const actionSection = createActionSection();
             container.appendChild(actionSection);
 
@@ -342,7 +580,6 @@
                 container.appendChild(clientSection);
             }
 
-            // Show total count
             console.log('Generated buttons for', availableHandlers.length, 'methods:', availableHandlers);
         }
 
@@ -390,45 +627,50 @@
             const buttonsContainer = document.createElement('div');
             buttonsContainer.className = 'handler-buttons';
 
-            // FormGear actions (using 'action' handler)
+            // FormGear actions (using 'action' handler) - Engine ID: 1
             const formGearActions = [
-                { name: '📷 Camera (FormGear)', method: 'action', args: ['CAMERA', 'camera_test', 'test_data'] },
-                { name: '📷 Camera GPS (FormGear)', method: 'action', args: ['CAMERA_GPS', 'gps_test', 'true'], new: true },
-                { name: '📁 File Picker (FormGear)', method: 'action', args: ['FILE_UPLOAD', 'file_test', 'test_data'] },
-                { name: '🔄 File Reload (FormGear)', method: 'action', args: ['FILE_RELOAD', 'reload_test', '{"files": ["test.jpg"]}'], new: true },
-                { name: '📍 Location (FormGear)', method: 'action', args: ['LOCATION', 'location_test', 'test_data'] },
-                { name: '🗺️ Open Maps (FormGear)', method: 'action', args: ['OPEN_MAPS', 'maps_test', '-6.2088,106.8456'], new: true },
-                { name: '✍️ Signature (FormGear)', method: 'action', args: ['SIGNATURE', 'signature_test', 'test_data'], new: true },
+                { name: '📷 Camera', method: 'action', args: ['CAMERA', 'camera_test', 'test_data'] },
+                { name: '📷 Camera GPS', method: 'action', args: ['CAMERA_GPS', 'gps_test', 'true'], new: true },
+                { name: '📁 File Picker', method: 'action', args: ['FILE_UPLOAD', 'file_test', 'test_data'] },
+                { name: '🔄 File Reload', method: 'action', args: ['FILE_RELOAD', 'reload_test', '{"files": ["test.jpg"]}'], new: true },
+                { name: '📍 Location', method: 'action', args: ['LOCATION', 'location_test', 'test_data'] },
+                { name: '🗺️ Open Maps', method: 'action', args: ['OPEN_MAPS', 'maps_test', '-6.2088,106.8456'], new: true },
+                { name: '✍️ Signature', method: 'action', args: ['SIGNATURE', 'signature_test', 'test_data'], new: true },
+                { name: '📝 Get Answer', method: 'action', args: ['GET_ANSWER', 'answer_test', 'dataKey1'], new: true },
+                { name: '📊 Barcode Scan', method: 'action', args: ['BARCODE', 'barcode_test', 'test_data'] },
+                { name: '🔊 Audio Record', method: 'action', args: ['AUDIO', 'audio_test', 'test_data'] },
+                { name: '📚 Lookup Data', method: 'action', args: ['LOOKUP', 'lookup_test', 'survey_id'], new: true },
             ];
 
-            // FasihForm actions (using 'execute' handler)
+            // FasihForm actions (using 'execute' handler) - Engine ID: 2
             const fasihFormActions = [
-                { name: '📷 Camera (FasihForm)', method: 'execute', args: ['CAMERA', 'camera_test', 'test_data'], fasih: true },
-                { name: '📁 File Picker (FasihForm)', method: 'execute', args: ['FILE_UPLOAD', 'file_test', 'test_data'], fasih: true },
-                { name: '📍 Location (FasihForm)', method: 'execute', args: ['LOCATION', 'location_test', 'test_data'], fasih: true }
+                { name: '📷 Camera', method: 'execute', args: ['CAMERA', 'camera_test', 'test_data'] },
+                { name: '📁 File Picker', method: 'execute', args: ['FILE_UPLOAD', 'file_test', 'test_data'] },
+                { name: '📍 Location', method: 'execute', args: ['LOCATION', 'location_test', 'test_data'] }
             ];
 
-            // Add FormGear buttons
+            // Add FormGear buttons with blue theme
             formGearActions.forEach(action => {
                 const button = document.createElement('button');
                 button.innerHTML = action.name;
+                button.className = 'formgear-action';
                 if (action.new) {
-                    button.className = 'new-feature';
+                    button.classList.add('new-feature');
                 }
                 button.onclick = () => {
-                    displayMessage('🔄 Testing ' + action.name + '...');
+                    displayMessage('🔄 Testing FormGear: ' + action.name + '...');
                     testSpecificAction(action.method, action.args);
                 };
                 buttonsContainer.appendChild(button);
             });
 
-            // Add FasihForm buttons
+            // Add FasihForm buttons with purple theme
             fasihFormActions.forEach(action => {
                 const button = document.createElement('button');
                 button.innerHTML = action.name;
-                button.className = 'fasih-form';
+                button.className = 'fasihform-action';
                 button.onclick = () => {
-                    displayMessage('🔄 Testing ' + action.name + '...');
+                    displayMessage('🔄 Testing FasihForm: ' + action.name + '...');
                     testSpecificAction(action.method, action.args);
                 };
                 buttonsContainer.appendChild(button);
@@ -443,7 +685,6 @@
             updateBridgeStatus('loading', 'Testing ' + methodName + ' with ' + args[0] + '...');
 
             try {
-                // Check if method exists
                 if (typeof window.Android[methodName] !== 'function') {
                     throw new Error('Method ' + methodName + ' not available on Android bridge');
                 }
@@ -482,7 +723,6 @@
             updateBridgeStatus('loading', 'Testing ' + methodName + '...');
 
             try {
-                // Check if method exists
                 if (typeof window.Android[methodName] !== 'function') {
                     throw new Error('Method ' + methodName + ' not available on Android bridge');
                 }
@@ -499,28 +739,28 @@
                 } else if (methodName === 'saveOrSubmitFasihForm') {
                     result = await window.Android[methodName]('{}', '{}', '{}', 'SUBMIT');
                 } else if (methodName === 'mobileExit') {
-                    // Mobile exit method - no arguments needed
+                    result = await window.Android[methodName]();
+                } else if (methodName === 'loadActivityTemplateData') {
+                    result = await window.Android[methodName]('test_template_id', 'test_data');
+                } else if (methodName === 'getGPSTimeout') {
+                    result = await window.Android[methodName]();
+                } else if (methodName === 'getServerUrl') {
+                    result = await window.Android[methodName]();
+                } else if (methodName === 'getUnique') {
                     result = await window.Android[methodName]();
                 } else if (methodName === 'cameraHandler') {
-                    // Camera handler - needs callback and filename
                     result = await window.Android[methodName](function() {}, 'test_camera_' + Date.now());
                 } else if (methodName === 'fileUploadHandler') {
-                    // File upload handler - needs file data and callback
                     result = await window.Android[methodName]({name: 'test.jpg', size: 1024}, function() {}, false);
                 } else if (methodName === 'gpsHandler') {
-                    // GPS handler - needs callback function
                     result = await window.Android[methodName](function(location) { console.log('GPS:', location); });
                 } else if (methodName === 'openMap') {
-                    // Open map - needs coordinates
                     result = await window.Android[methodName]('-6.2088,106.8456');
                 } else if (methodName === 'setResponseMobile') {
-                    // Set response mobile - needs 5 JSON parameters
                     result = await window.Android[methodName]('{}', '{}', '{}', '{}', '{}');
                 } else if (methodName === 'setSubmitMobile') {
-                    // Set submit mobile - needs 5 JSON parameters
                     result = await window.Android[methodName]('{}', '{}', '{}', '{}', '{}');
                 } else {
-                    // Data methods - no arguments needed
                     result = await window.Android[methodName]();
                 }
 
@@ -551,89 +791,20 @@
             }
         }
 
-        async function testHandlerMethods(handlerName) {
-            console.log('Testing all methods for handler: ' + handlerName);
-            updateBridgeStatus('loading', 'Testing ' + handlerName + ' methods...');
-
-            const methodsMap = {
-                'customUser': ['getUserName'],
-                'customForm': ['getFormMode'],
-                'cameraAction': ['action', 'execute'],
-                'filePickerAction': ['action', 'execute'],
-                'locationAction': ['action', 'execute'],
-                'defaultFormData': ['getReference', 'getTemplate', 'getUserName', 'getFormMode'],
-                'defaultFormAction': ['action', 'execute', 'saveOrSubmit', 'saveOrSubmitFasihForm']
-            };
-
-            const methods = methodsMap[handlerName] || ['action'];
-
-            for (const method of methods) {
-                try {
-                    let result;
-                    // Call the method directly on Android bridge with appropriate args
-                    if (typeof window.Android[method] === 'function') {
-                        if (method === 'action') {
-                            if (handlerName === 'cameraAction') {
-                                result = await window.Android[method]('CAMERA', 'camera');
-                            } else if (handlerName === 'filePickerAction') {
-                                result = await window.Android[method]('FILE_UPLOAD', 'documents');
-                            } else if (handlerName === 'locationAction') {
-                                result = await window.Android[method]('LOCATION', 'current');
-                            } else {
-                                result = await window.Android[method]('TEST_ACTION', 'test', 'data');
-                            }
-                        } else {
-                            result = await window.Android[method]();
-                        }
-                    } else {
-                        throw new Error('Method ' + method + ' not available on Android bridge');
-                    }
-
-                    const resultData = {
-                        handler: handlerName + '.' + method,
-                        success: true,
-                        result: result,
-                        timestamp: new Date().toLocaleTimeString()
-                    };
-
-                    testResults.push(resultData);
-                    displayResult(resultData);
-
-                } catch (error) {
-                    console.error('Error testing ' + handlerName + '.' + method + ':', error);
-
-                    const resultData = {
-                        handler: handlerName + '.' + method,
-                        success: false,
-                        error: error.message,
-                        timestamp: new Date().toLocaleTimeString()
-                    };
-
-                    testResults.push(resultData);
-                    displayResult(resultData);
-                }
-
-                await new Promise(resolve => setTimeout(resolve, 200)); // Small delay
-            }
-
-            updateBridgeStatus('success', handlerName + ' methods tested');
-        }
-
         async function testAllHandlers() {
             updateBridgeStatus('loading', 'Testing all methods...');
             clearResults();
 
-            // Add initial message
             displayMessage('🧪 Starting comprehensive test of all handlers...');
 
             // Test data methods
-            for (const method of availableHandlers.filter(h => h.startsWith('get') || h.includes('Role'))) {
+            for (const method of availableHandlers.filter(h => h.startsWith('get') || h.includes('load') || h.includes('Role'))) {
                 await testHandler(method);
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
 
-            // Test specific actions
-            const actions = [
+            // Test all FormGear actions
+            const formGearActions = [
                 { name: 'Camera (FormGear)', method: 'action', args: ['CAMERA', 'camera_test', 'test_data'] },
                 { name: 'Camera GPS (FormGear)', method: 'action', args: ['CAMERA_GPS', 'gps_test', 'true'] },
                 { name: 'File Picker (FormGear)', method: 'action', args: ['FILE_UPLOAD', 'file_test', 'test_data'] },
@@ -643,15 +814,24 @@
                 { name: 'Signature (FormGear)', method: 'action', args: ['SIGNATURE', 'signature_test', 'test_data'] },
                 { name: 'Get Answer (FormGear)', method: 'action', args: ['GET_ANSWER', 'answer_test', 'dataKey1'] },
                 { name: 'Barcode Scan (FormGear)', method: 'action', args: ['BARCODE', 'barcode_test', 'test_data'] },
-                { name: 'QR Scan (FormGear)', method: 'action', args: ['QR_SCAN', 'qr_test', 'test_data'] },
                 { name: 'Audio Record (FormGear)', method: 'action', args: ['AUDIO', 'audio_test', 'test_data'] },
                 { name: 'Lookup Data (FormGear)', method: 'action', args: ['LOOKUP', 'lookup_test', 'survey_id'] },
+            ];
+
+            for (const action of formGearActions) {
+                displayMessage('🔄 Testing ' + action.name + '...');
+                await testSpecificAction(action.method, action.args);
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+
+            // Test all FasihForm actions
+            const fasihFormActions = [
                 { name: 'Camera (FasihForm)', method: 'execute', args: ['CAMERA', 'camera_test', 'test_data'] },
                 { name: 'File Picker (FasihForm)', method: 'execute', args: ['FILE_UPLOAD', 'file_test', 'test_data'] },
                 { name: 'Location (FasihForm)', method: 'execute', args: ['LOCATION', 'location_test', 'test_data'] }
             ];
 
-            for (const action of actions) {
+            for (const action of fasihFormActions) {
                 displayMessage('🔄 Testing ' + action.name + '...');
                 await testSpecificAction(action.method, action.args);
                 await new Promise(resolve => setTimeout(resolve, 200));
@@ -663,16 +843,9 @@
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
 
-            // Test exit methods
-            for (const method of availableHandlers.filter(h => h === 'mobileExit')) {
-                displayMessage('🚪 Testing ' + method + '...');
-                await testHandler(method);
-                await new Promise(resolve => setTimeout(resolve, 100));
-            }
-
-            // Test client action methods
+            // Test exit and client methods
             for (const method of availableHandlers.filter(h =>
-                ['cameraHandler', 'fileUploadHandler', 'gpsHandler', 'openMap', 'setResponseMobile', 'setSubmitMobile'].includes(h)
+                h === 'mobileExit' || ['cameraHandler', 'fileUploadHandler', 'gpsHandler', 'openMap', 'setResponseMobile', 'setSubmitMobile'].includes(h)
             )) {
                 displayMessage('🎯 Testing ' + method + '...');
                 await testHandler(method);
@@ -681,6 +854,9 @@
 
             updateBridgeStatus('success', 'Completed testing all methods and actions');
             displayMessage('✅ All tests completed! Check results above.');
+
+            // Auto-show results dialog after all tests complete
+            setTimeout(() => showResultsDialog(), 500);
         }
 
         function displayResult(resultData) {
@@ -701,7 +877,6 @@
                     resultStr = String(resultData.result);
                 }
 
-                // Truncate very long results
                 if (resultStr.length > 300) {
                     resultStr = resultStr.substring(0, 300) + '...';
                 }
@@ -731,21 +906,111 @@
             resultsContainer.scrollTop = resultsContainer.scrollHeight;
         }
 
-        // Global helper functions for manual testing
+        // Dialog functions
+        function showResultsDialog() {
+            const dialog = document.getElementById('results-dialog');
+            const summaryContainer = document.getElementById('dialog-summary');
+            const resultsContainer = document.getElementById('dialog-results');
+
+            // Calculate summary
+            const totalTests = testResults.length;
+            const successTests = testResults.filter(r => r.success).length;
+            const failedTests = testResults.filter(r => !r.success).length;
+
+            // Build summary cards
+            summaryContainer.innerHTML = `
+                <div class="summary-card total">
+                    <div class="summary-number">${totalTests}</div>
+                    <div class="summary-label">Total Tests</div>
+                </div>
+                <div class="summary-card success">
+                    <div class="summary-number">${successTests}</div>
+                    <div class="summary-label">Passed</div>
+                </div>
+                <div class="summary-card error">
+                    <div class="summary-number">${failedTests}</div>
+                    <div class="summary-label">Failed</div>
+                </div>
+            `;
+
+            // Build results list
+            if (testResults.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #6b7280;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
+                        <div style="font-size: 16px; font-weight: 600;">No test results yet</div>
+                        <div style="font-size: 14px; margin-top: 8px;">Run some tests to see results here</div>
+                    </div>
+                `;
+            } else {
+                resultsContainer.innerHTML = testResults.map(result => {
+                    const methodName = result.method || result.handler;
+                    const className = result.success ? 'success' : 'error';
+                    const icon = result.success ? '✅' : '❌';
+
+                    let contentHtml = '';
+                    if (result.success) {
+                        let resultStr;
+                        if (typeof result.result === 'string') {
+                            resultStr = result.result;
+                        } else if (typeof result.result === 'object') {
+                            resultStr = JSON.stringify(result.result, null, 2);
+                        } else {
+                            resultStr = String(result.result);
+                        }
+
+                        // Limit length for dialog
+                        if (resultStr.length > 500) {
+                            resultStr = resultStr.substring(0, 500) + '...';
+                        }
+
+                        contentHtml = `<div class="dialog-result-content">${resultStr}</div>`;
+                    } else {
+                        contentHtml = `<div class="dialog-result-content" style="color: #991b1b;">Error: ${result.error}</div>`;
+                    }
+
+                    return `
+                        <div class="dialog-result-item ${className}">
+                            <div class="dialog-result-method">${icon} ${methodName}</div>
+                            <div class="dialog-result-time">${result.timestamp}</div>
+                            ${contentHtml}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Show dialog with animation
+            dialog.classList.add('show');
+        }
+
+        function hideResultsDialog() {
+            const dialog = document.getElementById('results-dialog');
+            dialog.classList.remove('show');
+        }
+
+        // Close dialog on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hideResultsDialog();
+            }
+        });
+
+        // Global helper functions
         window.testSingleHandler = testHandler;
-        window.testHandlerMethods = testHandlerMethods;
+        window.showResultsDialog = showResultsDialog;
+        window.hideResultsDialog = hideResultsDialog;
         window.clearResults = function() {
             testResults = [];
             document.getElementById('results-content').innerHTML = '<div class="result-item"><strong>Results cleared. Click buttons to test handlers.</strong></div>';
         };
 
-        // Log bridge info for debugging
         console.log('FormGear SDK Bridge Test Page Loaded');
         console.log('Available methods:', {
             testSingleHandler: 'testSingleHandler(handlerName)',
-            testHandlerMethods: 'testHandlerMethods(handlerName)',
             testAllHandlers: 'testAllHandlers()',
-            clearResults: 'clearResults()'
+            clearResults: 'clearResults()',
+            showResultsDialog: 'showResultsDialog()',
+            hideResultsDialog: 'hideResultsDialog()'
         });
     </script>
 </body>
