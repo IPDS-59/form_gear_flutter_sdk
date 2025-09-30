@@ -780,8 +780,16 @@ class FormGearDownloadManager {
           }
         }
 
-        // Skip empty filenames after stripping
+        // Skip empty filenames after stripping or root directory itself
         if (filename.isEmpty) continue;
+
+        // Skip the root directory entry itself (e.g., "form-gear/" or "fasihform/")
+        if (hasCommonRoot &&
+            commonRootDir != null &&
+            file.name == '$commonRootDir/') {
+          FormGearLogger.sdk('Skipping root directory entry: ${file.name}');
+          continue;
+        }
 
         final filePath = path.join(targetDir.path, filename);
 
@@ -805,10 +813,11 @@ class FormGearDownloadManager {
             }
           }
         } else {
+          // For subdirectories inside the root, create them
           final dir = Directory(filePath);
           if (!dir.existsSync()) {
             dir.createSync(recursive: true);
-            FormGearLogger.sdk('Created directory: $filename');
+            FormGearLogger.sdk('Created subdirectory: $filename');
           }
         }
       }
