@@ -18,6 +18,7 @@ class AssignmentContext extends Equatable {
     required this.config,
     required this.data,
     this.metadata,
+    this.formEngineId,
   });
 
   /// Factory constructor from JSON
@@ -42,6 +43,11 @@ class AssignmentContext extends Equatable {
   /// Optional metadata for additional assignment information
   final Map<String, dynamic>? metadata;
 
+  /// Optional form engine ID to explicitly specify which engine to use
+  /// '1' = FormGear, '2' = FasihForm
+  /// If null, engine will be determined from template ID
+  final String? formEngineId;
+
   /// Convert to JSON
   Map<String, dynamic> toJson() => _$AssignmentContextToJson(this);
 
@@ -53,6 +59,7 @@ class AssignmentContext extends Equatable {
     AssignmentConfig? config,
     AssignmentData? data,
     Map<String, dynamic>? metadata,
+    String? formEngineId,
   }) {
     return AssignmentContext(
       assignmentId: assignmentId ?? this.assignmentId,
@@ -61,6 +68,7 @@ class AssignmentContext extends Equatable {
       config: config ?? this.config,
       data: data ?? this.data,
       metadata: metadata ?? this.metadata,
+      formEngineId: formEngineId ?? this.formEngineId,
     );
   }
 
@@ -72,6 +80,7 @@ class AssignmentContext extends Equatable {
     config,
     data,
     metadata,
+    formEngineId,
   ];
 }
 

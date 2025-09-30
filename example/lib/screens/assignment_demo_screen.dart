@@ -431,8 +431,7 @@ class _AssignmentDemoScreenState extends State<AssignmentDemoScreen> {
       await FormGearSDK.instance.openFormWithAssignment(
         context: context,
         assignment: assignment,
-        title:
-            'Assignment: ${assignment.assignmentId} (${_selectedEngineId == "1" ? "FormGear" : "FasihForm"})',
+        title: 'Assignment: ${assignment.assignmentId}',
       );
     } catch (e) {
       if (mounted) {
@@ -451,6 +450,7 @@ class _AssignmentDemoScreenState extends State<AssignmentDemoScreen> {
       assignmentId: 'new_assignment_001',
       templateId: 'demo_template',
       surveyId: 'family_characteristics_2024',
+      formEngineId: _selectedEngineId, // Use selected engine
       config: const AssignmentConfig(
         lookupMode:
             FormGearLookupMode.online, // Online lookup for real-time data
@@ -500,6 +500,7 @@ class _AssignmentDemoScreenState extends State<AssignmentDemoScreen> {
       assignmentId: 'existing_assignment_002',
       templateId: 'demo_template',
       surveyId: 'family_characteristics_2024',
+      formEngineId: _selectedEngineId, // Use selected engine
       config: const AssignmentConfig(
         lookupMode: FormGearLookupMode.online,
         formMode: FormGearFormMode.open,
@@ -556,6 +557,7 @@ class _AssignmentDemoScreenState extends State<AssignmentDemoScreen> {
       assignmentId: 'review_assignment_003',
       templateId: 'demo_template',
       surveyId: 'family_characteristics_2024',
+      formEngineId: _selectedEngineId, // Use selected engine
       config: const AssignmentConfig(
         lookupMode: FormGearLookupMode.online, // Online lookup for validation
         formMode: FormGearFormMode.submitted, // Read-only submitted form
