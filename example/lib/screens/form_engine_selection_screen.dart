@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:form_gear_engine_sdk/src/presentation/screens/form_engine_update_screen.dart';
-import 'template_selection_screen.dart';
 
 class FormEngineSelectionScreen extends StatefulWidget {
   const FormEngineSelectionScreen({super.key});
@@ -176,19 +175,27 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
 
   void _handleEngineTap(FormEngineMetadata engine, bool isDownloaded) {
     if (isDownloaded) {
-      _navigateToTemplateSelection(engine);
+      _showEngineDownloadedMessage(engine);
     } else {
       _showForceUpdateScreen(engine);
     }
   }
 
-  void _navigateToTemplateSelection(FormEngineMetadata engine) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TemplateSelectionScreen(
-          formEngineId: engine.id,
-          engineName: '${engine.name} v${engine.version}',
+  void _showEngineDownloadedMessage(FormEngineMetadata engine) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '✅ ${engine.name} v${engine.version} is already downloaded and ready to use!',
+        ),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
+        action: SnackBarAction(
+          label: 'OK',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
         ),
       ),
     );
