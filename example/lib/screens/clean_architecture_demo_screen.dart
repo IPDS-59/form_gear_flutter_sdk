@@ -13,6 +13,9 @@ class CleanArchitectureDemoScreen extends StatefulWidget {
 
 class _CleanArchitectureDemoScreenState
     extends State<CleanArchitectureDemoScreen> {
+  // Static token persisted during app lifetime (cleared on app restart)
+  static String? _persistedToken;
+
   final TextEditingController _tokenController = TextEditingController();
   bool _isLoading = false;
   String _status =
@@ -27,6 +30,10 @@ class _CleanArchitectureDemoScreenState
   @override
   void initState() {
     super.initState();
+    // Load persisted token if available
+    if (_persistedToken != null) {
+      _tokenController.text = _persistedToken!;
+    }
     _status =
         'SDK initialized with clean architecture pattern:\n'
         '• Repository Pattern for data access\n'
@@ -107,6 +114,9 @@ class _CleanArchitectureDemoScreenState
       dioInterceptors: [dioAdapter],
     );
 
+    // Persist token during app lifetime
+    _persistedToken = token;
+
     setState(() {
       _status =
           'API Token Updated Successfully!\n'
@@ -116,7 +126,8 @@ class _CleanArchitectureDemoScreenState
           '✅ API config authToken updated for HTTP requests\n'
           '✅ Repository layer will use new authentication\n'
           '✅ All API calls now authenticated with new token\n'
-          '✅ SDK properly re-initialized with updated configuration';
+          '✅ SDK properly re-initialized with updated configuration\n'
+          '✅ Token persisted for app lifetime (cleared on restart)';
     });
   }
 
@@ -586,6 +597,7 @@ class _CleanArchitectureDemoScreenState
                                 onPressed: () {
                                   setState(() {
                                     _tokenController.clear();
+                                    _persistedToken = null;
                                   });
                                 },
                                 tooltip: 'Clear token',
