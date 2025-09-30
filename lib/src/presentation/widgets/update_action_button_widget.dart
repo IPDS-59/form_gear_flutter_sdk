@@ -10,6 +10,7 @@ class UpdateActionButtonWidget extends StatefulWidget {
     this.progress,
     this.isCompleted = false,
     this.completedText = 'Unduhan Selesai!',
+    this.isForced = false,
     super.key,
   });
 
@@ -20,6 +21,7 @@ class UpdateActionButtonWidget extends StatefulWidget {
   final int? progress;
   final bool isCompleted;
   final String completedText;
+  final bool isForced;
 
   @override
   State<UpdateActionButtonWidget> createState() =>
@@ -38,6 +40,8 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
 
   int _currentTextIndex = 0;
   Timer? _textCycleTimer;
+  Timer? _countdownTimer;
+  int _countdownSeconds = 5;
 
   final List<String> _loadingTexts = [
     'Mengunduh...',
@@ -133,14 +137,21 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
       if (widget.isCompleted) {
         _stopTextCycling();
         _completionController.forward();
-        // Auto-dismiss after showing success for 2 seconds
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted && widget.isCompleted) {
-            Navigator.of(context).pop();
-          }
-        });
+
+        if (widget.isForced) {
+          // For forced updates, start countdown timer
+          _startCountdownTimer();
+        } else {
+          // For optional updates, auto-dismiss after showing success
+          Future<void>.delayed(const Duration(seconds: 2), () {
+            if (mounted && widget.isCompleted) {
+              Navigator.of(context).pop();
+            }
+          });
+        }
       } else {
         _completionController.reset();
+        _stopCountdownTimer();
       }
     }
   }
@@ -161,9 +172,33 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
     _textCycleTimer = null;
   }
 
+  void _startCountdownTimer() {
+    _countdownSeconds = 5;
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          _countdownSeconds--;
+        });
+
+        if (_countdownSeconds <= 0) {
+          _stopCountdownTimer();
+          if (mounted) {
+            Navigator.of(context).pop();
+          }
+        }
+      }
+    });
+  }
+
+  void _stopCountdownTimer() {
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
+  }
+
   @override
   void dispose() {
     _stopTextCycling();
+    _stopCountdownTimer();
     _buttonController.dispose();
     _progressController.dispose();
     _completionController.dispose();
@@ -238,7 +273,11 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
                     ],
                   ),
                   child: ElevatedButton(
-                    onPressed: widget.isLoading ? null : widget.onPressed,
+                    onPressed:
+                        (widget.isLoading ||
+                            (widget.isCompleted && widget.isForced))
+                        ? null
+                        : widget.onPressed,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,
@@ -265,13 +304,33 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
                                 const SizedBox(width: 12),
                                 FadeTransition(
                                   opacity: _completionAnimation,
-                                  child: Text(
-                                    widget.completedText,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                    ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        widget.completedText,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      if (widget.isForced &&
+                                          _countdownTimer != null) ...[
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'Otomatis tutup dalam '
+                                          '$_countdownSeconds detik',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.normal,
+                                            color: Colors.white,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                 ),
                               ],

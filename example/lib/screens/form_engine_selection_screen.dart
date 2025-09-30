@@ -63,8 +63,16 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
           final localVersion = await downloadManager.getLocalFormEngineVersion(
             config['id'] as String,
           );
-          if (localVersion != null) {
+          if (localVersion != null && localVersion.isNotEmpty) {
             version = localVersion;
+            debugPrint(
+              'Using local version $localVersion for engine ${config['id']}',
+            );
+          } else {
+            debugPrint(
+              'No local version found for engine ${config['id']}, '
+              'using default: $version',
+            );
           }
         } catch (e) {
           debugPrint(
@@ -161,107 +169,10 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
               itemBuilder: (context, index) {
                 final engine = availableEngines[index];
                 final isDownloaded = downloadedEngines.contains(engine.id);
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: ListTile(
-                    leading: Icon(
-                      isDownloaded
-                          ? Icons.engineering
-                          : Icons.download_outlined,
-                      color: isDownloaded
-                          ? (engine.type == 'FormGear'
-                                ? Colors.blue
-                                : Colors.green)
-                          : Colors.grey,
-                      size: 32,
-                    ),
-                    title: Text(
-                      '${engine.name} v${engine.version}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: isDownloaded ? null : Colors.grey[600],
-                      ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          engine.description,
-                          style: TextStyle(
-                            color: isDownloaded ? null : Colors.grey[500],
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 4,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isDownloaded
-                                    ? (engine.type == 'FormGear'
-                                          ? Colors.blue[100]
-                                          : Colors.green[100])
-                                    : Colors.grey[100],
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                engine.type,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: isDownloaded
-                                      ? (engine.type == 'FormGear'
-                                            ? Colors.blue[800]
-                                            : Colors.green[800])
-                                      : Colors.grey[600],
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            if (!isDownloaded)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange[100],
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  'Belum Diunduh',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.orange[800],
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            Text(
-                              engine.jsFile,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isDownloaded
-                                    ? Colors.grey
-                                    : Colors.grey[400],
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    trailing: Icon(
-                      isDownloaded ? Icons.arrow_forward_ios : Icons.download,
-                      color: isDownloaded ? null : Colors.orange,
-                    ),
-                    onTap: () => _handleEngineTap(engine, isDownloaded),
-                    isThreeLine: true,
-                  ),
+                return ModernEngineCard(
+                  engine: engine,
+                  isDownloaded: isDownloaded,
+                  onTap: () => _handleEngineTap(engine, isDownloaded),
                 );
               },
             ),
@@ -306,19 +217,31 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
     await FormEngineUpdateScreen.show(
       context: context,
       versionResult: versionResult,
-      onDownload: () => _downloadFromBundledAssets(engine),
+      onDownload: (onProgress) =>
+          _downloadFromBundledAssets(engine, onProgress),
     );
 
     // Refresh the engines list after potential download
     await _loadEngines();
   }
 
-  Future<void> _downloadFromBundledAssets(FormEngineMetadata engine) async {
+  Future<void> _downloadFromBundledAssets(
+    FormEngineMetadata engine,
+    void Function(int progress) onProgress,
+  ) async {
     debugPrint('Starting download for engine ${engine.id}');
 
     try {
       // Use the actual download manager to download the form engine
-      final success = await downloadManager.downloadFormEngine(engine.id);
+      final success = await downloadManager.downloadFormEngine(
+        engine.id,
+        onProgress: (received, total) {
+          if (total > 0) {
+            final progress = ((received / total) * 100).round();
+            onProgress(progress);
+          }
+        },
+      );
 
       if (success) {
         debugPrint('Successfully downloaded ${engine.name} v${engine.version}');
@@ -333,6 +256,288 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
       debugPrint('Error downloading engine: $e');
       rethrow;
     }
+  }
+}
+
+class ModernEngineCard extends StatelessWidget {
+  final FormEngineMetadata engine;
+  final bool isDownloaded;
+  final VoidCallback onTap;
+
+  const ModernEngineCard({
+    super.key,
+    required this.engine,
+    required this.isDownloaded,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Determine engine type label and colors based on engine type (ID)
+    final engineTypeLabel = engine.id == '1'
+        ? 'FormGear Engine'
+        : 'FasihForm Engine';
+    final primaryColor = engine.id == '1'
+        ? const Color(0xFF1E88E5) // Blue for FormGear
+        : const Color(0xFF8E24AA); // Purple for FasihForm
+    final accentColor = engine.id == '1'
+        ? const Color(0xFF42A5F5)
+        : const Color(0xFFAB47BC);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [Colors.white, primaryColor.withValues(alpha: 0.05)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withValues(alpha: 0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: primaryColor.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with icon and status
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [primaryColor, accentColor],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryColor.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        isDownloaded
+                            ? Icons.verified_rounded
+                            : Icons.rocket_launch_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            engineTypeLabel,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[800],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'v${engine.version}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Status indicator
+                    if (isDownloaded)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.check_circle_rounded,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'Downloaded',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.orange.withValues(alpha: 0.5),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.download_outlined,
+                              color: Colors.orange,
+                              size: 16,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'Not Downloaded',
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Description
+                Text(
+                  engine.description,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Technical details
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _buildEngineTag(
+                      'Engine ${engine.id}',
+                      primaryColor,
+                      Icons.settings_rounded,
+                    ),
+                    _buildEngineTag(
+                      engine.jsFile,
+                      const Color(
+                        0xFFE65100,
+                      ), // Darker orange for better contrast
+                      Icons.code_rounded,
+                    ),
+                    _buildEngineTag(
+                      engine.type,
+                      const Color(
+                        0xFF00695C,
+                      ), // Darker teal for better contrast
+                      Icons.category_rounded,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Action hint
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      isDownloaded
+                          ? Icons.play_arrow_rounded
+                          : Icons.download_rounded,
+                      size: 16,
+                      color: Colors.grey[600],
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      isDownloaded
+                          ? 'Tap to open template selection'
+                          : 'Tap to download engine',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEngineTag(String label, Color color, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(
+          alpha: 0.15,
+        ), // Increased alpha for better background visibility
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: color.withValues(alpha: 0.4),
+          width: 1,
+        ), // Increased alpha for border
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight
+                  .w700, // Increased font weight for better readability
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

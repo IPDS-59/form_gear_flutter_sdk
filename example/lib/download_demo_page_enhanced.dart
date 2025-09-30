@@ -715,106 +715,267 @@ class _EnhancedDownloadDemoPageState extends State<EnhancedDownloadDemoPage> {
     final isDownloading = downloadingItems[itemKey] ?? false;
     final progress = downloadProgress[itemKey] ?? 0.0;
 
-    // Determine engine type label and color based on ID
+    // Determine engine type label and colors based on engine type (ID)
     final engineTypeLabel = engine.id == '1'
-        ? 'FormGear'
-        : engine.id == '2'
-        ? 'FasihForm'
-        : engine.type;
-    final engineColor = engine.id == '1'
-        ? Colors.blue
-        : engine.id == '2'
-        ? Colors.purple
-        : Colors.grey;
+        ? 'FormGear Engine'
+        : 'FasihForm Engine';
+    final primaryColor = engine.id == '1'
+        ? const Color(0xFF1E88E5) // Blue for FormGear
+        : const Color(0xFF8E24AA); // Purple for FasihForm
+    final accentColor = engine.id == '1'
+        ? const Color(0xFF42A5F5)
+        : const Color(0xFFAB47BC);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [Colors.white, primaryColor.withValues(alpha: 0.05)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withValues(alpha: 0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: primaryColor.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
       child: Column(
         children: [
-          ListTile(
-            leading: Icon(
-              isDownloaded ? Icons.download_done : Icons.engineering,
-              color: isDownloaded ? Colors.green : engineColor,
-            ),
-            title: Text('${engine.name} v${engine.version}'),
-            subtitle: Column(
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(engine.description),
-                const SizedBox(height: 4),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
+                // Header with icon and status
+                Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: engineColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color: engineColor.withValues(alpha: 0.3),
+                        gradient: LinearGradient(
+                          colors: [primaryColor, accentColor],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryColor.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      child: Text(
-                        'Engine ID: ${engine.id}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: engineColor,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: Icon(
+                        isDownloaded
+                            ? Icons.verified_rounded
+                            : Icons.rocket_launch_rounded,
+                        color: Colors.white,
+                        size: 24,
                       ),
                     ),
-                    Text(
-                      'Type: $engineTypeLabel',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            engineTypeLabel,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[800],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'v${engine.version}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    Text(
-                      'JS: ${engine.jsFile}',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    // Status indicator
+                    if (isDownloaded)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.check_circle_rounded,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'Downloaded',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Description
+                Text(
+                  engine.description,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Technical details
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _buildEngineTag(
+                      'Engine ${engine.id}',
+                      primaryColor,
+                      Icons.settings_rounded,
+                    ),
+                    _buildEngineTag(
+                      engine.jsFile,
+                      Colors.orange,
+                      Icons.code_rounded,
+                    ),
+                    _buildEngineTag(
+                      engine.type,
+                      Colors.teal,
+                      Icons.category_rounded,
                     ),
                   ],
                 ),
+                const SizedBox(height: 20),
+
+                // Action button or progress
+                if (isDownloading)
+                  Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Downloading...',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: primaryColor,
+                            ),
+                          ),
+                          Text(
+                            '${(progress * 100).toInt()}%',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          backgroundColor: primaryColor.withValues(alpha: 0.2),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            primaryColor,
+                          ),
+                          minHeight: 8,
+                        ),
+                      ),
+                    ],
+                  )
+                else if (!isDownloaded)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () => _downloadFormEngine(engine),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shadowColor: primaryColor.withValues(alpha: 0.3),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.download_rounded, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Download Engine',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
               ],
             ),
-            trailing: isDownloaded
-                ? const Icon(Icons.check_circle, color: Colors.green)
-                : isDownloading
-                ? SizedBox(
-                    width: 80,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${(progress * 100).toInt()}%',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  )
-                : ElevatedButton(
-                    onPressed: () => _downloadFormEngine(engine),
-                    child: const Text('Download'),
-                  ),
-            isThreeLine: true,
           ),
-          if (isDownloading)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: LinearProgressIndicator(
-                value: progress,
-                backgroundColor: Colors.grey[300],
-                valueColor: AlwaysStoppedAnimation<Color>(engineColor),
-              ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEngineTag(String label, Color color, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
             ),
+          ),
         ],
       ),
     );
@@ -826,66 +987,289 @@ class _EnhancedDownloadDemoPageState extends State<EnhancedDownloadDemoPage> {
     final isDownloading = downloadingItems[itemKey] ?? false;
     final progress = downloadProgress[itemKey] ?? 0.0;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Column(
-        children: [
-          ListTile(
-            leading: Icon(
-              isDownloaded ? Icons.download_done : Icons.description,
-              color: isDownloaded ? Colors.green : Colors.grey,
-            ),
-            title: Text(template.title),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    // Category colors
+    final categoryColor = _getCategoryColor(template.category);
+    final formTypeColor = _getFormTypeColor(template.formType);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [Colors.white, categoryColor.withValues(alpha: 0.05)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: categoryColor.withValues(alpha: 0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: categoryColor.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with icon and status
+            Row(
               children: [
-                Text(template.description),
-                const SizedBox(height: 4),
-                Text(
-                  'v${template.version} • ${template.category} • ${template.formType}',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        categoryColor,
+                        categoryColor.withValues(alpha: 0.7),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: categoryColor.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    isDownloaded
+                        ? Icons.verified_rounded
+                        : Icons.article_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
-              ],
-            ),
-            trailing: isDownloaded
-                ? const Icon(Icons.check_circle, color: Colors.green)
-                : isDownloading
-                ? SizedBox(
-                    width: 80,
-                    child: Column(
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        template.title,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'v${template.version}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: categoryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Status indicator
+                if (isDownloaded)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                        Icon(
+                          Icons.check_circle_rounded,
+                          color: Colors.white,
+                          size: 16,
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(width: 4),
                         Text(
-                          '${(progress * 100).toInt()}%',
-                          style: const TextStyle(fontSize: 12),
+                          'Downloaded',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
-                  )
-                : ElevatedButton(
-                    onPressed: () => _downloadTemplate(template),
-                    child: const Text('Download'),
                   ),
-            isThreeLine: true,
-          ),
-          if (isDownloading)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: LinearProgressIndicator(
-                value: progress,
-                backgroundColor: Colors.grey[300],
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Description
+            Text(
+              template.description,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+                height: 1.4,
               ),
             ),
+            const SizedBox(height: 16),
+
+            // Category and type tags
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _buildTemplateTag(
+                  template.category,
+                  categoryColor,
+                  Icons.folder_rounded,
+                ),
+                _buildTemplateTag(
+                  template.formType,
+                  formTypeColor,
+                  Icons.description_rounded,
+                ),
+                _buildTemplateTag(
+                  'ID: ${template.id}',
+                  Colors.grey,
+                  Icons.tag_rounded,
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Action button or progress
+            if (isDownloading)
+              Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Downloading...',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: categoryColor,
+                        ),
+                      ),
+                      Text(
+                        '${(progress * 100).toInt()}%',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: categoryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      backgroundColor: categoryColor.withValues(alpha: 0.2),
+                      valueColor: AlwaysStoppedAnimation<Color>(categoryColor),
+                      minHeight: 8,
+                    ),
+                  ),
+                ],
+              )
+            else if (!isDownloaded)
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () => _downloadTemplate(template),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: categoryColor,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shadowColor: categoryColor.withValues(alpha: 0.3),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.download_rounded, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Download Template',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTemplateTag(String label, Color color, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  Color _getCategoryColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'survey':
+        return const Color(0xFF3B82F6); // Blue
+      case 'registration':
+        return const Color(0xFF10B981); // Green
+      case 'assessment':
+        return const Color(0xFFF59E0B); // Amber
+      case 'census':
+        return const Color(0xFF8B5CF6); // Purple
+      case 'general':
+      default:
+        return const Color(0xFF6B7280); // Gray
+    }
+  }
+
+  Color _getFormTypeColor(String formType) {
+    switch (formType.toLowerCase()) {
+      case 'standard':
+        return const Color(0xFF059669); // Emerald
+      case 'advanced':
+        return const Color(0xFFDC2626); // Red
+      case 'basic':
+        return const Color(0xFF0891B2); // Cyan
+      default:
+        return const Color(0xFF7C3AED); // Violet
+    }
   }
 
   Widget _buildLookupCard(LookupMetadata lookup) {

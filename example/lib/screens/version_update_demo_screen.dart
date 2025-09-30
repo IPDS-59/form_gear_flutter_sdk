@@ -148,7 +148,7 @@ class VersionUpdateDemoScreen extends StatelessWidget {
     await FormEngineUpdateScreen.show(
       context: context,
       versionResult: versionResult,
-      onDownload: () => _simulateDownload(),
+      onDownload: (onProgress) => _simulateDownload(onProgress),
     );
   }
 
@@ -161,14 +161,31 @@ class VersionUpdateDemoScreen extends StatelessWidget {
       context: context,
       versionResult: versionResult,
       templateName: templateName,
-      onDownload: () => _simulateDownload(),
+      onDownload: () => _simulateDownload((_) {}),
     );
   }
 
-  Future<void> _simulateDownload() async {
-    // Simulate download process with delays
-    await Future.delayed(const Duration(seconds: 2));
-    debugPrint('Download simulation completed');
+  Future<void> _simulateDownload(void Function(int progress) onProgress) async {
+    final downloadManager = getIt<FormGearDownloadManager>();
+
+    // Attempt actual download with progress callback - for demo, we'll use
+    // FormGear engine
+    final success = await downloadManager.downloadFormEngine(
+      '1',
+      onProgress: (received, total) {
+        // Calculate progress percentage and send to caller
+        if (total > 0) {
+          final progress = ((received / total) * 100).round();
+          onProgress(progress);
+        }
+      },
+    );
+
+    if (success) {
+      debugPrint('Form engine download completed successfully');
+    } else {
+      debugPrint('Form engine download failed');
+    }
   }
 
   FormEngineEntity _createMockFormEngine({required bool isForced}) {

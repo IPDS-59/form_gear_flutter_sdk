@@ -19,7 +19,7 @@ void main() async {
 
   alice.addAdapter(dioAdapter);
 
-  // Initialize FormGear SDK
+  // Initialize FormGear SDK (legacy mode for backward compatibility)
   await initializeFormGearSDK();
 
   runApp(const MyApp());

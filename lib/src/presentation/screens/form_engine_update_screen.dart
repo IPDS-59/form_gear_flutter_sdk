@@ -12,28 +12,32 @@ import 'package:form_gear_engine_sdk/src/presentation/widgets/update_version_inf
 class FormEngineUpdateScreen extends StatelessWidget {
   const FormEngineUpdateScreen({
     required this.versionResult,
-    required this.onDownload,
     super.key,
   });
 
   final VersionCheckResult versionResult;
-  final Future<void> Function() onDownload;
 
-  static Future<void> show({
+  static Future<FormEngineUpdateBloc?> show({
     required BuildContext context,
     required VersionCheckResult versionResult,
-    required Future<void> Function() onDownload,
-  }) {
-    return Navigator.of(context).push(
+    required Future<void> Function(void Function(int progress) onProgress)
+    onDownload,
+  }) async {
+    // Create wrapper that will be captured by the bloc
+    late final FormEngineUpdateBloc bloc;
+
+    // Create BLoC with download callback that uses the wrapper
+    bloc = FormEngineUpdateBloc(
+      versionResult: versionResult,
+      onDownload: () => onDownload(bloc.updateProgress),
+    );
+
+    await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => BlocProvider(
-          create: (context) => FormEngineUpdateBloc(
-            versionResult: versionResult,
-            onDownload: onDownload,
-          ),
+        builder: (context) => BlocProvider.value(
+          value: bloc,
           child: FormEngineUpdateScreen(
             versionResult: versionResult,
-            onDownload: onDownload,
           ),
         ),
         fullscreenDialog: true,
@@ -43,11 +47,47 @@ class FormEngineUpdateScreen extends StatelessWidget {
         ),
       ),
     );
+
+    return bloc;
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<FormEngineUpdateBloc, FormEngineUpdateState>(
+    return BlocConsumer<FormEngineUpdateBloc, FormEngineUpdateState>(
+      listener: (context, state) {
+        // Show error in modern SnackBar instead of ugly dialog
+        if (state.error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      state.error!,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.red[700],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              duration: const Duration(seconds: 5),
+              action: SnackBarAction(
+                label: 'OK',
+                textColor: Colors.white,
+                onPressed: () {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                },
+              ),
+            ),
+          );
+        }
+      },
       builder: (context, state) {
         return PopScope(
           canPop: !versionResult.isForced || state.isCompleted,
@@ -70,12 +110,9 @@ class FormEngineUpdateScreen extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Spacer(),
-                    Center(
-                      child: UpdateGreetingWidget(emoji: _getGreetingEmoji()),
-                    ),
+                    UpdateGreetingWidget(emoji: _getGreetingEmoji()),
                     const SizedBox(height: 32),
                     UpdateMainMessageWidget(
                       message: _getMainMessage(),
@@ -84,7 +121,7 @@ class FormEngineUpdateScreen extends StatelessWidget {
                     const SizedBox(height: 24),
                     UpdateVersionInfoWidget(versionResult: versionResult),
                     const SizedBox(height: 40),
-                    const Center(child: UpdateSignatureWidget()),
+                    const UpdateSignatureWidget(),
                     const Spacer(flex: 2),
                     UpdateActionButtonWidget(
                       onPressed: state.isDownloading
@@ -97,13 +134,17 @@ class FormEngineUpdateScreen extends StatelessWidget {
                       loadingText: 'Downloading...',
                       progress: state.progress,
                       isCompleted: state.isCompleted,
+                      isForced: versionResult.isForced,
                     ),
                     AnimatedSize(
                       duration: const Duration(milliseconds: 400),
                       curve: Curves.easeInOut,
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
-                        child: (!versionResult.isForced && !state.isDownloading)
+                        child:
+                            (!versionResult.isForced &&
+                                !state.isDownloading &&
+                                !state.isCompleted)
                             ? Column(
                                 key: const ValueKey('skip-section'),
                                 children: [
@@ -114,9 +155,7 @@ class FormEngineUpdateScreen extends StatelessWidget {
                                   ),
                                 ],
                               )
-                            : const SizedBox.shrink(
-                                key: ValueKey('no-skip'),
-                              ),
+                            : const SizedBox.shrink(key: ValueKey('no-skip')),
                       ),
                     ),
                     const SizedBox(height: 32),

@@ -57,14 +57,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.13.0"
+  audio_session:
+    dependency: transitive
+    description:
+      name: audio_session
+      sha256: "8f96a7fecbb718cb093070f868b4cdcb8a9b1053dce342ff8ab2fde10eb9afb7"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.2"
   bloc:
     dependency: transitive
     description:
       name: bloc
-      sha256: "52c10575f4445c61dd9e0cafcc6356fdd827c4c64dd7945ef3c4105f6b6ac189"
+      sha256: e18b8e7825e9921d67a6d256dba0b6015ece8a577eb0a411845c46a352994d78
       url: "https://pub.dev"
     source: hosted
-    version: "9.0.0"
+    version: "9.0.1"
   boolean_selector:
     dependency: transitive
     description:
@@ -133,18 +141,18 @@ packages:
     dependency: transitive
     description:
       name: camera_android_camerax
-      sha256: "0db8e7b161ec6cdb2219540eaa4cf599dc963929e5f8ded3b20b3acb52712fa4"
+      sha256: d04649fab70a5d586a7b26d5ac26f700656b6aab26a16bfd5a29302589b7a973
       url: "https://pub.dev"
     source: hosted
-    version: "0.6.21+1"
+    version: "0.6.23"
   camera_avfoundation:
     dependency: transitive
     description:
       name: camera_avfoundation
-      sha256: a5a90297520e3b9841331161a7511626681153849c690c138e04a2b6d0af3026
+      sha256: "98bc06fccfaa8aef0af354f33e314de9c59eedf62bfe10935521607e768d8fef"
       url: "https://pub.dev"
     source: hosted
-    version: "0.9.21+3"
+    version: "0.9.21+4"
   camera_platform_interface:
     dependency: transitive
     description:
@@ -367,7 +375,7 @@ packages:
     source: sdk
     version: "0.0.0"
   flutter_bloc:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_bloc
       sha256: cf51747952201a455a1c840f8171d273be009b932c75093020f9af64f2123e38
@@ -707,10 +715,10 @@ packages:
     dependency: transitive
     description:
       name: injectable
-      sha256: "1b86fab6a98c11a97e5c718afb00e628d47d183c2a2256392e995a4c561141c1"
+      sha256: f71ef28f5ed30603ab9be004425fd5cd4a473806f5de269d35deb33b61917534
       url: "https://pub.dev"
     source: hosted
-    version: "2.5.1"
+    version: "2.5.2"
   io:
     dependency: transitive
     description:
@@ -727,6 +735,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.9.0"
+  just_audio:
+    dependency: transitive
+    description:
+      name: just_audio
+      sha256: "9694e4734f515f2a052493d1d7e0d6de219ee0427c7c29492e246ff32a219908"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.10.5"
+  just_audio_platform_interface:
+    dependency: transitive
+    description:
+      name: just_audio_platform_interface
+      sha256: "2532c8d6702528824445921c5ff10548b518b13f808c2e34c2fd54793b999a6a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.6.0"
+  just_audio_web:
+    dependency: transitive
+    description:
+      name: just_audio_web
+      sha256: "6ba8a2a7e87d57d32f0f7b42856ade3d6a9fbe0f1a11fabae0a4f00bb73f0663"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.16"
   leak_tracker:
     dependency: transitive
     description:
@@ -799,6 +831,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  mobile_scanner:
+    dependency: transitive
+    description:
+      name: mobile_scanner
+      sha256: "5e7e09d904dc01de071b79b3f3789b302b0ed3c9c963109cd3f83ad90de62ecf"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.1.2"
   mocktail:
     dependency: transitive
     description:
@@ -1228,6 +1268,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
+  synchronized:
+    dependency: transitive
+    description:
+      name: synchronized
+      sha256: c254ade258ec8282947a0acbbc90b9575b4f19673533ee46f2f6e9b3aeefd7c0
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.4.0"
   term_glyph:
     dependency: transitive
     description:
@@ -1380,6 +1428,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.3"
+  waveform_flutter:
+    dependency: transitive
+    description:
+      name: waveform_flutter
+      sha256: "08c9e98d4cf119428d8b3c083ed42c11c468623eaffdf30420ae38e36662922a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.0"
   web:
     dependency: transitive
     description:
