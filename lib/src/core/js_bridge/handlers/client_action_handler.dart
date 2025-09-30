@@ -125,8 +125,8 @@ class ClientActionHandler {
             // (automatically opens settings if disabled)
             final accessResult =
                 await LocationServiceHelper.ensureLocationAccess(
-              contextDescription: 'GPS handler',
-            );
+                  contextDescription: 'GPS handler',
+                );
             if (!accessResult.success) {
               return ActionInfoJs(
                 success: false,
