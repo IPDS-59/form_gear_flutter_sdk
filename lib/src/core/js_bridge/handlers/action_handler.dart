@@ -4,9 +4,11 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/models/response_models.dart';
+import 'package:form_gear_engine_sdk/src/presentation/bloc/barcode_scanner_bloc.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/audio_recorder_screen.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/barcode_scanner_screen.dart';
 import 'package:form_gear_engine_sdk/src/utils/fasih_media_helper.dart';
@@ -543,11 +545,15 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
         );
       }
 
-      // Navigate to barcode scanner screen from presentation layer
+      // Navigate to barcode scanner screen from presentation layer with BLoC
       final scannedResult = await Navigator.of(context).push<String?>(
         MaterialPageRoute<String?>(
-          builder: (context) => BarcodeScannerScreen(
-            title: 'Scan Barcode - $dataKey',
+          builder: (context) => BlocProvider(
+            create: (context) =>
+                BarcodeScannerBloc()..add(const InitializeScanner()),
+            child: BarcodeScannerScreen(
+              title: 'Scan Barcode - $dataKey',
+            ),
           ),
         ),
       );
