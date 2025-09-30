@@ -12,22 +12,24 @@ import 'package:form_gear_engine_sdk/src/presentation/widgets/update_version_inf
 class FormEngineUpdateScreen extends StatelessWidget {
   const FormEngineUpdateScreen({
     required this.versionResult,
-    required this.onDownload,
     super.key,
   });
 
   final VersionCheckResult versionResult;
-  final Future<void> Function() onDownload;
 
   static Future<FormEngineUpdateBloc?> show({
     required BuildContext context,
     required VersionCheckResult versionResult,
-    required Future<void> Function() onDownload,
+    required Future<void> Function(void Function(int progress) onProgress)
+    onDownload,
   }) async {
-    // Create BLoC outside so it can be accessed by the download callback
-    final bloc = FormEngineUpdateBloc(
+    // Create wrapper that will be captured by the bloc
+    late final FormEngineUpdateBloc bloc;
+
+    // Create BLoC with download callback that uses the wrapper
+    bloc = FormEngineUpdateBloc(
       versionResult: versionResult,
-      onDownload: onDownload,
+      onDownload: () => onDownload(bloc.updateProgress),
     );
 
     await Navigator.of(context).push(
@@ -36,7 +38,6 @@ class FormEngineUpdateScreen extends StatelessWidget {
           value: bloc,
           child: FormEngineUpdateScreen(
             versionResult: versionResult,
-            onDownload: onDownload,
           ),
         ),
         fullscreenDialog: true,
@@ -52,7 +53,41 @@ class FormEngineUpdateScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<FormEngineUpdateBloc, FormEngineUpdateState>(
+    return BlocConsumer<FormEngineUpdateBloc, FormEngineUpdateState>(
+      listener: (context, state) {
+        // Show error in modern SnackBar instead of ugly dialog
+        if (state.error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      state.error!,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.red[700],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              duration: const Duration(seconds: 5),
+              action: SnackBarAction(
+                label: 'OK',
+                textColor: Colors.white,
+                onPressed: () {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                },
+              ),
+            ),
+          );
+        }
+      },
       builder: (context, state) {
         return PopScope(
           canPop: !versionResult.isForced || state.isCompleted,
@@ -120,9 +155,7 @@ class FormEngineUpdateScreen extends StatelessWidget {
                                   ),
                                 ],
                               )
-                            : const SizedBox.shrink(
-                                key: ValueKey('no-skip'),
-                              ),
+                            : const SizedBox.shrink(key: ValueKey('no-skip')),
                       ),
                     ),
                     const SizedBox(height: 32),

@@ -59,10 +59,52 @@ class ZipHelper {
         FormGearLogger.sdk('Created extraction directory: $extractToPath');
       }
 
+      // Detect if all files are under a single root directory (FASIH pattern)
+      String? commonRootDir;
+      var hasCommonRoot = true;
+
+      // First pass: detect common root directory
+      for (final file in archive) {
+        // Skip directory entries themselves
+        if (file.isDirectory) continue;
+
+        if (file.name.contains('/')) {
+          final rootDir = file.name.split('/').first;
+          if (commonRootDir == null) {
+            commonRootDir = rootDir;
+          } else if (commonRootDir != rootDir) {
+            hasCommonRoot = false;
+            break;
+          }
+        } else {
+          // File at root level, no common directory
+          hasCommonRoot = false;
+          break;
+        }
+      }
+
       // Extract all files from the archive
       var extractedCount = 0;
       for (final file in archive) {
-        final filename = file.name;
+        // Skip the root directory entry itself BEFORE processing
+        if (hasCommonRoot &&
+            commonRootDir != null &&
+            file.name == '$commonRootDir/') {
+          continue;
+        }
+
+        var filename = file.name;
+
+        // Strip common root directory if detected (FASIH pattern)
+        if (hasCommonRoot && commonRootDir != null) {
+          if (filename.startsWith('$commonRootDir/')) {
+            filename = filename.substring(commonRootDir.length + 1);
+          }
+        }
+
+        // Skip empty filenames after stripping
+        if (filename.isEmpty) continue;
+
         final filePath = '$extractToPath${Platform.pathSeparator}$filename';
 
         if (file.isFile) {
@@ -78,14 +120,13 @@ class ZipHelper {
           // Write file content
           outFile.writeAsBytesSync(file.content as List<int>);
           extractedCount++;
-
-          FormGearLogger.sdk('Extracted file: $filename');
-        } else {
-          // Create directory
-          final dir = Directory(filePath);
-          if (!dir.existsSync()) {
-            dir.createSync(recursive: true);
-            FormGearLogger.sdk('Created directory: $filename');
+        } else if (file.isDirectory) {
+          // Only create subdirectories AFTER stripping root
+          if (filename.isNotEmpty) {
+            final dir = Directory(filePath);
+            if (!dir.existsSync()) {
+              dir.createSync(recursive: true);
+            }
           }
         }
       }
@@ -146,10 +187,52 @@ class ZipHelper {
         FormGearLogger.sdk('Created extraction directory: $extractToPath');
       }
 
+      // Detect if all files are under a single root directory (FASIH pattern)
+      String? commonRootDir;
+      var hasCommonRoot = true;
+
+      // First pass: detect common root directory
+      for (final file in archive) {
+        // Skip directory entries themselves
+        if (file.isDirectory) continue;
+
+        if (file.name.contains('/')) {
+          final rootDir = file.name.split('/').first;
+          if (commonRootDir == null) {
+            commonRootDir = rootDir;
+          } else if (commonRootDir != rootDir) {
+            hasCommonRoot = false;
+            break;
+          }
+        } else {
+          // File at root level, no common directory
+          hasCommonRoot = false;
+          break;
+        }
+      }
+
       // Extract all files from the archive
       var extractedCount = 0;
       for (final file in archive) {
-        final filename = file.name;
+        // Skip the root directory entry itself BEFORE processing
+        if (hasCommonRoot &&
+            commonRootDir != null &&
+            file.name == '$commonRootDir/') {
+          continue;
+        }
+
+        var filename = file.name;
+
+        // Strip common root directory if detected (FASIH pattern)
+        if (hasCommonRoot && commonRootDir != null) {
+          if (filename.startsWith('$commonRootDir/')) {
+            filename = filename.substring(commonRootDir.length + 1);
+          }
+        }
+
+        // Skip empty filenames after stripping
+        if (filename.isEmpty) continue;
+
         final filePath = '$extractToPath${Platform.pathSeparator}$filename';
 
         if (file.isFile) {
@@ -165,14 +248,13 @@ class ZipHelper {
           // Write file content
           outFile.writeAsBytesSync(file.content as List<int>);
           extractedCount++;
-
-          FormGearLogger.sdk('Extracted file: $filename');
-        } else {
-          // Create directory
-          final dir = Directory(filePath);
-          if (!dir.existsSync()) {
-            dir.createSync(recursive: true);
-            FormGearLogger.sdk('Created directory: $filename');
+        } else if (file.isDirectory) {
+          // Only create subdirectories AFTER stripping root
+          if (filename.isNotEmpty) {
+            final dir = Directory(filePath);
+            if (!dir.existsSync()) {
+              dir.createSync(recursive: true);
+            }
           }
         }
       }

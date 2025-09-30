@@ -39,9 +39,7 @@ class FormGearVersionManager {
 
       return await result.fold(
         (failure) async {
-          FormGearLogger.sdkError(
-            'Form engine version check failed: $failure',
-          );
+          FormGearLogger.sdkError('Form engine version check failed: $failure');
           if (showNotifications && context != null) {
             _showErrorNotification(
               context,
@@ -171,16 +169,12 @@ class FormGearVersionManager {
       FormEngineUpdateScreen.show(
         context: context,
         versionResult: result,
-        onDownload: () => _performFormEngineDownload(
+        onDownload: (onProgress) => _performFormEngineDownload(
           context,
           result.formEngine,
           result.formEngine.formEngineId?.toString() ??
               FormEngineType.formGear.id.toString(),
-          onProgress: (progress) {
-            // Progress callback will be passed to the download manager
-            // The update screen will handle progress updates through its bloc
-            FormGearLogger.sdk('Download progress: $progress%');
-          },
+          onProgress: onProgress,
         ),
       ),
     );
@@ -265,9 +259,7 @@ class FormGearVersionManager {
         );
       }
     } on Exception catch (e) {
-      FormGearLogger.sdkError(
-        'Form engine download failed: $e',
-      );
+      FormGearLogger.sdkError('Form engine download failed: $e');
       _handleDownloadError(context, 'Download failed: $e');
     }
   }
@@ -387,23 +379,10 @@ class FormGearVersionManager {
   }
 
   /// Handles download errors
+  /// Error display is handled by the update screen's BLoC state
   void _handleDownloadError(BuildContext context, String error) {
-    // Removed Navigator.pop() - let update screen handle its own UI state
-    // The update screen manages its own navigation and error display
-
-    // Show error dialog without attempting to close any existing dialogs
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Download Failed'),
-        content: Text(error),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
+    FormGearLogger.sdkError('Download error: $error');
+    // Error is already propagated through BLoC state via onDownload callback
+    // The update screen will display error in modern UI
   }
 }
