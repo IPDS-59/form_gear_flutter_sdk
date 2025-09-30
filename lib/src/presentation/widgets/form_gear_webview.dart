@@ -259,6 +259,7 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
   }
 
   /// Handle back navigation - check if WebView can go back
+  /// Supports multi-section forms by navigating back within WebView history
   Future<void> _handleBackNavigation(InAppWebViewController? controller) async {
     if (controller == null) {
       // No WebView controller, allow normal back navigation
@@ -274,18 +275,86 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
 
       if (canGoBack) {
         // WebView has history, navigate back within WebView
+        // This handles multi-section forms
+        // where user navigates between sections
         await controller.goBack();
-        FormGearLogger.webview('WebView navigated back');
+        FormGearLogger.webview('WebView navigated back to previous section');
       } else {
-        // No WebView history, allow normal back navigation
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
+        // No WebView history, show exit confirmation dialog
+        await _showExitConfirmationDialog(controller);
       }
     } on Exception catch (e) {
       FormGearLogger.webviewError('Error checking WebView back navigation: $e');
 
       // On error, allow normal back navigation
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    }
+  }
+
+  /// Show exit confirmation dialog before closing the form
+  /// Matches FASIH native behavior
+  Future<void> _showExitConfirmationDialog(
+    InAppWebViewController controller,
+  ) async {
+    if (!mounted) return;
+
+    final shouldExit = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Perhatian'),
+        content: const Text(
+          'Apakah Anda yakin akan keluar dari halaman ini?',
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Tidak'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1E88E5),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Iya'),
+          ),
+        ],
+      ),
+    );
+
+    if ((shouldExit ?? false) && mounted) {
+      // Call mobileExit() to trigger cleanup in FormGear/FasihForm
+      try {
+        await controller.evaluateJavascript(
+          source: '''
+            (function() {
+              try {
+                if (typeof window.mobileExit === 'function') {
+                  window.mobileExit();
+                } else if (typeof Android !== 'undefined' && typeof Android.mobileExit === 'function') {
+                  Android.mobileExit();
+                }
+              } catch (e) {
+                console.log('mobileExit not available: ' + e);
+              }
+            })();
+          ''',
+        );
+        FormGearLogger.webview('Called mobileExit before closing form');
+      } on Exception catch (e) {
+        FormGearLogger.webviewError('Error calling mobileExit: $e');
+      }
+
+      // Close the form
       if (mounted) {
         Navigator.of(context).pop();
       }
