@@ -1,5 +1,3 @@
-// ignore_for_file: lines_longer_than_80_chars
-
 import 'package:form_gear_engine_sdk/src/core/listeners/save_submit_data.dart';
 import 'package:form_gear_engine_sdk/src/core/listeners/save_submit_result.dart';
 

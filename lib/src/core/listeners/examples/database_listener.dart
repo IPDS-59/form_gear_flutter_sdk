@@ -1,10 +1,12 @@
-// ignore_for_file: lines_longer_than_80_chars, avoid_catches_without_on_clauses
+// Generic catches intentional for example implementation
+// ignore_for_file: avoid_catches_without_on_clauses
 
 import 'dart:convert';
 
 import 'package:form_gear_engine_sdk/src/core/listeners/form_data_listener.dart';
 import 'package:form_gear_engine_sdk/src/core/listeners/save_submit_data.dart';
 import 'package:form_gear_engine_sdk/src/core/listeners/save_submit_result.dart';
+import 'package:form_gear_engine_sdk/src/models/validation_result.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 
 /// Example FormDataListener implementation for database storage
@@ -318,22 +320,34 @@ class DatabaseFormDataListener extends BaseFormDataListener {
   ValidationResult _validateData(SaveSubmitData data) {
     // Check required fields
     if (data.assignmentId.isEmpty) {
-      return const ValidationResult(false, 'Assignment ID is required');
+      return const ValidationResult(
+        isValid: false,
+        error: 'Assignment ID is required',
+      );
     }
 
     if (data.templateId.isEmpty) {
-      return const ValidationResult(false, 'Template ID is required');
+      return const ValidationResult(
+        isValid: false,
+        error: 'Template ID is required',
+      );
     }
 
     if (data.formData.isEmpty) {
-      return const ValidationResult(false, 'Form data is required');
+      return const ValidationResult(
+        isValid: false,
+        error: 'Form data is required',
+      );
     }
 
     // Validate JSON format
     try {
       jsonDecode(data.formData);
     } catch (e) {
-      return ValidationResult(false, 'Invalid JSON in form data: $e');
+      return ValidationResult(
+        isValid: false,
+        error: 'Invalid JSON in form data: $e',
+      );
     }
 
     // Additional validation for optional fields
@@ -341,7 +355,10 @@ class DatabaseFormDataListener extends BaseFormDataListener {
       try {
         jsonDecode(data.remark);
       } catch (e) {
-        return ValidationResult(false, 'Invalid JSON in remark data: $e');
+        return ValidationResult(
+          isValid: false,
+          error: 'Invalid JSON in remark data: $e',
+        );
       }
     }
 
@@ -349,11 +366,14 @@ class DatabaseFormDataListener extends BaseFormDataListener {
       try {
         jsonDecode(data.principal);
       } catch (e) {
-        return ValidationResult(false, 'Invalid JSON in principal data: $e');
+        return ValidationResult(
+          isValid: false,
+          error: 'Invalid JSON in principal data: $e',
+        );
       }
     }
 
-    return const ValidationResult(true, null);
+    return const ValidationResult(isValid: true);
   }
 
   /// Checks if an error is retryable (transient failure vs permanent failure)
@@ -419,14 +439,6 @@ class DatabaseFormDataListener extends BaseFormDataListener {
       return null;
     }
   }
-}
-
-/// Validation result for data validation operations
-class ValidationResult {
-  const ValidationResult(this.isValid, this.error);
-
-  final bool isValid;
-  final String? error;
 }
 
 /// Abstract interface for database operations
