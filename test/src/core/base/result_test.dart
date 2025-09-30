@@ -431,7 +431,7 @@ void main() {
       });
 
       test('should handle API response transformation', () {
-        final apiResult = Success<Map<String, dynamic>>({
+        const apiResult = Success<Map<String, dynamic>>({
           'userId': 123,
           'name': 'John Doe',
           'email': 'john@example.com',

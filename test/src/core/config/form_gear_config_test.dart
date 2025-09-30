@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:form_gear_engine_sdk/src/core/config/config.dart';
-import 'package:form_gear_engine_sdk/src/core/config/form_gear_config.dart';
 import 'package:form_gear_engine_sdk/src/models/bps_user.dart';
 
 void main() {
@@ -22,7 +21,7 @@ void main() {
           lookupEndpoint: '/api/lookup/{surveyId}',
         );
 
-        final config = FormGearConfig(
+        const config = FormGearConfig(
           clientMode: FormGearClientMode.capi,
           lookupKey: 'key%5B%5D',
           lookupValue: 'value%5B%5D',
@@ -36,12 +35,10 @@ void main() {
           autoStartServer: true,
           bpsUser: bpsUser,
           apiConfig: apiConfig,
-          preset: const {'defaultValue': 'test'},
-          formResponse: const {'answer': 'test'},
-          validation: const {'required': true},
+          preset: {'defaultValue': 'test'},
+          formResponse: {'answer': 'test'},
+          validation: {'required': true},
           remark: 'Test remark',
-          isNewForm: true,
-          enableLogging: true,
         );
 
         expect(config.clientMode, equals(FormGearClientMode.capi));
@@ -411,7 +408,6 @@ void main() {
           sdkLogPrefix: '[SDK]',
           serverPort: 3310,
           autoStartServer: true,
-          enableLogging: true,
         );
 
         expect(config.enableLogging, isTrue);
@@ -506,7 +502,7 @@ void main() {
 
     group('Form Data', () {
       test('should configure with preset data', () {
-        final config = FormGearConfig(
+        const config = FormGearConfig(
           clientMode: FormGearClientMode.capi,
           lookupKey: 'key%5B%5D',
           lookupValue: 'value%5B%5D',
@@ -518,7 +514,7 @@ void main() {
           sdkLogPrefix: '[SDK]',
           serverPort: 3310,
           autoStartServer: true,
-          preset: const {'province': 'Jawa Barat', 'regency': 'Bandung'},
+          preset: {'province': 'Jawa Barat', 'regency': 'Bandung'},
         );
 
         expect(config.preset, isNotNull);
@@ -527,7 +523,7 @@ void main() {
       });
 
       test('should configure with form response', () {
-        final config = FormGearConfig(
+        const config = FormGearConfig(
           clientMode: FormGearClientMode.capi,
           lookupKey: 'key%5B%5D',
           lookupValue: 'value%5B%5D',
@@ -539,7 +535,7 @@ void main() {
           sdkLogPrefix: '[SDK]',
           serverPort: 3310,
           autoStartServer: true,
-          formResponse: const {'question1': 'answer1', 'question2': 'answer2'},
+          formResponse: {'question1': 'answer1', 'question2': 'answer2'},
         );
 
         expect(config.formResponse, isNotNull);
@@ -547,7 +543,7 @@ void main() {
       });
 
       test('should configure with validation rules', () {
-        final config = FormGearConfig(
+        const config = FormGearConfig(
           clientMode: FormGearClientMode.capi,
           lookupKey: 'key%5B%5D',
           lookupValue: 'value%5B%5D',
@@ -559,7 +555,7 @@ void main() {
           sdkLogPrefix: '[SDK]',
           serverPort: 3310,
           autoStartServer: true,
-          validation: const {
+          validation: {
             'field1': {'required': true, 'minLength': 5},
           },
         );
@@ -600,7 +596,6 @@ void main() {
           sdkLogPrefix: '[SDK]',
           serverPort: 3310,
           autoStartServer: true,
-          isNewForm: true,
         );
 
         const config2 = FormGearConfig(
@@ -632,7 +627,7 @@ void main() {
           lookupEndpoint: '/lookup/{surveyId}',
         );
 
-        final config = FormGearConfig(
+        const config = FormGearConfig(
           clientMode: FormGearClientMode.capi,
           lookupKey: 'key%5B%5D',
           lookupValue: 'value%5B%5D',
@@ -685,7 +680,7 @@ void main() {
           formEngineEndpoint: '/api/form-engine',
         );
 
-        final config = FormGearConfig(
+        const config = FormGearConfig(
           clientMode: FormGearClientMode.capi,
           lookupKey: 'key%5B%5D',
           lookupValue: 'value%5B%5D',
@@ -713,7 +708,7 @@ void main() {
           templateZipEndpoint: '/api/template/zip/{templateId}',
         );
 
-        final config = FormGearConfig(
+        const config = FormGearConfig(
           clientMode: FormGearClientMode.cawi,
           lookupKey: 'key%5B%5D',
           lookupValue: 'value%5B%5D',

@@ -37,7 +37,7 @@ void main() {
     });
 
     test('should iterate through all values', () {
-      final values = FormGearClientMode.values;
+      const values = FormGearClientMode.values;
 
       expect(values, contains(FormGearClientMode.cawi));
       expect(values, contains(FormGearClientMode.capi));
@@ -104,7 +104,7 @@ void main() {
     });
 
     test('should iterate through all values', () {
-      final values = FormGearFormMode.values;
+      const values = FormGearFormMode.values;
 
       expect(values, contains(FormGearFormMode.open));
       expect(values, contains(FormGearFormMode.rejected));
@@ -176,7 +176,7 @@ void main() {
     });
 
     test('should iterate through all values', () {
-      final values = FormGearLookupMode.values;
+      const values = FormGearLookupMode.values;
 
       expect(values, contains(FormGearLookupMode.online));
       expect(values, contains(FormGearLookupMode.offline));
@@ -234,7 +234,7 @@ void main() {
     });
 
     test('should iterate through all values', () {
-      final values = FormGearInitialMode.values;
+      const values = FormGearInitialMode.values;
 
       expect(values, contains(FormGearInitialMode.initial));
       expect(values, contains(FormGearInitialMode.assign));

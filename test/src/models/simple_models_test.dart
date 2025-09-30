@@ -32,7 +32,6 @@ void main() {
       test('should create result with all parameters', () {
         const result = DownloadResult(
           success: true,
-          error: null,
           localPath: '/storage/downloads/template.zip',
         );
 
@@ -95,7 +94,6 @@ void main() {
       test('should have readable string representation', () {
         const result = DownloadResult(
           success: true,
-          error: null,
           localPath: '/downloads/file.zip',
         );
 
