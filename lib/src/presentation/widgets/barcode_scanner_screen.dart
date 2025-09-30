@@ -155,6 +155,24 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
     context.read<BarcodeScannerBloc>().add(const SwitchCamera());
   }
 
+  Widget _buildCameraView(BarcodeScannerState state) {
+    // Only show camera when scanner is ready and has controller
+    final controller = context.read<BarcodeScannerBloc>().controller;
+
+    if (controller == null ||
+        state.status == BarcodeScannerStatus.disposed ||
+        state.status == BarcodeScannerStatus.initializing ||
+        state.status == BarcodeScannerStatus.error) {
+      return Container(color: Colors.black);
+    }
+
+    // MobileScanner widget will use the controller that's already started
+    // The BLoC listens to controller.barcodes stream in _onStartScanning
+    return MobileScanner(
+      controller: controller,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<BarcodeScannerBloc, BarcodeScannerState>(
@@ -313,13 +331,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
         children: [
           // Camera view
           Positioned.fill(
-            child:
-                state.status != BarcodeScannerStatus.disposed &&
-                    context.read<BarcodeScannerBloc>().controller != null
-                ? MobileScanner(
-                    controller: context.read<BarcodeScannerBloc>().controller,
-                  )
-                : Container(color: Colors.black),
+            child: _buildCameraView(state),
           ),
 
           // Scanning overlay with viewfinder

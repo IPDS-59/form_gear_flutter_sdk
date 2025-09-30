@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/models/response_models.dart';
+import 'package:form_gear_engine_sdk/src/utils/location_service_helper.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -121,31 +121,29 @@ class ClientActionHandler {
       _ClientActionMethodHandler('gpsHandler', (args) async {
         if (args.isNotEmpty) {
           try {
-            // Check location permissions
-            final locationStatus = await Permission.location.request();
-            if (!locationStatus.isGranted) {
+            // Ensure location access using helper (automatically opens settings if disabled)
+            final accessResult =
+                await LocationServiceHelper.ensureLocationAccess(
+                  contextDescription: 'GPS handler',
+                );
+            if (!accessResult.success) {
               return ActionInfoJs(
                 success: false,
-                error: 'Location permission denied',
+                error: accessResult.errorMessage ?? 'Location access failed',
               );
             }
 
-            // Check if location services are enabled
-            final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-            if (!serviceEnabled) {
+            // Get current location using helper
+            final locationResult =
+                await LocationServiceHelper.getCurrentLocation();
+            if (!locationResult.success) {
               return ActionInfoJs(
                 success: false,
-                error: 'Location services are disabled',
+                error: locationResult.errorMessage ?? 'Failed to get location',
               );
             }
 
-            // Get current position
-            final position = await Geolocator.getCurrentPosition(
-              locationSettings: const LocationSettings(
-                accuracy: LocationAccuracy.high,
-              ),
-            );
-
+            final position = locationResult.position!;
             final locationData = {
               'latitude': position.latitude,
               'longitude': position.longitude,

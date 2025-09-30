@@ -51,3 +51,7 @@ class PauseScanning extends BarcodeScannerEvent {
 class DisposeScanner extends BarcodeScannerEvent {
   const DisposeScanner();
 }
+
+class CheckFlashSupport extends BarcodeScannerEvent {
+  const CheckFlashSupport();
+}
