@@ -102,12 +102,11 @@ class HomeScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            _buildDemoCard(
-              context,
+            _DemoCard(
               title: 'Launch Form Engine',
               subtitle: 'Test different form engine implementations',
               icon: Icons.rocket_launch,
-              gradientColors: [Color(0xFF1E88E5), Color(0xFF1976D2)],
+              gradientColors: const [Color(0xFF1E88E5), Color(0xFF1976D2)],
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -116,12 +115,11 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _buildDemoCard(
-              context,
+            _DemoCard(
               title: 'Assignment-Based Configuration',
               subtitle: 'Dynamic configuration per template/assignment',
               icon: Icons.assignment,
-              gradientColors: [Color(0xFF9C27B0), Color(0xFF673AB7)],
+              gradientColors: const [Color(0xFF9C27B0), Color(0xFF673AB7)],
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -130,12 +128,11 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _buildDemoCard(
-              context,
+            _DemoCard(
               title: 'SaveOrSubmit Listener',
               subtitle: 'Test custom data persistence strategies',
               icon: Icons.save_alt,
-              gradientColors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+              gradientColors: const [Color(0xFF4CAF50), Color(0xFF2E7D32)],
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -144,12 +141,11 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _buildDemoCard(
-              context,
+            _DemoCard(
               title: 'Media Features',
               subtitle: 'Audio recording and barcode scanning',
               icon: Icons.perm_media,
-              gradientColors: [Color(0xFFE91E63), Color(0xFFC2185B)],
+              gradientColors: const [Color(0xFFE91E63), Color(0xFFC2185B)],
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -164,12 +160,11 @@ class HomeScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            _buildDemoCard(
-              context,
+            _DemoCard(
               title: 'Download Demo',
               subtitle: 'Asset download and management',
               icon: Icons.download,
-              gradientColors: [Color(0xFF42D9FF), Color(0xFF00BCD4)],
+              gradientColors: const [Color(0xFF42D9FF), Color(0xFF00BCD4)],
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -178,12 +173,11 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _buildDemoCard(
-              context,
+            _DemoCard(
               title: 'Clean Architecture Demo',
               subtitle: 'Repository pattern and use cases',
               icon: Icons.architecture,
-              gradientColors: [Color(0xFF9C27B0), Color(0xFF673AB7)],
+              gradientColors: const [Color(0xFF9C27B0), Color(0xFF673AB7)],
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -192,12 +186,11 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _buildDemoCard(
-              context,
+            _DemoCard(
               title: 'Version Update Demo',
               subtitle: 'Version checking and updates',
               icon: Icons.system_update,
-              gradientColors: [Color(0xFFFF9800), Color(0xFFFF6F00)],
+              gradientColors: const [Color(0xFFFF9800), Color(0xFFFF6F00)],
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -206,12 +199,11 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _buildDemoCard(
-              context,
+            _DemoCard(
               title: 'Loading Screen Demo',
               subtitle: 'Loading states and animations',
               icon: Icons.hourglass_empty,
-              gradientColors: [Color(0xFF8BC34A), Color(0xFF689F38)],
+              gradientColors: const [Color(0xFF8BC34A), Color(0xFF689F38)],
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -220,12 +212,11 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _buildDemoCard(
-              context,
+            _DemoCard(
               title: 'Bridge Test',
               subtitle: 'JavaScript bridge integration',
               icon: Icons.code,
-              gradientColors: [Color(0xFF673AB7), Color(0xFF512DA8)],
+              gradientColors: const [Color(0xFF673AB7), Color(0xFF512DA8)],
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -284,15 +275,25 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildDemoCard(
-    BuildContext context, {
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required List<Color> gradientColors,
-    required VoidCallback onTap,
-  }) {
+class _DemoCard extends StatelessWidget {
+  const _DemoCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.gradientColors,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final List<Color> gradientColors;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
