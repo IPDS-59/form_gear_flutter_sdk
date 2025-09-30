@@ -8,7 +8,7 @@ on:
       - "hotfix/**"
 
 env:
-  FLUTTER_VERSION: "stable"
+  FLUTTER_VERSION: "3.35.5"
 
 jobs:
   release-branch-setup:
