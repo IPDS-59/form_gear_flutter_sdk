@@ -730,20 +730,41 @@ class FormGearDownloadManager {
       String? commonRootDir;
       var hasCommonRoot = true;
 
+      // First pass: detect common root directory
       for (final file in archive) {
+        // Skip directory entries themselves
+        if (file.isDirectory) continue;
+
         if (file.name.contains('/')) {
           final rootDir = file.name.split('/').first;
           if (commonRootDir == null) {
             commonRootDir = rootDir;
+            FormGearLogger.sdk(
+              'ZIP Detection: Found potential root directory: $rootDir',
+            );
           } else if (commonRootDir != rootDir) {
             hasCommonRoot = false;
+            FormGearLogger.sdk(
+              'ZIP Detection: Multiple root directories found '
+              '($commonRootDir vs $rootDir), will not strip root',
+            );
             break;
           }
         } else {
           // File at root level, no common directory
           hasCommonRoot = false;
+          FormGearLogger.sdk(
+            'ZIP Detection: File at root level found (${file.name}), '
+            'will not strip root',
+          );
           break;
         }
+      }
+
+      if (hasCommonRoot && commonRootDir != null) {
+        FormGearLogger.sdk(
+          'ZIP Detection: Will strip common root directory: $commonRootDir',
+        );
       }
 
       String? detectedVersion;
