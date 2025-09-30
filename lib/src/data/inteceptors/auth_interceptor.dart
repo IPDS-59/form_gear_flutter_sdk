@@ -22,9 +22,9 @@ class AuthInterceptor extends Interceptor {
 
         // Fallback to BPS user session if no API token
         if (authToken == null && formGearConfig != null) {
-          authToken =
-              'Bearer '
-              '${formGearConfig.bpsUser?.sessionToken ?? formGearConfig.bpsUser?.authToken}';
+          final token = formGearConfig.bpsUser?.sessionToken ??
+              formGearConfig.bpsUser?.authToken;
+          authToken = 'Bearer $token';
         }
 
         if (authToken != null) {

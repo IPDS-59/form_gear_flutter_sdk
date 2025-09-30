@@ -1,3 +1,5 @@
+// ignore_for_file: lines_longer_than_80_chars
+
 import 'package:equatable/equatable.dart';
 import 'package:form_gear_engine_sdk/src/models/assignment_context.dart';
 import 'package:json_annotation/json_annotation.dart';

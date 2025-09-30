@@ -1,3 +1,5 @@
+// ignore_for_file: lines_longer_than_80_chars, avoid_catches_without_on_clauses
+
 import 'dart:convert';
 import 'dart:io';
 

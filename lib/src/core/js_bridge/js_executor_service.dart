@@ -5,12 +5,12 @@ import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 /// Allows handlers to execute JavaScript without direct WebView
 /// controller access
 class JSExecutorService {
-  JSExecutorService._();
-
-  static JSExecutorService? _instance;
 
   /// Get the singleton instance
   factory JSExecutorService() => _instance ??= JSExecutorService._();
+  JSExecutorService._();
+
+  static JSExecutorService? _instance;
 
   InAppWebViewController? _controller;
   String? _formEngineId;
