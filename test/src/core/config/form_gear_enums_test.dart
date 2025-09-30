@@ -205,12 +205,12 @@ void main() {
     test('should have correct enum values', () {
       expect(FormGearInitialMode.values.length, equals(2));
       expect(FormGearInitialMode.initial.value, equals(1));
-      expect(FormGearInitialMode.assignment.value, equals(2));
+      expect(FormGearInitialMode.assign.value, equals(2));
     });
 
     test('should have correct enum names', () {
       expect(FormGearInitialMode.initial.name, equals('initial'));
-      expect(FormGearInitialMode.assignment.name, equals('assignment'));
+      expect(FormGearInitialMode.assign.name, equals('assign'));
     });
 
     test('should be usable in switch statements', () {
@@ -218,7 +218,7 @@ void main() {
         switch (mode) {
           case FormGearInitialMode.initial:
             return 'New form creation';
-          case FormGearInitialMode.assignment:
+          case FormGearInitialMode.assign:
             return 'Assignment based form';
         }
       }
@@ -228,7 +228,7 @@ void main() {
         equals('New form creation'),
       );
       expect(
-        getDescription(FormGearInitialMode.assignment),
+        getDescription(FormGearInitialMode.assign),
         equals('Assignment based form'),
       );
     });
@@ -237,7 +237,7 @@ void main() {
       final values = FormGearInitialMode.values;
 
       expect(values, contains(FormGearInitialMode.initial));
-      expect(values, contains(FormGearInitialMode.assignment));
+      expect(values, contains(FormGearInitialMode.assign));
     });
 
     test('should have unique values', () {
