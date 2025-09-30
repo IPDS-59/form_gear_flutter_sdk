@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 
 // Import screens and BLoC directly since they're not exported
@@ -146,14 +147,29 @@ class VersionUpdateDemoScreen extends StatelessWidget {
     BuildContext context,
     VersionCheckResult versionResult,
   ) async {
-    // Create a variable to hold the BLoC reference
-    FormEngineUpdateBloc? blocRef;
-
-    // Show screen and capture BLoC reference
-    blocRef = await FormEngineUpdateScreen.show(
-      context: context,
+    // Use late to allow self-reference in closure
+    late final FormEngineUpdateBloc bloc;
+    bloc = FormEngineUpdateBloc(
       versionResult: versionResult,
-      onDownload: () => _simulateDownload(blocRef),
+      onDownload: () => _simulateDownload(bloc),
+    );
+
+    // Show screen with the pre-created BLoC
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => BlocProvider.value(
+          value: bloc,
+          child: FormEngineUpdateScreen(
+            versionResult: versionResult,
+            onDownload: bloc.onDownload,
+          ),
+        ),
+        fullscreenDialog: true,
+        settings: RouteSettings(
+          name: 'form_engine_update',
+          arguments: {'canPop': !versionResult.isForced},
+        ),
+      ),
     );
   }
 

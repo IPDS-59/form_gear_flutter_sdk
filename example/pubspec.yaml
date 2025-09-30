@@ -39,6 +39,9 @@ dependencies:
   form_gear_engine_sdk:
     path: ../
 
+  # BLoC for state management in demo screens
+  flutter_bloc: ^8.1.6
+
   # Permission handling
   permission_handler: ^12.0.1
 
