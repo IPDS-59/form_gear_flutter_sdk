@@ -41,7 +41,6 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
         {
           'id': '1',
           'name': 'FormGear Engine',
-          'defaultVersion': '1.0',
           'type': 'FormGear',
           'description': 'Original FormGear Engine with ES6 modules',
           'jsFile': 'form-gear.es.js',
@@ -49,7 +48,6 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
         {
           'id': '2',
           'name': 'FasihForm Engine',
-          'defaultVersion': '2.0',
           'type': 'FasihForm',
           'description': 'Enhanced FasihForm with improved validation',
           'jsFile': 'fasih-form.es.js',
@@ -57,8 +55,8 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
       ];
 
       for (final config in engineConfigs) {
-        // Get actual version from local version.json if available
-        String version = config['defaultVersion'] as String;
+        // Get actual version from local version.json
+        String version = 'Unknown';
         try {
           final localVersion = await downloadManager.getLocalFormEngineVersion(
             config['id'] as String,
@@ -66,18 +64,15 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
           if (localVersion != null && localVersion.isNotEmpty) {
             version = localVersion;
             debugPrint(
-              'Using local version $localVersion for engine ${config['id']}',
+              'Found local version $localVersion for engine ${config['id']}',
             );
           } else {
             debugPrint(
-              'No local version found for engine ${config['id']}, '
-              'using default: $version',
+              'No version.json found for engine ${config['id']} - not downloaded or version file missing',
             );
           }
         } catch (e) {
-          debugPrint(
-            'Could not get local version for engine ${config['id']}: $e',
-          );
+          debugPrint('Error reading version for engine ${config['id']}: $e');
         }
 
         engines.add(
@@ -235,9 +230,9 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
       // Use the actual download manager to download the form engine
       final success = await downloadManager.downloadFormEngine(
         engine.id,
-        onProgress: (received, total) {
-          if (total > 0) {
-            final progress = ((received / total) * 100).round();
+        onProgress: (bytesReceived, totalBytes) {
+          if (totalBytes > 0) {
+            final progress = ((bytesReceived / totalBytes) * 100).round();
             onProgress(progress);
           }
         },
