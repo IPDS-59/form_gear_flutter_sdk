@@ -7,7 +7,7 @@ import 'package:form_gear_engine_sdk/src/models/assignment_context.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 
 /// Factory class that creates JSHandlers for Android action methods
-/// Now supports both legacy callbacks and new FormDataListener architecture
+/// Now supports both direct callbacks and FormDataListener architecture
 class AndroidActionHandler {
   AndroidActionHandler({
     this.onAction,
@@ -33,8 +33,8 @@ class AndroidActionHandler {
   )?
   onExecute;
 
-  /// Legacy callback for FormGear v1 saveOrSubmit
-  /// Kept for backward compatibility - use formDataListener for new
+  /// Optional callback for FormGear (engine ID: 1) saveOrSubmit
+  /// Can be used alongside or instead of formDataListener
   /// implementations
   final Future<String?> Function(
     String response,
@@ -46,8 +46,8 @@ class AndroidActionHandler {
   )?
   onSaveOrSubmit;
 
-  /// Legacy callback for FasihForm v2 saveOrSubmitFasihForm
-  /// Kept for backward compatibility - use formDataListener for new
+  /// Optional callback for FasihForm (engine ID: 2) saveOrSubmitFasihForm
+  /// Can be used alongside or instead of formDataListener
   /// implementations
   final Future<String?> Function(
     String response,
@@ -57,7 +57,7 @@ class AndroidActionHandler {
   )?
   onSaveOrSubmitFasihForm;
 
-  /// New FormDataListener for comprehensive save/submit handling
+  /// FormDataListener for comprehensive save/submit handling
   /// Provides structured data and result handling following FASIH
   /// patterns
   final FormDataListener? formDataListener;
@@ -66,7 +66,7 @@ class AndroidActionHandler {
   final AssignmentContext? Function()? getCurrentAssignment;
 
   /// Creates individual JSHandlers for each Android action method
-  /// Now supports both legacy callbacks and new FormDataListener
+  /// Now supports both direct callbacks and FormDataListener
   /// architecture
   /// Note: 'action' and 'execute' handlers are provided by dedicated
   /// classes
@@ -87,7 +87,7 @@ class AndroidActionHandler {
 
   /// Handles saveOrSubmit operations for both FormGear and FasihForm
   /// engines
-  /// Supports both legacy callbacks and new FormDataListener
+  /// Supports both direct callbacks and FormDataListener
   /// architecture
   Future<SubmissionInfoJs> _handleSaveOrSubmit(
     List<dynamic> args,
@@ -153,8 +153,8 @@ class AndroidActionHandler {
         );
       }
 
-      // Fallback to legacy callbacks for backward compatibility
-      return await _handleWithLegacyCallbacks(
+      // Fallback to direct callbacks for backward compatibility
+      return await _handleWithDirectCallbacks(
         formData: formData,
         remark: remark,
         principal: principal,
@@ -298,9 +298,9 @@ class AndroidActionHandler {
     }
   }
 
-  /// Handle save/submit using legacy callbacks for backward
+  /// Handle save/submit using direct callbacks for backward
   /// compatibility
-  Future<SubmissionInfoJs> _handleWithLegacyCallbacks({
+  Future<SubmissionInfoJs> _handleWithDirectCallbacks({
     required String formData,
     required String remark,
     required String principal,
@@ -310,7 +310,7 @@ class AndroidActionHandler {
     String? media,
   }) async {
     FormGearLogger.webview(
-      'Using legacy callback for ${engineType.displayName} '
+      'Using direct callback for ${engineType.displayName} '
       'saveOrSubmit',
     );
 
@@ -336,7 +336,7 @@ class AndroidActionHandler {
     } else {
       // No callback available - return default implementation
       FormGearLogger.webview(
-        'No listener or legacy callback available for '
+        'No listener or callback available for '
         '${engineType.displayName} - using default implementation',
       );
       submissionId =
