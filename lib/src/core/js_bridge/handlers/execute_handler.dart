@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:file_picker/file_picker.dart';
+import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/models/response_models.dart';
 import 'package:form_gear_engine_sdk/src/utils/location_service_helper.dart';
@@ -33,6 +36,7 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
       switch (action) {
         case 'CAMERA':
           return await _executeCamera(dataKey, data);
+        case 'FILE':
         case 'FILE_UPLOAD':
         case 'FILE_PICKER':
           return await _executeFilePicker(dataKey, data);
@@ -100,6 +104,20 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
   Future<ActionInfoJs> _executeFilePicker(String dataKey, String data) async {
     try {
       FormGearLogger.webview('Executing file picker for FasihForm: $dataKey');
+      FormGearLogger.webview('File picker data: $data');
+
+      // Parse data parameter (may contain accept type like {"accept":"text/csv"})
+      String? acceptType;
+      try {
+        final dataJson = jsonDecode(data) as Map<String, dynamic>;
+        acceptType = dataJson['accept'] as String?;
+        FormGearLogger.webview('Parsed accept type: $acceptType');
+      } on Exception {
+        // Ignore JSON parsing errors, continue with default file picker
+        FormGearLogger.webview(
+          'No JSON data to parse, using default file picker',
+        );
+      }
 
       // Request storage permission first (for Android)
       final storageStatus = await Permission.storage.request();
@@ -114,12 +132,42 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
         }
       }
 
-      // Open file picker
-      final result = await FilePicker.platform.pickFiles();
+      // Open file picker with appropriate type
+      FilePickerResult? result;
+      if (acceptType != null) {
+        // Handle specific file types
+        if (acceptType.contains('csv')) {
+          result = await FilePicker.platform.pickFiles(
+            type: FileType.custom,
+            allowedExtensions: ['csv'],
+          );
+        } else if (acceptType.contains('image')) {
+          result = await FilePicker.platform.pickFiles(type: FileType.image);
+        } else if (acceptType.contains('video')) {
+          result = await FilePicker.platform.pickFiles(type: FileType.video);
+        } else if (acceptType.contains('audio')) {
+          result = await FilePicker.platform.pickFiles(type: FileType.audio);
+        } else {
+          result = await FilePicker.platform.pickFiles();
+        }
+      } else {
+        result = await FilePicker.platform.pickFiles();
+      }
 
       if (result != null && result.files.single.path != null) {
         final filePath = result.files.single.path!;
-        FormGearLogger.webview('FasihForm file picker executed: $filePath');
+        final fileName = result.files.single.name;
+        FormGearLogger.webview(
+          'FasihForm file picker executed: $filePath (filename: $fileName)',
+        );
+
+        // Notify FasihForm of file selection via JavaScript callback
+        await _notifyFasihFormOfFileSelection(
+          dataKey: dataKey,
+          filePath: filePath,
+          fileName: fileName,
+        );
+
         return ActionInfoJs(success: true, result: filePath);
       } else {
         FormGearLogger.webview('FasihForm file picker cancelled by user');
@@ -133,6 +181,41 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
       return ActionInfoJs(
         success: false,
         error: 'Execute file picker error: $e',
+      );
+    }
+  }
+
+  /// Notifies FasihForm JavaScript of file selection
+  /// Calls: fasihForm.event.emit('file-selected', dataKey, '[{ "filename": "...", "uri": "file://..." }]')
+  Future<void> _notifyFasihFormOfFileSelection({
+    required String dataKey,
+    required String filePath,
+    required String fileName,
+  }) async {
+    try {
+      final jsExecutor = JSExecutorService();
+      if (!jsExecutor.isRegistered) {
+        FormGearLogger.webview(
+          'No JavaScript executor available, skipping file notification',
+        );
+        return;
+      }
+
+      // FasihForm expects: fasihForm.event.emit('file-selected', dataKey, '[{ "filename": "name", "uri": "file://path" }]')
+      final jsCommand =
+          '''
+javascript:fasihForm.event.emit(
+  "file-selected",
+  "$dataKey",
+  '[{ "filename": "$fileName", "uri": "file://$filePath" }]'
+)
+''';
+
+      FormGearLogger.webview('Executing file-selected JS callback: $jsCommand');
+      await jsExecutor.executeJavaScript(jsCommand);
+    } on Exception catch (e) {
+      FormGearLogger.webviewError(
+        'Failed to notify FasihForm of file selection: $e',
       );
     }
   }
@@ -168,10 +251,57 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
       final position = locationResult.position!;
       final locationData = '${position.latitude},${position.longitude}';
       FormGearLogger.webview('FasihForm location executed: $locationData');
+
+      // Notify FasihForm of location acquisition via JavaScript callback
+      await _notifyFasihFormOfLocation(
+        dataKey: dataKey,
+        latitude: position.latitude,
+        longitude: position.longitude,
+        accuracy: position.accuracy,
+      );
+
       return ActionInfoJs(success: true, result: locationData);
     } on Exception catch (e) {
       FormGearLogger.webviewError('Execute location error: $e');
       return ActionInfoJs(success: false, error: 'Execute location error: $e');
+    }
+  }
+
+  /// Notifies FasihForm JavaScript of location acquisition
+  /// Calls: fasihForm.event.emit('geolocation-acquired', dataKey, jsonString)
+  Future<void> _notifyFasihFormOfLocation({
+    required String dataKey,
+    required double latitude,
+    required double longitude,
+    required double accuracy,
+  }) async {
+    try {
+      final jsExecutor = JSExecutorService();
+      if (!jsExecutor.isRegistered) {
+        FormGearLogger.webview(
+          'No JavaScript executor available, skipping location notification',
+        );
+        return;
+      }
+
+      // FasihForm expects:
+      // fasihForm.event.emit('geolocation-acquired', dataKey,
+      //   '{"latitude": lat, "longitude": lng, "accuracy": acc}')
+      final jsCommand =
+          '''
+javascript:fasihForm.event.emit(
+  "geolocation-acquired",
+  "$dataKey",
+  '{"latitude": $latitude, "longitude": $longitude, "accuracy": $accuracy}'
+)
+''';
+
+      FormGearLogger.webview('Executing geolocation JS callback: $jsCommand');
+      await jsExecutor.executeJavaScript(jsCommand);
+    } on Exception catch (e) {
+      FormGearLogger.webviewError(
+        'Failed to notify FasihForm of location: $e',
+      );
     }
   }
 }
