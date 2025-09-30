@@ -45,11 +45,11 @@ class CompressionService {
   Future<List<int>> compressFile(String filePath) async {
     try {
       final file = File(filePath);
-      if (!await file.exists()) {
+      if (!file.existsSync()) {
         throw CompressionException('File not found: $filePath');
       }
 
-      final bytes = await file.readAsBytes();
+      final bytes = file.readAsBytesSync();
       return const GZipEncoder().encode(bytes);
     } catch (e) {
       throw CompressionException('Failed to compress file: $e');
