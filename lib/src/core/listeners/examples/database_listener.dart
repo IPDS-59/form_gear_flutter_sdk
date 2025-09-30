@@ -11,9 +11,9 @@ import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 
 /// Example FormDataListener implementation for database storage
 ///
-/// This example demonstrates how to implement FormDataListener with a database
-/// backend. It shows proper transaction handling, data validation, and
-/// error recovery patterns.
+/// This example demonstrates how to implement FormDataListener with a
+/// database backend. It shows proper transaction handling, data
+/// validation, and error recovery patterns.
 ///
 /// Features:
 /// - Database transaction support for atomic operations
@@ -73,7 +73,8 @@ class DatabaseFormDataListener extends BaseFormDataListener {
     StackTrace? stackTrace,
   ) async {
     FormGearLogger.sdkError(
-      'DatabaseFormDataListener: Error for assignment ${data.assignmentId}: $error',
+      'DatabaseFormDataListener: Error for assignment '
+      '${data.assignmentId}: $error',
     );
 
     // Log error to database for debugging
@@ -94,7 +95,8 @@ class DatabaseFormDataListener extends BaseFormDataListener {
   @override
   Future<void> onSaveOrSubmitStarted(SaveSubmitData data) async {
     FormGearLogger.sdk(
-      'DatabaseFormDataListener: Started processing assignment ${data.assignmentId}',
+      'DatabaseFormDataListener: Started processing assignment '
+      '${data.assignmentId}',
     );
 
     // Optional: Log operation start for audit trail
@@ -153,7 +155,8 @@ class DatabaseFormDataListener extends BaseFormDataListener {
     for (var attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         FormGearLogger.sdk(
-          'DatabaseFormDataListener: Attempt $attempt/$maxRetries for assignment ${data.assignmentId}',
+          'DatabaseFormDataListener: Attempt $attempt/$maxRetries for '
+          'assignment ${data.assignmentId}',
         );
 
         // Validate data if enabled
@@ -184,13 +187,15 @@ class DatabaseFormDataListener extends BaseFormDataListener {
         );
       } catch (e, stackTrace) {
         FormGearLogger.sdkError(
-          'DatabaseFormDataListener: Attempt $attempt failed for assignment ${data.assignmentId}: $e',
+          'DatabaseFormDataListener: Attempt $attempt failed for '
+          'assignment ${data.assignmentId}: $e',
         );
 
         // Check if we should retry
         if (attempt < maxRetries && _isRetryableError(e)) {
           FormGearLogger.sdk(
-            'DatabaseFormDataListener: Retrying in ${retryDelay.inMilliseconds}ms...',
+            'DatabaseFormDataListener: Retrying in '
+            '${retryDelay.inMilliseconds}ms...',
           );
           await Future<void>.delayed(retryDelay);
           continue;

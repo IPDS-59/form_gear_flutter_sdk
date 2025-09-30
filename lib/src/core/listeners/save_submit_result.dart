@@ -56,7 +56,10 @@ class SaveSubmitResult extends Equatable {
   /// return SaveSubmitResult.failure(
   ///   error: 'Database connection failed',
   ///   errorCode: 'DB_ERROR',
-  ///   metadata: {'retry_count': 3, 'last_attempt': DateTime.now().toIso8601String()},
+  ///   metadata: {
+  ///     'retry_count': 3,
+  ///     'last_attempt': DateTime.now().toIso8601String()
+  ///   },
   /// );
   /// ```
   factory SaveSubmitResult.failure({

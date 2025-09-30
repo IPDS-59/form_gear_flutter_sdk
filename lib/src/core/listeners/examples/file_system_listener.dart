@@ -10,14 +10,16 @@ import 'package:form_gear_engine_sdk/src/core/listeners/save_submit_result.dart'
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 import 'package:path_provider/path_provider.dart';
 
-/// Example FormDataListener implementation that saves data to the local file system
+/// Example FormDataListener implementation that saves data to the
+/// local file system
 ///
-/// This implementation follows FASIH's file structure patterns and demonstrates
-/// how to handle save/submit operations with proper file management, encryption,
-/// and error handling.
+/// This implementation follows FASIH's file structure patterns and
+/// demonstrates how to handle save/submit operations with proper file
+/// management, encryption, and error handling.
 ///
 /// Features:
-/// - FASIH-compatible directory structure (BPS/assignments/{assignmentId}/)
+/// - FASIH-compatible directory structure
+///   (BPS/assignments/{assignmentId}/)
 /// - Separate files for each data type (data.json, remark.json, etc.)
 /// - Optional encryption support based on assignment configuration
 /// - Proper error handling and logging
@@ -46,7 +48,8 @@ class FileSystemFormDataListener extends UnifiedFormDataListener {
   /// If null, will use application documents directory
   Directory? _baseDirectory;
 
-  /// Whether to encrypt sensitive data based on assignment configuration
+  /// Whether to encrypt sensitive data based on assignment
+  /// configuration
   final bool enableEncryption;
 
   /// Whether to create backup files before overwriting
@@ -55,7 +58,8 @@ class FileSystemFormDataListener extends UnifiedFormDataListener {
   /// Maximum number of backup files to keep
   final int maxBackups;
 
-  /// Compression level for JSON files (0-9, where 9 is max compression)
+  /// Compression level for JSON files (0-9, where 9 is max
+  /// compression)
   final int compressionLevel;
 
   /// Cache for base directory to avoid repeated async calls
@@ -113,8 +117,8 @@ class FileSystemFormDataListener extends UnifiedFormDataListener {
       final submissionId = _generateSubmissionId(data);
 
       FormGearLogger.sdk(
-        'FileSystemFormDataListener: Successfully saved ${savedFiles.length} files '
-        'for assignment ${data.assignmentId}',
+        'FileSystemFormDataListener: Successfully saved '
+        '${savedFiles.length} files for assignment ${data.assignmentId}',
       );
 
       return SaveSubmitResult.success(
@@ -129,7 +133,8 @@ class FileSystemFormDataListener extends UnifiedFormDataListener {
       );
     } catch (e, stackTrace) {
       FormGearLogger.sdkError(
-        'FileSystemFormDataListener: Failed to save data for assignment ${data.assignmentId}: $e',
+        'FileSystemFormDataListener: Failed to save data for '
+        'assignment ${data.assignmentId}: $e',
       );
       return SaveSubmitResult.fromException(e, stackTrace);
     }
@@ -142,7 +147,8 @@ class FileSystemFormDataListener extends UnifiedFormDataListener {
     StackTrace? stackTrace,
   ) async {
     FormGearLogger.sdkError(
-      'FileSystemFormDataListener: Error occurred for assignment ${data.assignmentId}: $error',
+      'FileSystemFormDataListener: Error occurred for assignment '
+      '${data.assignmentId}: $error',
     );
 
     // Log additional context for debugging
@@ -160,7 +166,8 @@ class FileSystemFormDataListener extends UnifiedFormDataListener {
   @override
   Future<void> onSaveOrSubmitStarted(SaveSubmitData data) async {
     FormGearLogger.sdk(
-      'FileSystemFormDataListener: Starting save/submit for assignment ${data.assignmentId}',
+      'FileSystemFormDataListener: Starting save/submit for '
+      'assignment ${data.assignmentId}',
     );
   }
 
@@ -171,13 +178,14 @@ class FileSystemFormDataListener extends UnifiedFormDataListener {
   ) async {
     if (result.isSuccess) {
       FormGearLogger.sdk(
-        'FileSystemFormDataListener: Completed save/submit for assignment ${data.assignmentId} '
+        'FileSystemFormDataListener: Completed save/submit for '
+        'assignment ${data.assignmentId} '
         'with submission ID: ${result.submissionId}',
       );
     } else {
       FormGearLogger.sdkError(
-        'FileSystemFormDataListener: Save/submit failed for assignment ${data.assignmentId}: '
-        '${result.error}',
+        'FileSystemFormDataListener: Save/submit failed for '
+        'assignment ${data.assignmentId}: ${result.error}',
       );
     }
   }
@@ -219,8 +227,8 @@ class FileSystemFormDataListener extends UnifiedFormDataListener {
     if (enableEncryption &&
         data.shouldEncrypt &&
         _shouldEncryptFile(fileName)) {
-      // Note: In a real implementation, you would use proper encryption
-      // This is just a placeholder for demonstration
+      // Note: In a real implementation, you would use proper
+      // encryption. This is just a placeholder for demonstration
       processedContent = _encryptContent(content, data);
     }
 
@@ -273,7 +281,8 @@ class FileSystemFormDataListener extends UnifiedFormDataListener {
           .toList();
 
       if (backupFiles.length > maxBackups) {
-        // Sort by creation time (oldest first) and delete excess files
+        // Sort by creation time (oldest first) and delete excess
+        // files
         backupFiles.sort(
           (a, b) => a.statSync().modified.compareTo(b.statSync().modified),
         );
@@ -330,15 +339,17 @@ class FileSystemFormDataListener extends UnifiedFormDataListener {
 
   /// Determines if a file should be encrypted based on its type
   bool _shouldEncryptFile(String fileName) {
-    // Typically, data.json and principal.json contain sensitive information
+    // Typically, data.json and principal.json contain sensitive
+    // information
     const sensitiveFiles = ['data.json', 'principal.json'];
     return sensitiveFiles.contains(fileName);
   }
 
   /// Encrypts content (placeholder implementation)
   String _encryptContent(String content, SaveSubmitData data) {
-    // In a real implementation, you would use proper encryption algorithms
-    // This is just a placeholder for demonstration purposes
+    // In a real implementation, you would use proper encryption
+    // algorithms. This is just a placeholder for demonstration
+    // purposes
     FormGearLogger.sdk(
       'Encrypting content for assignment ${data.assignmentId}',
     );
@@ -383,7 +394,8 @@ class FileSystemFormDataListener extends UnifiedFormDataListener {
 
       await for (final entity in bpsDir.list(recursive: true)) {
         if (entity is Directory) {
-          // Check if this is an assignment directory (contains assignment files)
+          // Check if this is an assignment directory (contains
+          // assignment files)
           final hasAssignmentFiles = entity.listSync().whereType<File>().any(
             (file) => file.path.endsWith('.json'),
           );
@@ -409,7 +421,8 @@ class FileSystemFormDataListener extends UnifiedFormDataListener {
     }
   }
 
-  /// Cleans up old assignment data based on age or assignment status
+  /// Cleans up old assignment data based on age or assignment
+  /// status
   Future<void> cleanupOldData({
     Duration? olderThan,
     List<String>? excludeAssignmentIds,
@@ -456,7 +469,8 @@ class FileSystemFormDataListener extends UnifiedFormDataListener {
       }
 
       FormGearLogger.sdk(
-        'Cleanup completed: deleted $deletedAssignments assignments, $deletedFiles files',
+        'Cleanup completed: deleted $deletedAssignments assignments, '
+        '$deletedFiles files',
       );
     } catch (e) {
       FormGearLogger.sdkError('Failed to cleanup old data: $e');

@@ -34,7 +34,8 @@ class AndroidActionHandler {
   onExecute;
 
   /// Legacy callback for FormGear v1 saveOrSubmit
-  /// Kept for backward compatibility - use formDataListener for new implementations
+  /// Kept for backward compatibility - use formDataListener for new
+  /// implementations
   final Future<String?> Function(
     String response,
     String remark,
@@ -46,7 +47,8 @@ class AndroidActionHandler {
   onSaveOrSubmit;
 
   /// Legacy callback for FasihForm v2 saveOrSubmitFasihForm
-  /// Kept for backward compatibility - use formDataListener for new implementations
+  /// Kept for backward compatibility - use formDataListener for new
+  /// implementations
   final Future<String?> Function(
     String response,
     String remark,
@@ -56,19 +58,24 @@ class AndroidActionHandler {
   onSaveOrSubmitFasihForm;
 
   /// New FormDataListener for comprehensive save/submit handling
-  /// Provides structured data and result handling following FASIH patterns
+  /// Provides structured data and result handling following FASIH
+  /// patterns
   final FormDataListener? formDataListener;
 
   /// Function to get current assignment context for save/submit operations
   final AssignmentContext? Function()? getCurrentAssignment;
 
   /// Creates individual JSHandlers for each Android action method
-  /// Now supports both legacy callbacks and new FormDataListener architecture
-  /// Note: 'action' and 'execute' handlers are provided by dedicated classes
+  /// Now supports both legacy callbacks and new FormDataListener
+  /// architecture
+  /// Note: 'action' and 'execute' handlers are provided by dedicated
+  /// classes
   List<JSHandler<JsonCodable>> createHandlers() {
     return [
-      // Removed 'action' handler - provided by ActionHandler class instead
-      // Removed 'execute' handler - provided by ExecuteHandler class instead
+      // Removed 'action' handler - provided by ActionHandler class
+      // instead
+      // Removed 'execute' handler - provided by ExecuteHandler class
+      // instead
       _AndroidActionMethodHandler('saveOrSubmit', (args) async {
         return _handleSaveOrSubmit(args, SaveSubmitEngineType.formGear);
       }),
@@ -78,8 +85,10 @@ class AndroidActionHandler {
     ];
   }
 
-  /// Handles saveOrSubmit operations for both FormGear and FasihForm engines
-  /// Supports both legacy callbacks and new FormDataListener architecture
+  /// Handles saveOrSubmit operations for both FormGear and FasihForm
+  /// engines
+  /// Supports both legacy callbacks and new FormDataListener
+  /// architecture
   Future<SubmissionInfoJs> _handleSaveOrSubmit(
     List<dynamic> args,
     SaveSubmitEngineType engineType,
@@ -91,10 +100,13 @@ class AndroidActionHandler {
           : args.length >= 4;
 
       if (!isValidArgs) {
+        final expectedArgs = engineType == SaveSubmitEngineType.formGear
+            ? 6
+            : 4;
         FormGearLogger.sdkError(
-          'Invalid arguments for ${engineType.displayName} saveOrSubmit: '
-          'expected ${engineType == SaveSubmitEngineType.formGear ? 6 : 4} '
-          'arguments, got ${args.length}',
+          'Invalid arguments for ${engineType.displayName} '
+          'saveOrSubmit: expected $expectedArgs arguments, '
+          'got ${args.length}',
         );
         return SubmissionInfoJs(
           success: false,
@@ -163,7 +175,8 @@ class AndroidActionHandler {
     }
   }
 
-  /// Handle save/submit using the new FormDataListener architecture
+  /// Handle save/submit using the new FormDataListener
+  /// architecture
   Future<SubmissionInfoJs> _handleWithListener({
     required String formData,
     required String remark,
@@ -232,14 +245,18 @@ class AndroidActionHandler {
 
       // Call completion callback if successful
       if (result.isSuccess) {
-        await formDataListener!.onSaveOrSubmitCompleted(saveSubmitData, result);
+        await formDataListener!.onSaveOrSubmitCompleted(
+          saveSubmitData,
+          result,
+        );
         FormGearLogger.webview(
-          '${engineType.displayName} saveOrSubmit completed successfully: '
-          '${result.submissionId}',
+          '${engineType.displayName} saveOrSubmit completed '
+          'successfully: ${result.submissionId}',
         );
       } else {
         FormGearLogger.webview(
-          '${engineType.displayName} saveOrSubmit failed: ${result.error}',
+          '${engineType.displayName} saveOrSubmit failed: '
+          '${result.error}',
         );
       }
 
@@ -281,7 +298,8 @@ class AndroidActionHandler {
     }
   }
 
-  /// Handle save/submit using legacy callbacks for backward compatibility
+  /// Handle save/submit using legacy callbacks for backward
+  /// compatibility
   Future<SubmissionInfoJs> _handleWithLegacyCallbacks({
     required String formData,
     required String remark,
@@ -292,7 +310,8 @@ class AndroidActionHandler {
     String? media,
   }) async {
     FormGearLogger.webview(
-      'Using legacy callback for ${engineType.displayName} saveOrSubmit',
+      'Using legacy callback for ${engineType.displayName} '
+      'saveOrSubmit',
     );
 
     String? submissionId;

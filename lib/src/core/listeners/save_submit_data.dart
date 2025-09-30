@@ -6,7 +6,8 @@ part 'save_submit_data.g.dart';
 
 /// Data model containing all information for save/submit operations
 ///
-/// This class encapsulates all data that FASIH saves during saveOrSubmit operations:
+/// This class encapsulates all data that FASIH saves during
+/// saveOrSubmit operations:
 /// - Form response data (answers, selections, inputs)
 /// - Remark data (comments, notes from users)
 /// - Principal data (collection metadata, signatures)

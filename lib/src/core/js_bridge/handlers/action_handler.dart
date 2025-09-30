@@ -178,7 +178,8 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
         if (success) {
           FormGearLogger.webview('Camera completed: $fileName');
 
-          // Execute JavaScript callbacks to notify FormGear engine (following FASIH pattern)
+          // Execute JavaScript callbacks to notify FormGear engine
+          // (following FASIH pattern)
           await _notifyFormGearOfMediaSelection(
             dataKey: dataKey,
             fileName: fileName,
@@ -250,7 +251,8 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
         if (success) {
           FormGearLogger.webview('File picker completed: $fileName');
 
-          // Execute JavaScript callbacks to notify FormGear engine (following FASIH pattern)
+          // Execute JavaScript callbacks to notify FormGear engine
+          // (following FASIH pattern)
           await _notifyFormGearOfMediaSelection(
             dataKey: dataKey,
             fileName: fileName,
@@ -879,7 +881,8 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
 
       String jsCommand;
 
-      // Choose JavaScript command based on engine type (following FASIH pattern)
+      // Choose JavaScript command based on engine type
+      // (following FASIH pattern)
       if (jsExecutor.formEngineId == '2') {
         // FasihForm engine (engine ID "2")
         jsCommand =
