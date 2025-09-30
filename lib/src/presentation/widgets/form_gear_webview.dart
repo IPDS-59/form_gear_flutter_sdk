@@ -258,8 +258,8 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
     );
   }
 
-  /// Handle back navigation - check if WebView can go back
-  /// Supports multi-section forms by navigating back within WebView history
+  /// Handle back navigation - show exit confirmation dialog
+  /// Multi-section navigation is handled by FormGear/FasihForm JavaScript
   Future<void> _handleBackNavigation(InAppWebViewController? controller) async {
     if (controller == null) {
       // No WebView controller, allow normal back navigation
@@ -269,32 +269,13 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
       return;
     }
 
-    try {
-      // Check if WebView can go back
-      final canGoBack = await controller.canGoBack();
-
-      if (canGoBack) {
-        // WebView has history, navigate back within WebView
-        // This handles multi-section forms
-        // where user navigates between sections
-        await controller.goBack();
-        FormGearLogger.webview('WebView navigated back to previous section');
-      } else {
-        // No WebView history, show exit confirmation dialog
-        await _showExitConfirmationDialog(controller);
-      }
-    } on Exception catch (e) {
-      FormGearLogger.webviewError('Error checking WebView back navigation: $e');
-
-      // On error, allow normal back navigation
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
-    }
+    // Always show exit confirmation dialog
+    // Multi-section forms handle their own internal navigation
+    await _showExitConfirmationDialog(controller);
   }
 
   /// Show exit confirmation dialog before closing the form
-  /// Matches FASIH native behavior
+  /// Modern Material Design 3 style matching SDK design system
   Future<void> _showExitConfirmationDialog(
     InAppWebViewController controller,
   ) async {
@@ -304,28 +285,96 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Perhatian'),
-        content: const Text(
-          'Apakah Anda yakin akan keluar dari halaman ini?',
-        ),
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Tidak'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1E88E5),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+        contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+        actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF3C7),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.warning_amber_rounded,
+                color: Color(0xFFF59E0B),
+                size: 24,
               ),
             ),
-            child: const Text('Iya'),
+            const SizedBox(width: 12),
+            const Text(
+              'Perhatian',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1F2937),
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Apakah Anda yakin akan keluar dari halaman ini?',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFF6B7280),
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(
+                      color: Color(0xFFE5E7EB),
+                      width: 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text(
+                    'Tidak',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1E88E5),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text(
+                    'Iya',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
