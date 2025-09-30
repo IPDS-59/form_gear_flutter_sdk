@@ -17,8 +17,8 @@ part 'save_submit_data.g.dart';
 /// - Operation flag (save vs submit)
 ///
 /// Based on FASIH analysis:
-/// - FormGear v1: saveOrSubmit(data, remark, principal, reference, media, flag)
-/// - FasihForm v2: saveOrSubmitFasihForm(data, remark, principal, flag)
+/// - FormGear (engine ID: 1): saveOrSubmit(data, remark, principal, reference, media, flag)
+/// - FasihForm (engine ID: 2): saveOrSubmitFasihForm(data, remark, principal, flag)
 @JsonSerializable()
 class SaveSubmitData extends Equatable {
   const SaveSubmitData({
@@ -38,7 +38,7 @@ class SaveSubmitData extends Equatable {
   factory SaveSubmitData.fromJson(Map<String, dynamic> json) =>
       _$SaveSubmitDataFromJson(json);
 
-  /// Create SaveSubmitData for FormGear v1 (full parameter set)
+  /// Create SaveSubmitData for FormGear (engine ID: 1) with full parameter set
   factory SaveSubmitData.formGear({
     required AssignmentContext assignmentContext,
     required String formData,
@@ -62,7 +62,7 @@ class SaveSubmitData extends Equatable {
     );
   }
 
-  /// Create SaveSubmitData for FasihForm v2 (simplified parameter set)
+  /// Create SaveSubmitData for FasihForm (engine ID: 2) with simplified parameter set
   factory SaveSubmitData.fasihForm({
     required AssignmentContext assignmentContext,
     required String formData,
@@ -115,8 +115,8 @@ class SaveSubmitData extends Equatable {
 
   /// Reference data containing lookup and validation data (JSON string)
   ///
-  /// This is only available in FormGear v1 saveOrSubmit.
-  /// FasihForm v2 does not include reference data in saveOrSubmitFasihForm.
+  /// This is only available in FormGear (engine ID: 1) saveOrSubmit.
+  /// FasihForm (engine ID: 2) does not include reference data in saveOrSubmitFasihForm.
   ///
   /// This typically contains:
   /// - Lookup table references
@@ -127,8 +127,8 @@ class SaveSubmitData extends Equatable {
 
   /// Media data containing file references and metadata (JSON string)
   ///
-  /// This is only available in FormGear v1 saveOrSubmit.
-  /// FasihForm v2 does not include media data in saveOrSubmitFasihForm.
+  /// This is only available in FormGear (engine ID: 1) saveOrSubmit.
+  /// FasihForm (engine ID: 2) does not include media data in saveOrSubmitFasihForm.
   ///
   /// This typically contains:
   /// - Image file paths and metadata
@@ -184,10 +184,10 @@ class SaveSubmitData extends Equatable {
   /// Check if this data should be encrypted based on assignment configuration
   bool get shouldEncrypt => assignmentContext.config.isEncrypted;
 
-  /// Check if this is from FormGear v1 engine
+  /// Check if this is from FormGear engine (ID: 1)
   bool get isFormGear => engineType == SaveSubmitEngineType.formGear;
 
-  /// Check if this is from FasihForm v2 engine
+  /// Check if this is from FasihForm engine (ID: 2)
   bool get isFasihForm => engineType == SaveSubmitEngineType.fasihForm;
 
   /// Get all file data that should be saved (following FASIH patterns)
@@ -280,11 +280,11 @@ class SaveSubmitData extends Equatable {
 /// Enum representing which form engine triggered the save/submit operation
 @JsonEnum()
 enum SaveSubmitEngineType {
-  /// FormGear v1 engine (full parameter set)
+  /// FormGear engine (ID: 1) with full parameter set
   @JsonValue('formGear')
   formGear,
 
-  /// FasihForm v2 engine (simplified parameter set)
+  /// FasihForm engine (ID: 2) with simplified parameter set
   @JsonValue('fasihForm')
   fasihForm;
 
@@ -292,9 +292,9 @@ enum SaveSubmitEngineType {
   String get displayName {
     switch (this) {
       case SaveSubmitEngineType.formGear:
-        return 'FormGear v1';
+        return 'FormGear (ID: 1)';
       case SaveSubmitEngineType.fasihForm:
-        return 'FasihForm v2';
+        return 'FasihForm (ID: 2)';
     }
   }
 
