@@ -166,10 +166,20 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
       return Container(color: Colors.black);
     }
 
-    // MobileScanner widget will use the controller that's already started
-    // The BLoC listens to controller.barcodes stream in _onStartScanning
+    // MobileScanner widget with onDetect callback
+    // This ensures barcode detection works even after permission grant
     return MobileScanner(
       controller: controller,
+      onDetect: (capture) {
+        // Forward detected barcodes to BLoC
+        if (capture.barcodes.isNotEmpty) {
+          context.read<BarcodeScannerBloc>().add(
+            BarcodeDetected(capture.barcodes),
+          );
+        } else {
+          context.read<BarcodeScannerBloc>().add(const ClearDetection());
+        }
+      },
     );
   }
 

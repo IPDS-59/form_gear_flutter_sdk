@@ -26,7 +26,6 @@ class BarcodeScannerBloc
   }
 
   MobileScannerController? _controller;
-  StreamSubscription<BarcodeCapture>? _subscription;
 
   MobileScannerController? get controller => _controller;
 
@@ -40,8 +39,6 @@ class BarcodeScannerBloc
       // Dispose old controller if exists
       await _controller?.dispose();
       _controller = null;
-      await _subscription?.cancel();
-      _subscription = null;
 
       // Create new controller with torch off (default)
       // Let MobileScanner widget handle the start/stop lifecycle
@@ -68,7 +65,8 @@ class BarcodeScannerBloc
         emit(
           state.copyWith(
             status: BarcodeScannerStatus.error,
-            errorMessage: 'Camera permission denied. '
+            errorMessage:
+                'Camera permission denied. '
                 'Please enable camera access in settings.',
           ),
         );
@@ -76,7 +74,8 @@ class BarcodeScannerBloc
         emit(
           state.copyWith(
             status: BarcodeScannerStatus.error,
-            errorMessage: 'Failed to initialize scanner: '
+            errorMessage:
+                'Failed to initialize scanner: '
                 '${e.errorDetails?.message ?? e.toString()}',
           ),
         );
@@ -120,24 +119,16 @@ class BarcodeScannerBloc
   ) async {
     if (_controller == null) return;
 
+    // Just update status to scanning
+    // MobileScanner widget's onDetect callback handles barcode detection
     emit(state.copyWith(status: BarcodeScannerStatus.scanning));
-
-    _subscription = _controller!.barcodes.listen((BarcodeCapture capture) {
-      if (capture.barcodes.isNotEmpty) {
-        add(BarcodeDetected(capture.barcodes));
-      } else {
-        add(const ClearDetection());
-      }
-    });
   }
 
   Future<void> _onStopScanning(
     StopScanning event,
     Emitter<BarcodeScannerState> emit,
   ) async {
-    await _subscription?.cancel();
-    _subscription = null;
-
+    // MobileScanner widget handles the scanning lifecycle
     emit(
       state.copyWith(
         status: BarcodeScannerStatus.stopped,
@@ -256,8 +247,6 @@ class BarcodeScannerBloc
     Emitter<BarcodeScannerState> emit,
   ) async {
     await _controller?.stop();
-    await _subscription?.cancel();
-    _subscription = null;
 
     emit(state.copyWith(status: BarcodeScannerStatus.paused));
   }
@@ -266,17 +255,14 @@ class BarcodeScannerBloc
     DisposeScanner event,
     Emitter<BarcodeScannerState> emit,
   ) async {
-    await _subscription?.cancel();
     await _controller?.dispose();
     _controller = null;
-    _subscription = null;
 
     emit(state.copyWith(status: BarcodeScannerStatus.disposed));
   }
 
   @override
   Future<void> close() async {
-    await _subscription?.cancel();
     await _controller?.dispose();
     return super.close();
   }
