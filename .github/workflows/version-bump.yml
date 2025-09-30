@@ -4,7 +4,7 @@ on:
   create:
 
 env:
-  FLUTTER_VERSION: "3.35.3"
+  FLUTTER_VERSION: "stable"
 
 jobs:
   # Automatic version bump when release branch is created
