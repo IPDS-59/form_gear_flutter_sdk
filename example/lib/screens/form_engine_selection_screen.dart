@@ -217,19 +217,31 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
     await FormEngineUpdateScreen.show(
       context: context,
       versionResult: versionResult,
-      onDownload: () => _downloadFromBundledAssets(engine),
+      onDownload: (onProgress) =>
+          _downloadFromBundledAssets(engine, onProgress),
     );
 
     // Refresh the engines list after potential download
     await _loadEngines();
   }
 
-  Future<void> _downloadFromBundledAssets(FormEngineMetadata engine) async {
+  Future<void> _downloadFromBundledAssets(
+    FormEngineMetadata engine,
+    void Function(int progress) onProgress,
+  ) async {
     debugPrint('Starting download for engine ${engine.id}');
 
     try {
       // Use the actual download manager to download the form engine
-      final success = await downloadManager.downloadFormEngine(engine.id);
+      final success = await downloadManager.downloadFormEngine(
+        engine.id,
+        onProgress: (received, total) {
+          if (total > 0) {
+            final progress = ((received / total) * 100).round();
+            onProgress(progress);
+          }
+        },
+      );
 
       if (success) {
         debugPrint('Successfully downloaded ${engine.name} v${engine.version}');

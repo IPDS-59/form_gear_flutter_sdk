@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 
-// Import screens and BLoC directly since they're not exported
+// Import screens directly since they're not exported
 // This is acceptable for demo/example code
-import 'package:form_gear_engine_sdk/src/presentation/bloc/form_engine_update/form_engine_update_bloc.dart';
 import 'package:form_gear_engine_sdk/src/presentation/screens/form_engine_update_screen.dart';
 import 'package:form_gear_engine_sdk/src/presentation/screens/template_update_screen.dart';
 
@@ -147,29 +145,10 @@ class VersionUpdateDemoScreen extends StatelessWidget {
     BuildContext context,
     VersionCheckResult versionResult,
   ) async {
-    // Use late to allow self-reference in closure
-    late final FormEngineUpdateBloc bloc;
-    bloc = FormEngineUpdateBloc(
+    await FormEngineUpdateScreen.show(
+      context: context,
       versionResult: versionResult,
-      onDownload: () => _simulateDownload(bloc),
-    );
-
-    // Show screen with the pre-created BLoC
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => BlocProvider.value(
-          value: bloc,
-          child: FormEngineUpdateScreen(
-            versionResult: versionResult,
-            onDownload: bloc.onDownload,
-          ),
-        ),
-        fullscreenDialog: true,
-        settings: RouteSettings(
-          name: 'form_engine_update',
-          arguments: {'canPop': !versionResult.isForced},
-        ),
-      ),
+      onDownload: (onProgress) => _simulateDownload(onProgress),
     );
   }
 
@@ -182,11 +161,11 @@ class VersionUpdateDemoScreen extends StatelessWidget {
       context: context,
       versionResult: versionResult,
       templateName: templateName,
-      onDownload: () => _simulateDownload(null),
+      onDownload: () => _simulateDownload((_) {}),
     );
   }
 
-  Future<void> _simulateDownload(FormEngineUpdateBloc? bloc) async {
+  Future<void> _simulateDownload(void Function(int progress) onProgress) async {
     final downloadManager = getIt<FormGearDownloadManager>();
 
     // Attempt actual download with progress callback - for demo, we'll use
@@ -194,11 +173,10 @@ class VersionUpdateDemoScreen extends StatelessWidget {
     final success = await downloadManager.downloadFormEngine(
       '1',
       onProgress: (received, total) {
-        // Calculate progress percentage and send to BLoC
-        if (total > 0 && bloc != null) {
+        // Calculate progress percentage and send to caller
+        if (total > 0) {
           final progress = ((received / total) * 100).round();
-          bloc.updateProgress(progress);
-          debugPrint('Download progress: $progress%');
+          onProgress(progress);
         }
       },
     );

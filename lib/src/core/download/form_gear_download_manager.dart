@@ -739,38 +739,29 @@ class FormGearDownloadManager {
           final rootDir = file.name.split('/').first;
           if (commonRootDir == null) {
             commonRootDir = rootDir;
-            FormGearLogger.sdk(
-              'ZIP Detection: Found potential root directory: $rootDir',
-            );
           } else if (commonRootDir != rootDir) {
             hasCommonRoot = false;
-            FormGearLogger.sdk(
-              'ZIP Detection: Multiple root directories found '
-              '($commonRootDir vs $rootDir), will not strip root',
-            );
             break;
           }
         } else {
           // File at root level, no common directory
           hasCommonRoot = false;
-          FormGearLogger.sdk(
-            'ZIP Detection: File at root level found (${file.name}), '
-            'will not strip root',
-          );
           break;
         }
-      }
-
-      if (hasCommonRoot && commonRootDir != null) {
-        FormGearLogger.sdk(
-          'ZIP Detection: Will strip common root directory: $commonRootDir',
-        );
       }
 
       String? detectedVersion;
       var extractedFiles = 0;
 
       for (final file in archive) {
+        // Skip the root directory entry itself BEFORE processing
+        // (e.g., "form-gear/" or "fasihform/")
+        if (hasCommonRoot &&
+            commonRootDir != null &&
+            file.name == '$commonRootDir/') {
+          continue;
+        }
+
         var filename = file.name;
 
         // Strip common root directory if detected (FASIH pattern)
@@ -780,16 +771,8 @@ class FormGearDownloadManager {
           }
         }
 
-        // Skip empty filenames after stripping or root directory itself
+        // Skip empty filenames after stripping
         if (filename.isEmpty) continue;
-
-        // Skip the root directory entry itself (e.g., "form-gear/" or "fasihform/")
-        if (hasCommonRoot &&
-            commonRootDir != null &&
-            file.name == '$commonRootDir/') {
-          FormGearLogger.sdk('Skipping root directory entry: ${file.name}');
-          continue;
-        }
 
         final filePath = path.join(targetDir.path, filename);
 
@@ -798,8 +781,6 @@ class FormGearDownloadManager {
           outFile.parent.createSync(recursive: true);
           outFile.writeAsBytesSync(file.content as List<int>);
           extractedFiles++;
-
-          FormGearLogger.sdk('Extracted file: $filename');
 
           // Try to detect version from existing version.json in archive
           if (filename == DirectoryConstants.versionFileName ||
@@ -812,12 +793,14 @@ class FormGearDownloadManager {
               // Ignore parsing errors
             }
           }
-        } else {
-          // For subdirectories inside the root, create them
-          final dir = Directory(filePath);
-          if (!dir.existsSync()) {
-            dir.createSync(recursive: true);
-            FormGearLogger.sdk('Created subdirectory: $filename');
+        } else if (file.isDirectory) {
+          // Only create subdirectories AFTER stripping root
+          // Skip if this is the root directory itself
+          if (filename.isNotEmpty) {
+            final dir = Directory(filePath);
+            if (!dir.existsSync()) {
+              dir.createSync(recursive: true);
+            }
           }
         }
       }
