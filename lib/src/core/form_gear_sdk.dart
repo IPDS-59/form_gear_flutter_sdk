@@ -277,8 +277,18 @@ class FormGearSDK {
       );
     }
 
-    // Prepare engine based on assignment template
-    final engineType = _determineEngineTypeFromTemplate(assignment.templateId);
+    // Prepare engine based on explicit engine ID or determine from template
+    final engineType = assignment.formEngineId != null
+        ? FormEngineType.fromId(int.tryParse(assignment.formEngineId!))
+        : _determineEngineTypeFromTemplate(assignment.templateId);
+
+    if (engineType == null) {
+      throw Exception(
+        'Invalid form engine ID: ${assignment.formEngineId}. '
+        'Valid IDs are: 1 (FormGear), 2 (FasihForm)',
+      );
+    }
+
     final preparedEngine = await prepareEngine(
       engineType: engineType,
       onProgress: onProgress,
