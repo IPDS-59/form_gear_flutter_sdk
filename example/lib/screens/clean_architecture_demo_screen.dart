@@ -19,6 +19,9 @@ class _CleanArchitectureDemoScreenState
       'Ready to demonstrate clean architecture patterns through SDK API';
   VersionCheckResult? _versionCheckResult;
 
+  // Selected form engine (1 = FormGear, 2 = FasihForm)
+  String _selectedEngineId = '1';
+
   // Loading states for individual operations
 
   @override
@@ -162,16 +165,19 @@ class _CleanArchitectureDemoScreenState
   }
 
   Future<void> _demonstrateFormEngineVersionCheck() async {
+    final engineName = _selectedEngineId == '1' ? 'FormGear' : 'FasihForm';
+
     setState(() {
       _isLoading = true;
       _status =
-          'Checking form engine version using SDK public API...\n'
+          'Checking $engineName (ID: $_selectedEngineId) version using SDK public API...\n'
           '(Internally uses clean architecture with 3-state version logic)';
     });
 
     try {
       final versionResult = await FormGearSDK.instance.checkFormEngineVersion(
         context: context,
+        engineId: _selectedEngineId,
         showNotifications: false, // Don't show UI notifications for demo
       );
 
@@ -470,6 +476,81 @@ class _CleanArchitectureDemoScreenState
             ),
             const SizedBox(height: 16),
 
+            // Engine Selector Section
+            Card(
+              color: Colors.purple[50],
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.settings, color: Colors.purple[800]),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Select Form Engine',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.purple[800],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Choose which form engine to check/download:',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _EngineOptionCard(
+                            engineId: '1',
+                            engineName: 'FormGear',
+                            engineIcon: Icons.web,
+                            color: const Color(0xFF1E88E5),
+                            isSelected: _selectedEngineId == '1',
+                            onTap: () {
+                              setState(() {
+                                _selectedEngineId = '1';
+                                _versionCheckResult = null;
+                                _status =
+                                    'FormGear Engine selected.\n'
+                                    'Run version check to see clean architecture in action!';
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _EngineOptionCard(
+                            engineId: '2',
+                            engineName: 'FasihForm',
+                            engineIcon: Icons.dynamic_form,
+                            color: const Color(0xFF8E24AA),
+                            isSelected: _selectedEngineId == '2',
+                            onTap: () {
+                              setState(() {
+                                _selectedEngineId = '2';
+                                _versionCheckResult = null;
+                                _status =
+                                    'FasihForm Engine selected.\n'
+                                    'Run version check to see clean architecture in action!';
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
             // API Token Input Section
             Card(
               color: Colors.amber[50],
@@ -616,6 +697,87 @@ class _CleanArchitectureDemoScreenState
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EngineOptionCard extends StatelessWidget {
+  const _EngineOptionCard({
+    required this.engineId,
+    required this.engineName,
+    required this.engineIcon,
+    required this.color,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String engineId;
+  final String engineName;
+  final IconData engineIcon;
+  final Color color;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withValues(alpha: 0.1) : Colors.white,
+          border: Border.all(
+            color: isSelected ? color : Colors.grey[300]!,
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              engineIcon,
+              size: 40,
+              color: isSelected ? color : Colors.grey[600],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              engineName,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? color : Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'ID: $engineId',
+              style: TextStyle(
+                fontSize: 12,
+                color: isSelected ? color : Colors.grey[600],
+              ),
+            ),
+            if (isSelected) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'Selected',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
