@@ -255,7 +255,7 @@ void main() {
           'templateVersion': '1.0.0',
           'formEngineId': 1,
           'formEngineBrandName': 'FormGear',
-          'lookups': [],
+          'lookups': <dynamic>[],
         };
 
         final templateLookup = TemplateLookup.fromJson(json);
@@ -351,8 +351,8 @@ void main() {
           templateId: 'template_001',
           templateName: 'Survey Template',
           templateVersion: '1.0.0',
-          templateData: {'fields': []},
-          lookupData: {'lookups': []},
+          templateData: <String, dynamic>{'fields': <dynamic>[]},
+          lookupData: <String, dynamic>{'lookups': <dynamic>[]},
           createdAt: '2024-01-01T00:00:00Z',
           updatedAt: '2024-01-02T00:00:00Z',
           isActive: true,
@@ -417,7 +417,7 @@ void main() {
   group('ListLookupNotifResponse Tests', () {
     group('Construction', () {
       test('should create successful response with data', () {
-        const lookupList = [
+        const lookupList = <TemplateLookupList>[
           TemplateLookupList(
             surveyId: 'survey_001',
             templateId: 'template_001',
@@ -467,7 +467,7 @@ void main() {
           'success': true,
           'errorCode': null,
           'message': 'Success',
-          'data': [],
+          'data': <dynamic>[],
         };
 
         final response = ListLookupNotifResponse.fromJson(json);
@@ -558,8 +558,11 @@ void main() {
         };
 
         final lookupList = TemplateLookupList.fromJson(json);
-        expect(lookupList.lookupValue, isA<Map>());
-        expect((lookupList.lookupValue as Map)['name'], equals('Jawa Barat'));
+        expect(lookupList.lookupValue, isA<Map<dynamic, dynamic>>());
+        expect(
+          (lookupList.lookupValue as Map<dynamic, dynamic>)['name'],
+          equals('Jawa Barat'),
+        );
       });
     });
   });

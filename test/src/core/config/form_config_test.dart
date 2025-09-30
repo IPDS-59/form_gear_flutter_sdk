@@ -22,15 +22,15 @@ void main() {
       });
 
       test('should create form config with all parameters', () {
-        const template = <String, dynamic>{'fields': []};
-        const validation = <String, dynamic>{'rules': []};
+        const template = <String, dynamic>{'fields': <dynamic>[]};
+        const validation = <String, dynamic>{'rules': <dynamic>[]};
         const preset = <String, dynamic>{'defaultValue': 'test'};
-        const response = <String, dynamic>{'answers': []};
-        const media = <String, dynamic>{'photos': []};
-        const reference = <String, dynamic>{'lookup': []};
+        const response = <String, dynamic>{'answers': <dynamic>[]};
+        const media = <String, dynamic>{'photos': <dynamic>[]};
+        const reference = <String, dynamic>{'lookup': <dynamic>[]};
         const remark = <String, dynamic>{'notes': 'test note'};
         const principals = <Map<String, dynamic>>[
-          {'name': 'user1'},
+          <String, dynamic>{'name': 'user1'},
         ];
         const additionalData = <String, dynamic>{'custom': 'data'};
 
@@ -95,8 +95,6 @@ void main() {
       test('should create copy with modified formMode and isNew', () {
         const original = FormConfig(
           formId: 'form_001',
-          formMode: 1,
-          isNew: 1,
         );
 
         final copy = original.copyWith(
@@ -112,14 +110,14 @@ void main() {
       test('should keep original values when not specified', () {
         const original = FormConfig(
           formId: 'form_001',
-          template: <String, dynamic>{'fields': []},
-          validation: <String, dynamic>{'rules': []},
+          template: <String, dynamic>{'fields': <dynamic>[]},
+          validation: <String, dynamic>{'rules': <dynamic>[]},
           formMode: 2,
           isNew: 0,
         );
 
         final copy = original.copyWith(
-          response: const <String, dynamic>{'answers': []},
+          response: const <String, dynamic>{'answers': <dynamic>[]},
         );
 
         expect(copy.formId, equals(original.formId));
@@ -127,7 +125,10 @@ void main() {
         expect(copy.validation, equals(original.validation));
         expect(copy.formMode, equals(original.formMode));
         expect(copy.isNew, equals(original.isNew));
-        expect(copy.response, equals(const <String, dynamic>{'answers': []}));
+        expect(
+          copy.response,
+          equals(const <String, dynamic>{'answers': <dynamic>[]}),
+        );
       });
     });
 
@@ -135,13 +136,11 @@ void main() {
       test('should be equal when all properties match', () {
         const config1 = FormConfig(
           formId: 'form_001',
-          template: <String, dynamic>{'fields': []},
-          formMode: 1,
+          template: <String, dynamic>{'fields': <dynamic>[]},
         );
         const config2 = FormConfig(
           formId: 'form_001',
-          template: <String, dynamic>{'fields': []},
-          formMode: 1,
+          template: <String, dynamic>{'fields': <dynamic>[]},
         );
 
         expect(config1, equals(config2));
@@ -171,7 +170,6 @@ void main() {
       test('should not be equal when formMode differs', () {
         const config1 = FormConfig(
           formId: 'form_001',
-          formMode: 1,
         );
         const config2 = FormConfig(
           formId: 'form_001',
@@ -186,8 +184,6 @@ void main() {
       test('should represent new form state', () {
         const config = FormConfig(
           formId: 'form_001',
-          formMode: 1,
-          isNew: 1,
         );
 
         expect(config.isNew, equals(1));
@@ -218,7 +214,7 @@ void main() {
         );
 
         expect(config.validation, isNotNull);
-        expect(config.validation?['rules'], isA<List>());
+        expect(config.validation?['rules'], isA<List<dynamic>>());
       });
 
       test('should represent form with preset values', () {
@@ -244,13 +240,11 @@ void main() {
             'version': '1.0.0',
           },
           validation: <String, dynamic>{
-            'rules': [],
+            'rules': <dynamic>[],
           },
           reference: <String, dynamic>{
-            'lookup_data': [],
+            'lookup_data': <dynamic>[],
           },
-          formMode: 1,
-          isNew: 1,
         );
 
         expect(config.formId, equals('assignment_12345'));
@@ -306,7 +300,10 @@ void main() {
         );
 
         expect(config.principals, hasLength(2));
-        expect(config.principals?[0]['role'], equals('ENUMERATOR'));
+        expect(
+          (config.principals?[0] as Map<String, dynamic>)['role'],
+          equals('ENUMERATOR'),
+        );
         expect(config.additionalData['survey_id'], equals('census_2024'));
       });
 
@@ -324,7 +321,6 @@ void main() {
               {'code': '02', 'name': 'Teacher'},
             ],
           },
-          formMode: 1,
         );
 
         expect(config.reference?['villages'], hasLength(2));
@@ -337,12 +333,12 @@ void main() {
         const config = FormConfig(
           formId: 'complex_form',
           template: <String, dynamic>{
-            'sections': [
-              {
+            'sections': <dynamic>[
+              <String, dynamic>{
                 'id': 'section1',
-                'fields': [
-                  {'name': 'field1', 'type': 'text'},
-                  {'name': 'field2', 'type': 'number'},
+                'fields': <dynamic>[
+                  <String, dynamic>{'name': 'field1', 'type': 'text'},
+                  <String, dynamic>{'name': 'field2', 'type': 'number'},
                 ],
               },
             ],
@@ -355,8 +351,8 @@ void main() {
           },
         );
 
-        expect(config.template?['sections'], isA<List>());
-        expect(config.response?['section1'], isA<Map>());
+        expect(config.template?['sections'], isA<List<dynamic>>());
+        expect(config.response?['section1'], isA<Map<dynamic, dynamic>>());
       });
 
       test('should handle empty optional fields', () {
