@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 
-// Import screens directly since they're not exported
+// Import screens and BLoC directly since they're not exported
 // This is acceptable for demo/example code
+import 'package:form_gear_engine_sdk/src/presentation/bloc/form_engine_update/form_engine_update_bloc.dart';
 import 'package:form_gear_engine_sdk/src/presentation/screens/form_engine_update_screen.dart';
 import 'package:form_gear_engine_sdk/src/presentation/screens/template_update_screen.dart';
 
@@ -148,7 +150,7 @@ class VersionUpdateDemoScreen extends StatelessWidget {
     await FormEngineUpdateScreen.show(
       context: context,
       versionResult: versionResult,
-      onDownload: () => _simulateDownload(),
+      onDownload: () => _simulateDownload(context),
     );
   }
 
@@ -161,18 +163,29 @@ class VersionUpdateDemoScreen extends StatelessWidget {
       context: context,
       versionResult: versionResult,
       templateName: templateName,
-      onDownload: () => _simulateDownload(),
+      onDownload: () => _simulateDownload(context),
     );
   }
 
-  Future<void> _simulateDownload() async {
+  Future<void> _simulateDownload(BuildContext context) async {
     final downloadManager = getIt<FormGearDownloadManager>();
 
-    // Simulate download process with delays for better progress visibility
-    await Future.delayed(const Duration(seconds: 1));
+    // Get the BLoC to send progress updates
+    final bloc = context.read<FormEngineUpdateBloc>();
 
-    // Attempt actual download - for demo, we'll use FormGear engine
-    final success = await downloadManager.downloadFormEngine('1');
+    // Attempt actual download with progress callback - for demo, we'll use
+    // FormGear engine
+    final success = await downloadManager.downloadFormEngine(
+      '1',
+      onProgress: (received, total) {
+        // Calculate progress percentage and send to BLoC
+        if (total > 0) {
+          final progress = ((received / total) * 100).round();
+          bloc.add(FormEngineUpdateProgressEvent(progress));
+          debugPrint('Download progress: $progress%');
+        }
+      },
+    );
 
     if (success) {
       debugPrint('Form engine download completed successfully');
