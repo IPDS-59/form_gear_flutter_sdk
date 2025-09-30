@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/media_demo_screen.dart';
-import 'simple_typed_bridge_test_screen.dart';
 import 'form_engine_selection_screen.dart';
-import 'clean_architecture_demo_screen.dart';
-import 'version_update_demo_screen.dart';
-import 'loading_screen_demo.dart';
 import 'assignment_demo_screen.dart';
 import 'form_data_listener_demo_screen.dart';
-import '../download_demo_page_enhanced.dart';
 import '../main.dart'; // For Alice access
 
 class HomeScreen extends StatelessWidget {
@@ -158,156 +153,53 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 24),
-            const Text(
-              'Additional Demos:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            _buildDemoCard(
-              context,
-              title: 'Download Demo',
-              subtitle: 'Asset download and management',
-              icon: Icons.download,
-              gradientColors: [Color(0xFF42D9FF), Color(0xFF00BCD4)],
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const EnhancedDownloadDemoPage(),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildDemoCard(
-              context,
-              title: 'Clean Architecture Demo',
-              subtitle: 'Repository pattern and use cases',
-              icon: Icons.architecture,
-              gradientColors: [Color(0xFF9C27B0), Color(0xFF673AB7)],
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CleanArchitectureDemoScreen(),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildDemoCard(
-              context,
-              title: 'Version Update Demo',
-              subtitle: 'Version checking and updates',
-              icon: Icons.system_update,
-              gradientColors: [Color(0xFFFF9800), Color(0xFFFF6F00)],
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const VersionUpdateDemoScreen(),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildDemoCard(
-              context,
-              title: 'Loading Screen Demo',
-              subtitle: 'Loading states and animations',
-              icon: Icons.hourglass_empty,
-              gradientColors: [Color(0xFF8BC34A), Color(0xFF689F38)],
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const LoadingScreenDemo(),
-                ),
-              ),
-            ),
             const SizedBox(height: 32),
             const Divider(),
             const SizedBox(height: 16),
             const Text(
-              'SDK Features (Auto-Registered):',
+              'SDK Features:',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
             const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('🔧 Simple Typed Bridge System'),
-                Text('📷 Camera Action (Auto-handled)'),
-                Text('📁 File Picker Action (Auto-handled)'),
-                Text('📍 Location Action (Auto-handled)'),
-                Text('🔒 Internal Permission Management'),
-                Text('🎯 Custom Handler Support'),
+                Text('✅ Assignment-Based Dynamic Configuration'),
+                Text('✅ FormGear & FasihForm Engine Support'),
+                Text('✅ Custom SaveOrSubmit Listener System'),
+                Text('✅ Media Actions (Camera, Audio, Barcode)'),
+                Text('✅ JavaScript Bridge for WebView Integration'),
+                Text('✅ Offline & Online Lookup Modes'),
+                Text('✅ Form State Management (Open, Submitted, Approved)'),
+                Text('✅ Encryption & Data Security'),
               ],
             ),
           ],
         ),
       ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          // Alice HTTP Inspector Button
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(28),
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFF5722), Color(0xFFE64A19)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFFF5722).withValues(alpha: 0.4),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: FloatingActionButton(
-              onPressed: () => alice.showInspector(),
-              heroTag: "alice_inspector",
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              child: const Icon(Icons.network_check, color: Colors.white),
-            ),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFF5722), Color(0xFFE64A19)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          const SizedBox(height: 16),
-          // SDK Integration Button
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(28),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF4CAF50), Color(0xFF45A049)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF4CAF50).withValues(alpha: 0.4),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFF5722).withValues(alpha: 0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
-            child: FloatingActionButton.extended(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SimpleTypedBridgeTestScreen(),
-                ),
-              ),
-              icon: const Icon(Icons.analytics, color: Colors.white),
-              label: const Text(
-                'SDK Integration',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              heroTag: "sdk_integration",
-            ),
-          ),
-        ],
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: () => alice.showInspector(),
+          tooltip: 'HTTP Inspector (Alice)',
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: const Icon(Icons.network_check, color: Colors.white),
+        ),
       ),
     );
   }
