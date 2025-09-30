@@ -9,7 +9,7 @@ require 'optparse'
 # This allows us to inspect the final HTML output with all injected JavaScript
 class FormGearHtmlGenerator
   def initialize
-    @form_engine_id = '1' # Default to FormGear v1
+    @form_engine_id = '1' # Default to FormGear (engine ID: 1)
     @template_id = 'demo' # Default template
     @example_assets_path = File.expand_path('../example/assets', __dir__)
     @output_dir = File.expand_path('../generated_html', __dir__)

@@ -274,6 +274,8 @@ class FormGearDownloadManager {
 
       var filesDownloaded = 0;
       final totalFiles = assetPaths.length;
+      var totalBytesDownloaded = 0;
+      var estimatedTotalBytes = 0;
 
       for (var i = 0; i < assetPaths.length; i++) {
         final assetPath = assetPaths[i];
@@ -284,10 +286,16 @@ class FormGearDownloadManager {
           localFile.writeAsStringSync(content);
           filesDownloaded++;
 
-          // Report progress
+          // Track bytes for proper progress reporting
+          final bytesInFile = content.length;
+          totalBytesDownloaded += bytesInFile;
+          // Estimate total bytes based on average file size
+          estimatedTotalBytes =
+              (totalBytesDownloaded / filesDownloaded * totalFiles).round();
+
+          // Report progress with actual bytes
           if (onProgress != null) {
-            final progress = (filesDownloaded / totalFiles * 100).round();
-            onProgress(progress, totalFiles);
+            onProgress(totalBytesDownloaded, estimatedTotalBytes);
           }
 
           FormGearLogger.sdk(

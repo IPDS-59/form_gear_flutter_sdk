@@ -1,8 +1,8 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/models/response_models.dart';
+import 'package:form_gear_engine_sdk/src/utils/location_service_helper.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -142,46 +142,30 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
     try {
       FormGearLogger.webview('Executing location for FasihForm: $dataKey');
 
-      // Check if location services are enabled
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        return ActionInfoJs(
-          success: false,
-          error:
-              'Location services are disabled. Please enable location '
-              'services.',
-        );
-      }
-
-      // Request location permission
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          return ActionInfoJs(
-            success: false,
-            error: 'Location permission denied',
-          );
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        return ActionInfoJs(
-          success: false,
-          error:
-              'Location permission permanently denied. Please enable in '
-              'settings.',
-        );
-      }
-
-      // Get current position with proper settings
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 10),
-        ),
+      // Ensure location access using helper
+      // (automatically opens settings if disabled)
+      final accessResult = await LocationServiceHelper.ensureLocationAccess(
+        contextDescription: 'FasihForm location',
       );
+      if (!accessResult.success) {
+        return ActionInfoJs(
+          success: false,
+          error: accessResult.errorMessage ?? 'Location access failed',
+        );
+      }
 
+      // Get current location using helper
+      final locationResult = await LocationServiceHelper.getCurrentLocation(
+        timeLimit: const Duration(seconds: 10),
+      );
+      if (!locationResult.success) {
+        return ActionInfoJs(
+          success: false,
+          error: locationResult.errorMessage ?? 'Failed to get location',
+        );
+      }
+
+      final position = locationResult.position!;
       final locationData = '${position.latitude},${position.longitude}';
       FormGearLogger.webview('FasihForm location executed: $locationData');
       return ActionInfoJs(success: true, result: locationData);
