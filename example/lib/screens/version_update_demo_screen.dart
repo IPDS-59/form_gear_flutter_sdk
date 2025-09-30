@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 
 // Import screens and BLoC directly since they're not exported
@@ -147,10 +146,14 @@ class VersionUpdateDemoScreen extends StatelessWidget {
     BuildContext context,
     VersionCheckResult versionResult,
   ) async {
-    await FormEngineUpdateScreen.show(
+    // Create a variable to hold the BLoC reference
+    FormEngineUpdateBloc? blocRef;
+
+    // Show screen and capture BLoC reference
+    blocRef = await FormEngineUpdateScreen.show(
       context: context,
       versionResult: versionResult,
-      onDownload: () => _simulateDownload(context),
+      onDownload: () => _simulateDownload(blocRef),
     );
   }
 
@@ -163,15 +166,12 @@ class VersionUpdateDemoScreen extends StatelessWidget {
       context: context,
       versionResult: versionResult,
       templateName: templateName,
-      onDownload: () => _simulateDownload(context),
+      onDownload: () => _simulateDownload(null),
     );
   }
 
-  Future<void> _simulateDownload(BuildContext context) async {
+  Future<void> _simulateDownload(FormEngineUpdateBloc? bloc) async {
     final downloadManager = getIt<FormGearDownloadManager>();
-
-    // Get the BLoC to send progress updates
-    final bloc = context.read<FormEngineUpdateBloc>();
 
     // Attempt actual download with progress callback - for demo, we'll use
     // FormGear engine
@@ -179,9 +179,9 @@ class VersionUpdateDemoScreen extends StatelessWidget {
       '1',
       onProgress: (received, total) {
         // Calculate progress percentage and send to BLoC
-        if (total > 0) {
+        if (total > 0 && bloc != null) {
           final progress = ((received / total) * 100).round();
-          bloc.add(FormEngineUpdateProgressEvent(progress));
+          bloc.updateProgress(progress);
           debugPrint('Download progress: $progress%');
         }
       },

@@ -19,18 +19,21 @@ class FormEngineUpdateScreen extends StatelessWidget {
   final VersionCheckResult versionResult;
   final Future<void> Function() onDownload;
 
-  static Future<void> show({
+  static Future<FormEngineUpdateBloc?> show({
     required BuildContext context,
     required VersionCheckResult versionResult,
     required Future<void> Function() onDownload,
-  }) {
-    return Navigator.of(context).push(
+  }) async {
+    // Create BLoC outside so it can be accessed by the download callback
+    final bloc = FormEngineUpdateBloc(
+      versionResult: versionResult,
+      onDownload: onDownload,
+    );
+
+    await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => BlocProvider(
-          create: (context) => FormEngineUpdateBloc(
-            versionResult: versionResult,
-            onDownload: onDownload,
-          ),
+        builder: (context) => BlocProvider.value(
+          value: bloc,
           child: FormEngineUpdateScreen(
             versionResult: versionResult,
             onDownload: onDownload,
@@ -43,6 +46,8 @@ class FormEngineUpdateScreen extends StatelessWidget {
         ),
       ),
     );
+
+    return bloc;
   }
 
   @override

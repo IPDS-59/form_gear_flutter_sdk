@@ -22,6 +22,12 @@ class FormEngineUpdateBloc
   final VersionCheckResult versionResult;
   final Future<void> Function() onDownload;
 
+  /// Public method to update progress from outside the BLoC
+  /// This allows download callbacks to report progress directly
+  void updateProgress(int progress) {
+    add(FormEngineUpdateProgressEvent(progress));
+  }
+
   Future<void> _onStartDownload(
     FormEngineStartDownloadEvent event,
     Emitter<FormEngineUpdateState> emit,
