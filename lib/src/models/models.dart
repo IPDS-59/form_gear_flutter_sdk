@@ -11,5 +11,6 @@ export 'list_lookup_notif_response.dart';
 export 'lookup.dart';
 export 'prepared_engine.dart';
 export 'template_lookup.dart';
+export 'validation_result.dart';
 export 'version_check_result.dart';
 export 'version_state.dart';
