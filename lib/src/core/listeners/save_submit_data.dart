@@ -17,8 +17,10 @@ part 'save_submit_data.g.dart';
 /// - Operation flag (save vs submit)
 ///
 /// Based on FASIH analysis:
-/// - FormGear (engine ID: 1): saveOrSubmit(data, remark, principal, reference, media, flag)
-/// - FasihForm (engine ID: 2): saveOrSubmitFasihForm(data, remark, principal, flag)
+/// - FormGear (engine ID: 1): saveOrSubmit(data, remark, principal,
+///   reference, media, flag)
+/// - FasihForm (engine ID: 2): saveOrSubmitFasihForm(data, remark,
+///   principal, flag)
 @JsonSerializable()
 class SaveSubmitData extends Equatable {
   const SaveSubmitData({
@@ -62,7 +64,8 @@ class SaveSubmitData extends Equatable {
     );
   }
 
-  /// Create SaveSubmitData for FasihForm (engine ID: 2) with simplified parameter set
+  /// Create SaveSubmitData for FasihForm (engine ID: 2) with simplified
+  /// parameter set
   factory SaveSubmitData.fasihForm({
     required AssignmentContext assignmentContext,
     required String formData,
@@ -116,7 +119,8 @@ class SaveSubmitData extends Equatable {
   /// Reference data containing lookup and validation data (JSON string)
   ///
   /// This is only available in FormGear (engine ID: 1) saveOrSubmit.
-  /// FasihForm (engine ID: 2) does not include reference data in saveOrSubmitFasihForm.
+  /// FasihForm (engine ID: 2) does not include reference data in
+  /// saveOrSubmitFasihForm.
   ///
   /// This typically contains:
   /// - Lookup table references
@@ -128,7 +132,8 @@ class SaveSubmitData extends Equatable {
   /// Media data containing file references and metadata (JSON string)
   ///
   /// This is only available in FormGear (engine ID: 1) saveOrSubmit.
-  /// FasihForm (engine ID: 2) does not include media data in saveOrSubmitFasihForm.
+  /// FasihForm (engine ID: 2) does not include media data in
+  /// saveOrSubmitFasihForm.
   ///
   /// This typically contains:
   /// - Image file paths and metadata

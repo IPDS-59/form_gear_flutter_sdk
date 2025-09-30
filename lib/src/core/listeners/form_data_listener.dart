@@ -24,7 +24,8 @@ import 'package:form_gear_engine_sdk/src/core/listeners/save_submit_result.dart'
 /// FormGearSDK.instance.setFormDataListener(MyFormDataListener());
 /// ```
 abstract class FormDataListener {
-  /// Called when FormGear (engine ID: 1) saveOrSubmit is triggered from JavaScript
+  /// Called when FormGear (engine ID: 1) saveOrSubmit is triggered from
+  /// JavaScript
   ///
   /// Parameters match FASIH's saveOrSubmit method:
   /// - [data]: The form data containing all answers and responses
