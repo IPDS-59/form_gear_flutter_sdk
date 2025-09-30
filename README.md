@@ -5,7 +5,7 @@
 
   [![pub package](https://img.shields.io/pub/v/form_gear_engine_sdk.svg)](https://pub.dev/packages/form_gear_engine_sdk)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-  [![Flutter](https://img.shields.io/badge/Flutter-%3E%3D3.9.2-blue.svg)](https://flutter.dev)
+  [![Flutter](https://img.shields.io/badge/Flutter-stable-blue.svg)](https://flutter.dev)
 </div>
 
 A Flutter SDK for [FormGear](https://github.com/bps-statistics/form-gear) - A flexible, JSON-driven form generation framework for dynamic data collection with 30+ input control types, nested forms, GPS, photo capture, and complex validation capabilities.
