@@ -7,6 +7,7 @@ import 'clean_architecture_demo_screen.dart';
 import 'version_update_demo_screen.dart';
 import 'loading_screen_demo.dart';
 import 'assignment_demo_screen.dart';
+import 'form_data_listener_demo_screen.dart';
 import '../download_demo_page_enhanced.dart';
 import '../main.dart'; // For Alice access
 
@@ -125,6 +126,20 @@ class HomeScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const AssignmentDemoScreen(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildDemoCard(
+              context,
+              title: 'SaveOrSubmit Listener',
+              subtitle: 'Test custom data persistence strategies',
+              icon: Icons.save_alt,
+              gradientColors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const FormDataListenerDemoScreen(),
                 ),
               ),
             ),

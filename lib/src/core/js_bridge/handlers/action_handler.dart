@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/models/response_models.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/audio_recorder_screen.dart';
@@ -176,6 +177,14 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
 
         if (success) {
           FormGearLogger.webview('Camera completed: $fileName');
+
+          // Execute JavaScript callbacks to notify FormGear engine (following FASIH pattern)
+          await _notifyFormGearOfMediaSelection(
+            dataKey: dataKey,
+            fileName: fileName,
+            assignmentId: assignmentId,
+          );
+
           return ActionInfoJs(success: true, result: fileName);
         } else {
           return ActionInfoJs(
@@ -219,8 +228,42 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
 
       if (result != null && result.files.single.path != null) {
         final filePath = result.files.single.path!;
-        FormGearLogger.webview('File picker completed: $filePath');
-        return ActionInfoJs(success: true, result: filePath);
+        final originalFile = File(filePath);
+
+        // Follow FASIH pattern: save to assignment media directory
+        final assignmentId = data.isNotEmpty ? data : 'current_assignment';
+        final extension = filePath.split('.').last;
+        final fileName = FasihMediaHelper.generateFileName(
+          dataKey: dataKey,
+          mediaType: 'document',
+          extension: extension,
+        );
+
+        // Save media file following FASIH pattern
+        final success = await FasihMediaHelper.saveMediaFile(
+          assignmentId: assignmentId,
+          sourceFile: originalFile,
+          fileName: fileName,
+          mediaType: 'document',
+        );
+
+        if (success) {
+          FormGearLogger.webview('File picker completed: $fileName');
+
+          // Execute JavaScript callbacks to notify FormGear engine (following FASIH pattern)
+          await _notifyFormGearOfMediaSelection(
+            dataKey: dataKey,
+            fileName: fileName,
+            assignmentId: assignmentId,
+          );
+
+          return ActionInfoJs(success: true, result: fileName);
+        } else {
+          return ActionInfoJs(
+            success: false,
+            error: 'Failed to save picked file',
+          );
+        }
       } else {
         FormGearLogger.webview('File picker cancelled by user');
         return ActionInfoJs(
@@ -810,6 +853,55 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
     } on Exception catch (e) {
       FormGearLogger.webviewError('Error getting context: $e');
       return null;
+    }
+  }
+
+  /// Notify FormGear engine of media selection following FASIH patterns
+  Future<void> _notifyFormGearOfMediaSelection({
+    required String dataKey,
+    required String fileName,
+    required String assignmentId,
+  }) async {
+    final jsExecutor = JSExecutorService();
+    if (!jsExecutor.isRegistered) {
+      FormGearLogger.webview(
+        'No JavaScript executor available, skipping media notification',
+      );
+      return;
+    }
+
+    try {
+      // Get media file path for URI
+      final filePath = await FasihMediaHelper.getMediaFilePath(
+        assignmentId,
+        fileName,
+      );
+
+      String jsCommand;
+
+      // Choose JavaScript command based on engine type (following FASIH pattern)
+      if (jsExecutor.formEngineId == '2') {
+        // FasihForm engine (engine ID "2")
+        jsCommand =
+            '''
+javascript:fasihForm.event.emit(
+  "file-selected",
+  "$dataKey",
+  '[{ "filename": "$fileName", "uri": "file://$filePath" }]'
+)
+''';
+      } else {
+        // FormGear engine (engine ID "1")
+        jsCommand =
+            "javascript:android.actionResult('$dataKey', true, '$fileName')";
+      }
+
+      FormGearLogger.webview('Executing JS callback: $jsCommand');
+      await jsExecutor.executeJavaScript(jsCommand);
+    } on Exception catch (e) {
+      FormGearLogger.webviewError(
+        'Failed to notify FormGear of media selection: $e',
+      );
     }
   }
 }
