@@ -24,7 +24,6 @@ dependencies:
   flutter_svg: ^2.2.1
   geolocator: ^14.0.2
   get_it: ^8.2.0
-  http: ^1.5.0
   image_picker: ^1.2.0
   injectable: ^2.5.2
   json_annotation: ^4.9.0
