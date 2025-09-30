@@ -170,6 +170,18 @@ generate_coverage() {
     print_error "Coverage file not generated. Tests may have failed completely."
     return 1
   fi
+
+  # Remove generated files from coverage
+  print_info "Filtering out generated files from coverage..."
+  if [[ -f "scripts/remove_generated_from_coverage.sh" ]]; then
+    if bash scripts/remove_generated_from_coverage.sh; then
+      print_success "Generated files removed from coverage"
+    else
+      print_warning "Failed to filter generated files, continuing with full coverage"
+    fi
+  else
+    print_warning "Coverage filter script not found, continuing with full coverage"
+  fi
 }
 
 # Function to filter coverage data for changed files only

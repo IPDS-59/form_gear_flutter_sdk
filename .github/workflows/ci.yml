@@ -183,6 +183,11 @@ jobs:
     - name: Get dependencies
       run: flutter pub get
 
+    - name: Install lcov for coverage processing
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y lcov
+
     - name: Run unit tests and generate coverage
       run: |
         echo "🧪 ${{ needs.detect-changes.outputs.test-summary }}"
