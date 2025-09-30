@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/media_demo_screen.dart';
+import 'simple_typed_bridge_test_screen.dart';
 import 'form_engine_selection_screen.dart';
 import 'assignment_demo_screen.dart';
 import 'form_data_listener_demo_screen.dart';
+import 'version_update_demo_screen.dart';
 import '../main.dart'; // For Alice access
 
 class HomeScreen extends StatelessWidget {
@@ -149,6 +151,40 @@ class HomeScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const MediaDemoScreen(),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+            const Text(
+              'SDK Testing:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            _buildDemoCard(
+              context,
+              title: 'Version Update Demo',
+              subtitle: 'Test version checking and update flow',
+              icon: Icons.system_update,
+              gradientColors: [Color(0xFFFF9800), Color(0xFFFF6F00)],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const VersionUpdateDemoScreen(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildDemoCard(
+              context,
+              title: 'Bridge Test',
+              subtitle: 'Test JavaScript bridge integration',
+              icon: Icons.code,
+              gradientColors: [Color(0xFF673AB7), Color(0xFF512DA8)],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SimpleTypedBridgeTestScreen(),
                 ),
               ),
             ),
