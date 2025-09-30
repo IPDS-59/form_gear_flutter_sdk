@@ -5,7 +5,7 @@ import 'package:json_annotation/json_annotation.dart';
 part 'form_engine_response.g.dart';
 
 /// Form engine response matching FASIH BaseResponse structure
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class FormEngineResponse extends Equatable {
   const FormEngineResponse({
     this.success,
