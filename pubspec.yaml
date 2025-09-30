@@ -27,7 +27,7 @@ dependencies:
   image_picker: ^1.2.0
   injectable: ^2.5.1
   json_annotation: ^4.9.0
-  just_audio: ^0.9.42
+  just_audio: ^0.10.5
   mobile_scanner: ^7.1.2
   mocktail: ^1.0.4
   path: ^1.9.1

@@ -40,7 +40,7 @@ dependencies:
     path: ../
 
   # BLoC for state management in demo screens
-  flutter_bloc: ^8.1.6
+  flutter_bloc: ^9.1.1
 
   # Permission handling
   permission_handler: ^12.0.1
