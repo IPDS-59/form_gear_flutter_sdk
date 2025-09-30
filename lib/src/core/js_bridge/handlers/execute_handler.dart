@@ -142,7 +142,8 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
     try {
       FormGearLogger.webview('Executing location for FasihForm: $dataKey');
 
-      // Ensure location access using helper (automatically opens settings if disabled)
+      // Ensure location access using helper
+      // (automatically opens settings if disabled)
       final accessResult = await LocationServiceHelper.ensureLocationAccess(
         contextDescription: 'FasihForm location',
       );

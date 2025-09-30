@@ -121,11 +121,12 @@ class ClientActionHandler {
       _ClientActionMethodHandler('gpsHandler', (args) async {
         if (args.isNotEmpty) {
           try {
-            // Ensure location access using helper (automatically opens settings if disabled)
+            // Ensure location access using helper
+            // (automatically opens settings if disabled)
             final accessResult =
                 await LocationServiceHelper.ensureLocationAccess(
-                  contextDescription: 'GPS handler',
-                );
+              contextDescription: 'GPS handler',
+            );
             if (!accessResult.success) {
               return ActionInfoJs(
                 success: false,
