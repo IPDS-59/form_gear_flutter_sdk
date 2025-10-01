@@ -204,8 +204,10 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
       // Use ImagePicker for images to avoid double picker issue on Android 13+
       if (acceptType != null && acceptType.contains('image')) {
         // Use ImagePicker for images (direct gallery access)
-        // NOTE: Don't request permission manually - ImagePicker handles it internally
-        // Requesting Permission.photos on Android 13+ opens photo picker first!
+        // NOTE: Don't request permission manually
+        // ImagePicker handles it internally
+        // Requesting Permission.photos on Android 13+
+        // opens photo picker first!
         final picker = ImagePicker();
         final image = await picker.pickImage(source: ImageSource.gallery);
 
