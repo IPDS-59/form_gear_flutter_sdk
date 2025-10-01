@@ -165,7 +165,7 @@ Future<void> initializeFormGearSDK() async {
   final apiConfig = FormGearApiConfig(
     baseUrl: Env.baseUrl,
     formEngineEndpoint: Env.endpointVerifyVersion,
-    authToken: Env.wilkerstatBearerToken,
+    authToken: Env.authToken,
     isProduction: Env.isProduction,
   );
 

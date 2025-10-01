@@ -377,7 +377,7 @@ class _AssignmentDemoScreenState extends State<AssignmentDemoScreen> {
       final apiConfig = FormGearApiConfig(
         baseUrl: Env.baseUrl,
         formEngineEndpoint: Env.endpointVerifyVersion,
-        authToken: Env.wilkerstatBearerToken,
+        authToken: Env.authToken,
         isProduction: Env.isProduction,
       );
 
