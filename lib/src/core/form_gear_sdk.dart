@@ -35,8 +35,14 @@ class FormGearSDK {
   // Current assignment context (new assignment-based system)
   AssignmentContext? _currentAssignment;
 
+  /// Gets the current assignment context
+  AssignmentContext? get currentAssignment => _currentAssignment;
+
   // FormDataListener for save/submit operations
   FormDataListener? _formDataListener;
+
+  // FileUploadListener for file upload operations
+  FileUploadListener? _fileUploadListener;
 
   // Version manager
   late FormGearVersionManager _versionManager;
@@ -251,6 +257,53 @@ class FormGearSDK {
   /// to legacy callback behavior or default implementations.
   void removeFormDataListener() {
     setFormDataListener(null);
+  }
+
+  /// Sets the FileUploadListener for handling file upload operations
+  ///
+  /// Register a custom listener to handle file uploads to your backend.
+  /// The listener will be called when files need to be uploaded from
+  /// FormGear/FasihForm.
+  ///
+  /// Example:
+  /// ```dart
+  /// class MyFileUploadListener implements FileUploadListener {
+  ///   @override
+  ///   Future<FileUploadResult> onFileUpload(FileUploadData data) async {
+  ///     // Upload to S3, server, etc.
+  ///     final url = await uploadToBackend(data.file);
+  ///     return FileUploadResult.success(uploadedUrl: url);
+  ///   }
+  /// }
+  ///
+  /// FormGearSDK.instance.setFileUploadListener(MyFileUploadListener());
+  /// ```
+  void setFileUploadListener(FileUploadListener? listener) {
+    _fileUploadListener = listener;
+
+    if (listener != null) {
+      FormGearLogger.sdk(
+        'FileUploadListener registered: ${listener.runtimeType}',
+      );
+    } else {
+      FormGearLogger.sdk('FileUploadListener removed');
+    }
+  }
+
+  /// Gets the currently registered FileUploadListener
+  ///
+  /// Returns null if no listener is registered.
+  FileUploadListener? get fileUploadListener => _fileUploadListener;
+
+  /// Checks if a FileUploadListener is currently registered
+  bool get hasFileUploadListener => _fileUploadListener != null;
+
+  /// Removes the currently registered FileUploadListener
+  ///
+  /// After calling this method, file upload operations will fall back
+  /// to default behavior (local file verification only).
+  void removeFileUploadListener() {
+    setFileUploadListener(null);
   }
 
   /// Opens form with assignment context (new assignment-based method)

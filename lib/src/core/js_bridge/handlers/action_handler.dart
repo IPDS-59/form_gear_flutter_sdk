@@ -5,9 +5,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
-import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
-import 'package:form_gear_engine_sdk/src/core/js_bridge/models/response_models.dart';
 import 'package:form_gear_engine_sdk/src/presentation/bloc/barcode_scanner_bloc.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/audio_recorder_screen.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/barcode_scanner_screen.dart';
@@ -266,8 +265,7 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
         'File upload: fileName=$fileName, uri=$fileUri',
       );
 
-      // File is already in FASIH media directory from previous file-open event
-      // Just verify it exists and return success
+      // Verify file exists
       final filePath = fileUri.replaceFirst('file://', '');
       final file = File(filePath);
 
@@ -279,20 +277,90 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
         );
       }
 
-      // In a real implementation, this would upload to server
-      // For now, we just confirm the file exists and is ready
-      FormGearLogger.webview('File upload completed: $fileName');
+      // Check if FileUploadListener is registered
+      if (FormGearSDK.instance.hasFileUploadListener) {
+        try {
+          // Create upload data
+          final uploadData = FileUploadData(
+            assignmentId:
+                FormGearSDK.instance.currentAssignment?.assignmentId ?? '',
+            templateId:
+                FormGearSDK.instance.currentAssignment?.templateId ?? '',
+            dataKey: dataKey,
+            file: file,
+            fileName: fileName,
+            fileUri: fileUri,
+            metadata: fileInfo,
+          );
 
-      return ActionInfoJs(
-        success: true,
-        result: jsonEncode({
-          'filename': fileName,
-          'uri': fileUri,
-          'size': file.lengthSync(),
-          'uploaded': true,
-          'message': 'File upload completed successfully',
-        }),
-      );
+          // Call listener to handle upload
+          final result = await FormGearSDK.instance.fileUploadListener!
+              .onFileUpload(
+                uploadData,
+              );
+
+          if (result.isSuccess) {
+            // Notify completion
+            await FormGearSDK.instance.fileUploadListener!.onUploadCompleted(
+              fileName,
+              result,
+            );
+
+            FormGearLogger.webview(
+              'File uploaded via listener: $fileName -> ${result.uploadedUrl}',
+            );
+
+            return ActionInfoJs(
+              success: true,
+              result: jsonEncode({
+                'filename': fileName,
+                'uri': result.uploadedUrl,
+                'size': file.lengthSync(),
+                'uploaded': true,
+                'message': 'File upload completed successfully',
+                ...?result.metadata,
+              }),
+            );
+          } else {
+            FormGearLogger.webviewError(
+              'File upload failed via listener: ${result.error}',
+            );
+            return ActionInfoJs(
+              success: false,
+              error: result.error ?? 'Upload failed',
+            );
+          }
+        } on Exception catch (e, st) {
+          // Notify error
+          await FormGearSDK.instance.fileUploadListener?.onUploadError(
+            fileName,
+            e,
+            st,
+          );
+
+          FormGearLogger.webviewError('File upload error: $e');
+          return ActionInfoJs(
+            success: false,
+            error: 'File upload error: $e',
+          );
+        }
+      } else {
+        // No listener: just verify file exists (legacy behavior)
+        FormGearLogger.webview(
+          'File verified (no upload listener): $fileName',
+        );
+
+        return ActionInfoJs(
+          success: true,
+          result: jsonEncode({
+            'filename': fileName,
+            'uri': fileUri,
+            'size': file.lengthSync(),
+            'uploaded': false,
+            'message': 'File verified locally (no upload configured)',
+          }),
+        );
+      }
     } on Exception catch (e) {
       FormGearLogger.webviewError('File upload error: $e');
       return ActionInfoJs(success: false, error: 'File upload error: $e');
