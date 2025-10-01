@@ -1,7 +1,8 @@
-/// Utility for sanitizing sensitive data from log messages to prevent PII leakage.
+/// Utility for sanitizing sensitive data from log messages to prevent PII
+/// leakage.
 ///
-/// This class provides methods to redact personally identifiable information (PII)
-/// and sensitive data from log messages before they are written to logs.
+/// This class provides methods to redact personally identifiable information
+/// (PII) and sensitive data from log messages before they are written to logs.
 ///
 /// Use this in production to prevent sensitive information from appearing in
 /// crash reports, analytics, or log aggregation services.
@@ -118,7 +119,8 @@ class LogSanitizer {
     return sanitized;
   }
 
-  /// Sanitizes a Map (e.g., JSON data, form data) by redacting sensitive fields.
+  /// Sanitizes a Map (e.g., JSON data, form data) by redacting sensitive
+  /// fields.
   ///
   /// Example:
   /// ```dart
@@ -181,10 +183,13 @@ class LogSanitizer {
   /// Checks if currently running in debug mode.
   static bool _isDebugMode() {
     var isDebug = false;
-    assert(() {
-      isDebug = true;
-      return true;
-    }());
+    assert(
+      () {
+        isDebug = true;
+        return true;
+      }(),
+      'Debug mode detection',
+    );
     return isDebug;
   }
 

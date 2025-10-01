@@ -41,7 +41,8 @@ class FormGearApiConfig extends Equatable {
   /// Certificate pinning configuration for enhanced security.
   ///
   /// Maps host names to lists of SHA-256 certificate fingerprints.
-  /// Only connections to these hosts with matching certificates will be allowed.
+  /// Only connections to these hosts with matching certificates will be
+  /// allowed.
   ///
   /// Example:
   /// ```dart

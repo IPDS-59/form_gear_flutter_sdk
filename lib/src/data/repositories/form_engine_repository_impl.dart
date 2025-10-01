@@ -32,9 +32,10 @@ class FormEngineRepositoryImpl implements FormEngineRepository {
       final versionFile = File('${engineDir.path}/version.json');
 
       // Check if engine directory exists and contains version file
-      final exists = await engineDir.exists() && await versionFile.exists();
-      return exists;
-    } catch (e) {
+      final dirExists = await engineDir.exists();
+      final fileExists = await versionFile.exists();
+      return dirExists && fileExists;
+    } on Exception {
       return false;
     }
   }
