@@ -11,8 +11,14 @@ const bridgeData = window._formGearBridgeData || {};
 const actionMethods = window._formGearActionMethods || [];
 const handlerNames = window._formGearHandlerNames || [];
 
+// Check if placeholder bridge exists and log replacement
+if (window.Android && window.Android._isPlaceholder) {
+  console.log('Replacing placeholder Android bridge with real handlers');
+}
+
+// Replace placeholder with real Android bridge
 // Traditional Android WebView bridge object with synchronous data methods
-window.Android = new Proxy(window.Android || {}, {
+window.Android = new Proxy({}, {
   get: function(target, prop) {
     // Handle synchronous data methods
     if (bridgeData.hasOwnProperty(prop)) {

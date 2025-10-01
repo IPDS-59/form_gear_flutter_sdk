@@ -931,25 +931,58 @@ class FormGearSDK {
   /// Injects a placeholder Android bridge object into HTML to prevent race condition
   /// The bridge will be populated with actual handlers later via addJavaScriptHandler
   String _injectPlaceholderBridge(String htmlContent) {
-    // Create a minimal Android object that will be extended later
+    // Use Proxy to return default values for getter methods until real bridge loads
     const placeholderBridge = '''
 <script>
-// Placeholder Android bridge - prevents "Android is not defined" errors
-// Will be populated with actual handlers via addJavaScriptHandler
-window.Android = window.Android || {
+// Placeholder Android bridge with Proxy - returns default values until real bridge loads
+window.Android = window.Android || new Proxy({
   _initialized: false,
-  _pendingCalls: [],
-  // Queue calls until handlers are registered
-  _queueOrExecute: function(method, args) {
-    if (this._initialized && this[method] && typeof this[method] === 'function') {
-      return this[method].apply(this, args);
-    } else {
-      this._pendingCalls.push({ method: method, args: args });
-      console.log('Android.' + method + ' queued (handlers not ready yet)');
-      return null;
+  _isPlaceholder: true,
+  _pendingCalls: []
+}, {
+  get: function(target, prop) {
+    // Return existing properties
+    if (target.hasOwnProperty(prop)) {
+      return target[prop];
     }
+
+    // Return stub functions for method calls
+    return function() {
+      console.log('Android.' + prop + ' called on placeholder (returning default)');
+
+      // Return appropriate defaults based on method name
+      if (prop.startsWith('get')) {
+        // getFormMode, getIsNew, getRolePetugas, getUserRole -> '1'
+        if (prop.includes('Mode') || prop.includes('New') || prop.includes('Role')) {
+          return '1';
+        }
+        // getPrincipalCollection -> '[]'
+        else if (prop.includes('Principal') || prop.includes('Collection')) {
+          return '[]';
+        }
+        // getTemplate, getValidation, etc. -> '{}'
+        else if (prop.includes('Template') || prop.includes('Validation') ||
+                 prop.includes('Reference') || prop.includes('Preset') ||
+                 prop.includes('Response') || prop.includes('Media') ||
+                 prop.includes('Remark')) {
+          return '{}';
+        }
+        // getUserName -> 'default_user'
+        else if (prop.includes('User')) {
+          return 'default_user';
+        }
+        // Default for other getters -> ''
+        else {
+          return '';
+        }
+      }
+
+      // For action methods (action, execute, saveOrSubmit), just log
+      console.log('Android.' + prop + ' action queued (real bridge not ready)');
+      return null;
+    };
   }
-};
+});
 </script>
 ''';
 
