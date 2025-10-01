@@ -140,7 +140,16 @@ class FormGearWebViewBloc
       ),
     );
 
-    // Bridge is now injected directly into HTML during preparation
+    // Inject bridge immediately on load start to beat the race condition
+    if (!_bridgeInjected) {
+      try {
+        await _registerJavaScriptHandlers(event.controller);
+        await _injectAndroidBridgeFromFile(event.controller);
+        _bridgeInjected = true;
+      } on Exception catch (e) {
+        FormGearLogger.sdkError('Failed to inject bridge on load start: $e');
+      }
+    }
   }
 
   Future<void> _onWebViewLoadStop(
