@@ -31,17 +31,17 @@ class _EnhancedDownloadDemoPageState extends State<EnhancedDownloadDemoPage> {
     setState(() {
       _assetStatus['FormGear Engine (ID 1)'] = AssetStatus(
         path: '${bpsDir.path}/formengine/1',
-        assetPath: 'assets/BPS/formengine/1',
+        assetPath: 'assets/formengine/1',
         isInstalled: false,
       );
       _assetStatus['FasihForm Engine (ID 2)'] = AssetStatus(
         path: '${bpsDir.path}/formengine/2',
-        assetPath: 'assets/BPS/formengine/2',
+        assetPath: 'assets/formengine/2',
         isInstalled: false,
       );
       _assetStatus['Demo Template'] = AssetStatus(
-        path: '${bpsDir.path}/Template/demo_template',
-        assetPath: 'assets/BPS/Template/demo_template',
+        path: '${bpsDir.path}/Template/demo',
+        assetPath: 'assets/Template/demo',
         isInstalled: false,
       );
     });

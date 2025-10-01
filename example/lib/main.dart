@@ -50,17 +50,14 @@ Future<void> _initializeAssets() async {
     debugPrint('Initializing bundled assets to local storage...');
 
     // Copy form engines (FormGear and FasihForm)
-    await _copyAssetDirectory(
-      'assets/BPS/formengine',
-      '${bpsDir.path}/formengine',
-    );
+    await _copyAssetDirectory('assets/formengine', '${bpsDir.path}/formengine');
 
     // Copy templates
-    await _copyAssetDirectory('assets/BPS/Template', '${bpsDir.path}/Template');
+    await _copyAssetDirectory('assets/Template', '${bpsDir.path}/Template');
 
     // Copy lookup data if exists
     try {
-      await _copyAssetDirectory('assets/BPS/lookup', '${bpsDir.path}/lookup');
+      await _copyAssetDirectory('assets/lookup', '${bpsDir.path}/lookup');
     } catch (e) {
       debugPrint('No lookup assets found (this is optional): $e');
     }
