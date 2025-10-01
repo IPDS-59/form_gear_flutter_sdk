@@ -14,6 +14,7 @@ class FormGearApiConfig extends Equatable {
     this.authToken,
     this.customHeaders = const {},
     this.isProduction = true,
+    this.pinnedCertificates,
   });
 
   factory FormGearApiConfig.fromJson(Map<String, dynamic> json) =>
@@ -40,6 +41,25 @@ class FormGearApiConfig extends Equatable {
 
   /// Whether this is production environment
   final bool isProduction;
+
+  /// Certificate pinning configuration for enhanced security.
+  ///
+  /// Maps host names to lists of SHA-256 certificate fingerprints.
+  /// Only connections to these hosts with matching certificates will be allowed.
+  ///
+  /// Example:
+  /// ```dart
+  /// pinnedCertificates: {
+  ///   'fasih-api.bps.go.id': [
+  ///     'sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+  ///     'sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=',
+  ///   ],
+  /// }
+  /// ```
+  ///
+  /// Use NetworkSecurityConfig.getCertificateFingerprint() to obtain
+  /// fingerprints for your production servers.
+  final Map<String, List<String>>? pinnedCertificates;
 
   /// Get full template ZIP download URL for a specific template ID
   /// Used for FASIH-compatible ZIP downloads
@@ -78,6 +98,7 @@ class FormGearApiConfig extends Equatable {
     authToken,
     customHeaders,
     isProduction,
+    pinnedCertificates,
   ];
 
   FormGearApiConfig copyWith({
@@ -88,6 +109,7 @@ class FormGearApiConfig extends Equatable {
     String? authToken,
     Map<String, String>? customHeaders,
     bool? isProduction,
+    Map<String, List<String>>? pinnedCertificates,
   }) {
     return FormGearApiConfig(
       baseUrl: baseUrl ?? this.baseUrl,
@@ -97,6 +119,7 @@ class FormGearApiConfig extends Equatable {
       authToken: authToken ?? this.authToken,
       customHeaders: customHeaders ?? this.customHeaders,
       isProduction: isProduction ?? this.isProduction,
+      pinnedCertificates: pinnedCertificates ?? this.pinnedCertificates,
     );
   }
 }
