@@ -16,6 +16,8 @@ export 'src/core/version/template_version_manager.dart';
 // Models
 export 'src/models/assignment_context.dart';
 export 'src/models/bps_user.dart';
+export 'src/models/file_upload_data.dart';
+export 'src/models/file_upload_result.dart';
 export 'src/models/form_engine_entity.dart';
 export 'src/models/form_engine_type.dart';
 export 'src/models/form_gear_global_config.dart';
