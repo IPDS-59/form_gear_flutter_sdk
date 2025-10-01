@@ -133,7 +133,8 @@ class FormGearSDK {
 
   /// Prepares the form engine by loading HTML, JS, and CSS assets internally
   /// Now accepts only FormEngineType enum for cleaner API
-  Future<PreparedEngine> prepareEngine({
+  /// Internal method - use openFormWithAssignment instead
+  Future<PreparedEngine> _prepareEngine({
     required FormEngineType engineType,
     String? baseUrl,
     String? historyUrl,
@@ -351,7 +352,7 @@ class FormGearSDK {
       );
     }
 
-    final preparedEngine = await prepareEngine(
+    final preparedEngine = await _prepareEngine(
       engineType: engineType,
       onProgress: onProgress,
     );
@@ -402,50 +403,6 @@ class FormGearSDK {
     }
   }
 
-  /// Launches the prepared engine in a WebView page (legacy method)
-  /// For backward compatibility - use openFormWithAssignment for new projects
-  Future<void> launchPreparedEngine(
-    BuildContext context, {
-    String? title,
-  }) async {
-    if (!_isInitialized) {
-      throw Exception('FormGear SDK not initialized. Call initialize() first.');
-    }
-
-    if (_currentPreparedEngine == null) {
-      throw Exception('No engine prepared. Call prepareEngine() first.');
-    }
-
-    // Start server for lookup requests (FasihForm uses http://localhost:3310/lookup)
-    // Note: HTML/CSS/JS are loaded directly inline, but server is needed for API calls
-    if (_server?.isRunning != true) {
-      await _startServer();
-    }
-
-    final webView = _createWebViewFromPreparedEngine();
-
-    try {
-      // Check if context is still mounted before navigation
-      if (!context.mounted) return;
-
-      // Navigate to a full-screen page with the WebView
-      await Navigator.of(context).push<void>(
-        MaterialPageRoute(
-          builder: (context) => _FormGearEnginePage(
-            title: title ?? 'FormGear Engine',
-            webView: webView,
-          ),
-        ),
-      );
-    } finally {
-      // Stop server when page is disposed to free resources
-      if (_server != null && _server!.isRunning) {
-        await _server!.stop();
-        FormGearLogger.sdk('FormGear server stopped - WebView closed');
-      }
-    }
-  }
-
   /// Creates WebView from prepared engine
   FormGearWebView _createWebViewFromPreparedEngine() {
     final preparedEngine = _currentPreparedEngine!;
@@ -466,7 +423,9 @@ class FormGearSDK {
   }
 
   /// Creates debug-only WebView for testing bridge functionality
-  /// (DEBUG MODE ONLY)
+  /// **DEBUG/TESTING ONLY** - Not for production use
+  /// Use openFormWithAssignment for production forms
+  @Deprecated('Only for testing - use openFormWithAssignment for production')
   Future<FormGearWebView?> createDebugBridgeTest({
     List<JSHandler<dynamic>> customHandlers = const [],
     void Function(InAppWebViewController controller)? onWebViewCreated,
@@ -710,7 +669,7 @@ class FormGearSDK {
       if (!htmlFile.existsSync()) {
         FormGearLogger.sdkError(
           'Engine files not found locally for engine ID: $engineId. '
-          'Please ensure engine is downloaded before calling prepareEngine().',
+          'Please ensure engine is downloaded before opening forms.',
         );
         return null;
       }
