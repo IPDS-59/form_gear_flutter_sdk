@@ -57,7 +57,8 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
         String version = 'Unknown';
         try {
           final engineId = config['id'] as String;
-          final isDownloaded = await FormGearSDK.instance.isFormEngineDownloaded(engineId);
+          final isDownloaded = await FormGearSDK.instance
+              .isFormEngineDownloaded(engineId);
 
           if (isDownloaded) {
             version = 'Installed';
@@ -179,9 +180,7 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
   void _navigateToTemplateSelection(FormEngineMetadata engine) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const TemplateSelectionScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const TemplateSelectionScreen()),
     );
   }
 
@@ -226,7 +225,9 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
         onProgress(i);
       }
 
-      debugPrint('Successfully simulated download for ${engine.name} v${engine.version}');
+      debugPrint(
+        'Successfully simulated download for ${engine.name} v${engine.version}',
+      );
 
       // Refresh the downloaded engines list
       await _loadDownloadedEngines();

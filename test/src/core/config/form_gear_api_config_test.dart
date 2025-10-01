@@ -60,14 +60,17 @@ void main() {
     });
 
     group('Version Check Support', () {
-      test('should support version check when both URL and endpoint are present', () {
-        const config = FormGearApiConfig(
-          baseUrl: 'https://api.example.com',
-          formEngineEndpoint: '/api/engine/version',
-        );
+      test(
+        'should support version check when both URL and endpoint are present',
+        () {
+          const config = FormGearApiConfig(
+            baseUrl: 'https://api.example.com',
+            formEngineEndpoint: '/api/engine/version',
+          );
 
-        expect(config.supportsFormEngineVersionCheck, isTrue);
-      });
+          expect(config.supportsFormEngineVersionCheck, isTrue);
+        },
+      );
 
       test('should not support version check without base URL', () {
         const config = FormGearApiConfig(

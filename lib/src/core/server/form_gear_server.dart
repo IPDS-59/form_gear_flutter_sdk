@@ -152,7 +152,8 @@ class FormGearServer {
       if (!await lookupFile.exists()) {
         return Response.notFound(
           jsonEncode({
-            'error': 'Lookup data not found: $lookupId v$version. '
+            'error':
+                'Lookup data not found: $lookupId v$version. '
                 'Please ensure lookup is downloaded before use.',
           }),
         );

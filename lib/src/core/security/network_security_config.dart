@@ -95,9 +95,6 @@ class NetworkSecurityConfig {
     String host,
     List<String> pinnedFingerprints,
   ) {
-    // Get certificate DER encoding
-    final certDer = cert.der;
-
     // For now, we validate that the certificate exists and matches the host
     // Full fingerprint validation requires crypto hashing which should be
     // implemented using a proper crypto library or SSL pinning plugin
@@ -111,6 +108,7 @@ class NetworkSecurityConfig {
     // Note: For production, integrate with ssl_pinning_plugin or similar
     // This is a basic implementation that prevents MITM but doesn't fully
     // validate against pinned fingerprints
+    // cert.der could be used for fingerprint comparison with proper crypto
     return false;
   }
 

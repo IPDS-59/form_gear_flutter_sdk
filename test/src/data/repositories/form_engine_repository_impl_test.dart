@@ -51,8 +51,9 @@ void main() {
             // Assert
             expect(result, isA<Success<FormEngineResponse>>());
             expect((result as Success).data, equals(responseData));
-            verify(() => mockRemoteDataSource.checkFormEngineVersion(engineId))
-                .called(1);
+            verify(
+              () => mockRemoteDataSource.checkFormEngineVersion(engineId),
+            ).called(1);
           },
         );
 
@@ -61,7 +62,7 @@ void main() {
           () async {
             // Arrange
             when(
-              () => mockRemoteDataSource.checkFormEngineVersion(null),
+              () => mockRemoteDataSource.checkFormEngineVersion(),
             ).thenAnswer((_) async => Success(responseData));
 
             // Act
@@ -69,8 +70,9 @@ void main() {
 
             // Assert
             expect(result, isA<Success<FormEngineResponse>>());
-            verify(() => mockRemoteDataSource.checkFormEngineVersion(null))
-                .called(1);
+            verify(
+              () => mockRemoteDataSource.checkFormEngineVersion(),
+            ).called(1);
           },
         );
 
@@ -88,8 +90,9 @@ void main() {
 
             // Assert
             expect(result, isA<Success<FormEngineResponse>>());
-            verify(() => mockRemoteDataSource.checkFormEngineVersion(engineId))
-                .called(1);
+            verify(
+              () => mockRemoteDataSource.checkFormEngineVersion(engineId),
+            ).called(1);
           },
         );
       });
@@ -111,8 +114,9 @@ void main() {
             // Assert
             expect(result, isA<Failure<FormEngineResponse>>());
             expect((result as Failure).error, equals(error));
-            verify(() => mockRemoteDataSource.checkFormEngineVersion(engineId))
-                .called(1);
+            verify(
+              () => mockRemoteDataSource.checkFormEngineVersion(engineId),
+            ).called(1);
           },
         );
       });
@@ -131,7 +135,9 @@ void main() {
           // Arrange
           const engineId = '1';
           final testDir = Directory.systemTemp.createTempSync('test_engine_');
-          final engineDir = Directory('${testDir.path}/BPS/formengine/$engineId');
+          final engineDir = Directory(
+            '${testDir.path}/BPS/formengine/$engineId',
+          );
           await engineDir.create(recursive: true);
           final versionFile = File('${engineDir.path}/version.json');
           await versionFile.writeAsString('{"version": "1.0.0"}');
@@ -181,7 +187,9 @@ void main() {
           // Arrange
           const engineId = '2';
           final testDir = Directory.systemTemp.createTempSync('test_engine_');
-          final engineDir = Directory('${testDir.path}/BPS/formengine/$engineId');
+          final engineDir = Directory(
+            '${testDir.path}/BPS/formengine/$engineId',
+          );
           await engineDir.create(recursive: true);
 
           // Override getApplicationDocumentsDirectory

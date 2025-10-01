@@ -8,7 +8,6 @@ import 'package:form_gear_engine_sdk/src/models/form_engine_response.dart';
 import 'package:injectable/injectable.dart';
 
 @LazySingleton(as: FormEngineRepository)
-
 /// Implementation of FormEngineRepository
 class FormEngineRepositoryImpl implements FormEngineRepository {
   const FormEngineRepositoryImpl({
@@ -27,7 +26,9 @@ class FormEngineRepositoryImpl implements FormEngineRepository {
   @override
   Future<bool> isFormEngineDownloaded(String engineId) async {
     try {
-      final engineDir = await DirectoryConstants.getFormEngineDirectory(engineId);
+      final engineDir = await DirectoryConstants.getFormEngineDirectory(
+        engineId,
+      );
       final versionFile = File('${engineDir.path}/version.json');
 
       // Check if engine directory exists and contains version file

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:alice/alice.dart';
@@ -49,7 +50,10 @@ Future<void> _initializeAssets() async {
     debugPrint('Initializing bundled assets to local storage...');
 
     // Copy form engines (FormGear and FasihForm)
-    await _copyAssetDirectory('assets/BPS/formengine', '${bpsDir.path}/formengine');
+    await _copyAssetDirectory(
+      'assets/BPS/formengine',
+      '${bpsDir.path}/formengine',
+    );
 
     // Copy templates
     await _copyAssetDirectory('assets/BPS/Template', '${bpsDir.path}/Template');
@@ -77,8 +81,9 @@ Future<void> _copyAssetDirectory(String assetPath, String targetPath) async {
   try {
     // List all files in the asset directory
     final manifestContent = await rootBundle.loadString('AssetManifest.json');
-    final Map<String, dynamic> manifestMap =
-        Map<String, dynamic>.from(Uri.decodeComponent(manifestContent) as Map);
+    final Map<String, dynamic> manifestMap = Map<String, dynamic>.from(
+      json.decode(manifestContent) as Map,
+    );
 
     // Filter assets that start with our path
     final assetFiles = manifestMap.keys

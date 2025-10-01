@@ -7,16 +7,15 @@ import 'package:form_gear_engine_sdk/src/models/file_upload_result.dart';
 
 // Mock implementation for testing
 class MockFileUploadListener implements FileUploadListener {
-
   MockFileUploadListener({
     Future<FileUploadResult> Function(FileUploadData)? onFileUpload,
     void Function(String, int, int)? onUploadProgress,
     Future<void> Function(String, FileUploadResult)? onUploadCompleted,
     Future<void> Function(String, Object, StackTrace)? onUploadError,
-  })  : _onFileUploadImpl = onFileUpload,
-        _onUploadProgressImpl = onUploadProgress,
-        _onUploadCompletedImpl = onUploadCompleted,
-        _onUploadErrorImpl = onUploadError;
+  }) : _onFileUploadImpl = onFileUpload,
+       _onUploadProgressImpl = onUploadProgress,
+       _onUploadCompletedImpl = onUploadCompleted,
+       _onUploadErrorImpl = onUploadError;
   final Future<FileUploadResult> Function(FileUploadData)? _onFileUploadImpl;
   final void Function(String, int, int)? _onUploadProgressImpl;
   final Future<void> Function(String, FileUploadResult)? _onUploadCompletedImpl;
@@ -117,7 +116,9 @@ void main() {
 
       test('should have onUploadCompleted method', () {
         final listener = MockFileUploadListener();
-        const result = FileUploadResult.success(uploadedUrl: 'https://example.com/file.jpg');
+        const result = FileUploadResult.success(
+          uploadedUrl: 'https://example.com/file.jpg',
+        );
         expect(
           listener.onUploadCompleted('file.jpg', result),
           isA<Future<void>>(),
@@ -127,7 +128,11 @@ void main() {
       test('should have onUploadError method', () {
         final listener = MockFileUploadListener();
         expect(
-          listener.onUploadError('file.jpg', Exception('error'), StackTrace.current),
+          listener.onUploadError(
+            'file.jpg',
+            Exception('error'),
+            StackTrace.current,
+          ),
           isA<Future<void>>(),
         );
       });
@@ -439,7 +444,8 @@ void main() {
         final listener = MockFileUploadListener(
           onFileUpload: (data) async {
             return FileUploadResult.success(
-              uploadedUrl: 'https://fasih-bucket.s3.amazonaws.com/${data.fileName}',
+              uploadedUrl:
+                  'https://fasih-bucket.s3.amazonaws.com/${data.fileName}',
               metadata: const {'uploadDuration': 100},
             );
           },
