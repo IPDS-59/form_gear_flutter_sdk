@@ -956,16 +956,37 @@ window.Android = window.Android || new Proxy({
         if (prop.includes('Mode') || prop.includes('New') || prop.includes('Role')) {
           return '1';
         }
-        // getPrincipalCollection -> '[]'
+        // getPrincipalCollection -> [] (actual array, not string)
         else if (prop.includes('Principal') || prop.includes('Collection')) {
-          return '[]';
+          return JSON.stringify([]);
         }
-        // getTemplate, getValidation, etc. -> '{}'
-        else if (prop.includes('Template') || prop.includes('Validation') ||
-                 prop.includes('Reference') || prop.includes('Preset') ||
-                 prop.includes('Response') || prop.includes('Media') ||
-                 prop.includes('Remark')) {
-          return '{}';
+        // getTemplate -> actual object with components structure
+        else if (prop.includes('Template')) {
+          return JSON.stringify({ components: [[]] });
+        }
+        // getValidation -> actual object with testFunctions
+        else if (prop.includes('Validation')) {
+          return JSON.stringify({ testFunctions: [] });
+        }
+        // getReference -> actual object with details and sidebar
+        else if (prop.includes('Reference')) {
+          return JSON.stringify({ details: [], sidebar: [] });
+        }
+        // getPreset -> actual object with preset structure
+        else if (prop.includes('Preset')) {
+          return JSON.stringify({ description: 'Default Preset', dataKey: 'default_preset', predata: [] });
+        }
+        // getResponse -> actual object with details and answers
+        else if (prop.includes('Response')) {
+          return JSON.stringify({ details: { answers: [] } });
+        }
+        // getMedia -> actual object with media array
+        else if (prop.includes('Media')) {
+          return JSON.stringify({ details: { media: [] } });
+        }
+        // getRemark -> actual object with notes
+        else if (prop.includes('Remark')) {
+          return JSON.stringify({ dataKey: 'default_remark', notes: [] });
         }
         // getUserName -> 'default_user'
         else if (prop.includes('User')) {
