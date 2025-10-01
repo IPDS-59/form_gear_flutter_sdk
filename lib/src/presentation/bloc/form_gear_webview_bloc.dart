@@ -132,24 +132,28 @@ class FormGearWebViewBloc
     WebViewLoadStart event,
     Emitter<FormGearWebViewState> emit,
   ) async {
+    // CRITICAL: Inject bridge SYNCHRONOUSLY before JavaScript executes
+    // onLoadStart is called BEFORE JavaScript in the page runs
+    // This ensures bridge is ready when FasihForm/FormGear JavaScript loads
+    try {
+      await _registerJavaScriptHandlers(event.controller);
+      await _injectAndroidBridgeFromFile(event.controller);
+      _bridgeInjected = true;
+      FormGearLogger.sdk(
+        'Bridge injected in onLoadStart (before JS execution)',
+      );
+    } on Exception catch (e) {
+      FormGearLogger.sdkError('Failed to inject bridge on load start: $e');
+    }
+
     emit(
       state.copyWith(
         status: WebViewStatus.loading,
         currentUrl: event.url,
         loadingProgress: 0,
+        isBridgeInjected: _bridgeInjected,
       ),
     );
-
-    // Inject bridge immediately on load start to beat the race condition
-    if (!_bridgeInjected) {
-      try {
-        await _registerJavaScriptHandlers(event.controller);
-        await _injectAndroidBridgeFromFile(event.controller);
-        _bridgeInjected = true;
-      } on Exception catch (e) {
-        FormGearLogger.sdkError('Failed to inject bridge on load start: $e');
-      }
-    }
   }
 
   Future<void> _onWebViewLoadStop(

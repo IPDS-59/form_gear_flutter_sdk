@@ -161,10 +161,6 @@ class FormGearSDK {
       // Inject actual vendor asset content into placeholders
       processedHtml = await _injectVendorAssets(processedHtml);
 
-      // Inject placeholder Android bridge to prevent race condition
-      // The actual handlers will be added later via addJavaScriptHandler
-      processedHtml = _injectPlaceholderBridge(processedHtml);
-
       final preparedEngine = PreparedEngine(
         html: processedHtml,
         baseUrl: baseUrl ?? 'about:blank',
@@ -926,97 +922,6 @@ class FormGearSDK {
     }
 
     return processedHtml;
-  }
-
-  /// Injects a placeholder Android bridge object into HTML to prevent race condition
-  /// The bridge will be populated with actual handlers later via addJavaScriptHandler
-  String _injectPlaceholderBridge(String htmlContent) {
-    // Use Proxy to return default values for getter methods until real bridge loads
-    const placeholderBridge = '''
-<script>
-// Placeholder Android bridge with Proxy - returns default values until real bridge loads
-window.Android = window.Android || new Proxy({
-  _initialized: false,
-  _isPlaceholder: true,
-  _pendingCalls: []
-}, {
-  get: function(target, prop) {
-    // Return existing properties
-    if (target.hasOwnProperty(prop)) {
-      return target[prop];
-    }
-
-    // Return stub functions for method calls
-    return function() {
-      console.log('Android.' + prop + ' called on placeholder (returning default)');
-
-      // Return appropriate defaults - ALREADY AS JSON STRINGS (bridge will use them as-is)
-      if (prop.startsWith('get')) {
-        // getFormMode, getIsNew, getRolePetugas, getUserRole -> '1'
-        if (prop.includes('Mode') || prop.includes('New') || prop.includes('Role')) {
-          return '1';
-        }
-        // getPrincipalCollection -> '[]' (JSON string)
-        else if (prop.includes('Principal') || prop.includes('Collection')) {
-          return '[]';
-        }
-        // getTemplate -> JSON string with complete FASIH template structure
-        else if (prop.includes('Template')) {
-          return '{"description":"","dataKey":"","title":"","acronym":"","version":"0.0.1","components":[[]]}';
-        }
-        // getValidation -> JSON string with complete FASIH validation structure
-        else if (prop.includes('Validation')) {
-          return '{"description":"","dataKey":"","version":"0.0.1","testFunctions":[]}';
-        }
-        // getReference -> JSON string with details and sidebar
-        else if (prop.includes('Reference')) {
-          return '{"details":[],"sidebar":[]}';
-        }
-        // getPreset -> JSON string with preset structure
-        else if (prop.includes('Preset')) {
-          return '{"description":"Default Preset","dataKey":"default_preset","predata":[]}';
-        }
-        // getResponse -> JSON string with FASIH structure (answers at root)
-        else if (prop.includes('Response')) {
-          const now = new Date().toISOString();
-          return '{"dataKey":"","description":"","answers":[],"templateDataKey":"","gearVersion":"1.1.0","templateVersion":"0.0.1","validationVersion":"0.0.1","docState":"E","summary":{"answer":0,"blank":0,"error":0,"remark":0,"clean":0},"createdBy":"default_user","createdAt":"' + now + '","createdAtTimezone":"UTC","createdAtGMT":0,"updatedBy":"default_user","updatedAt":"' + now + '","updatedAtTimezone":"UTC","updatedAtGMT":0}';
-        }
-        // getMedia -> JSON string with media array
-        else if (prop.includes('Media')) {
-          return '{"details":{"media":[]}}';
-        }
-        // getRemark -> JSON string with FASIH structure
-        else if (prop.includes('Remark')) {
-          return '{"dataKey":"","notes":[]}';
-        }
-        // getUserName -> 'default_user'
-        else if (prop.includes('User')) {
-          return 'default_user';
-        }
-        // Default for other getters -> ''
-        else {
-          return '';
-        }
-      }
-
-      // For action methods (action, execute, saveOrSubmit), just log
-      console.log('Android.' + prop + ' action queued (real bridge not ready)');
-      return null;
-    };
-  }
-});
-</script>
-''';
-
-    // Inject at the beginning of <head> to load before any other scripts
-    if (htmlContent.contains('<head>')) {
-      return htmlContent.replaceFirst('<head>', '<head>\n$placeholderBridge');
-    } else if (htmlContent.contains('<html>')) {
-      return htmlContent.replaceFirst('<html>', '<html>\n$placeholderBridge');
-    } else {
-      // Fallback: prepend to the beginning
-      return placeholderBridge + htmlContent;
-    }
   }
 
   /// Determines the FormEngineType based on template ID
