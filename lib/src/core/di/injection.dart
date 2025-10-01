@@ -3,6 +3,7 @@ import 'package:form_gear_engine_sdk/src/core/config/config_provider.dart';
 import 'package:form_gear_engine_sdk/src/core/config/form_gear_api_config.dart';
 import 'package:form_gear_engine_sdk/src/core/config/form_gear_config.dart';
 import 'package:form_gear_engine_sdk/src/core/di/injection.config.dart';
+import 'package:form_gear_engine_sdk/src/core/security/network_security_config.dart';
 import 'package:form_gear_engine_sdk/src/data/inteceptors/auth_interceptor.dart';
 import 'package:form_gear_engine_sdk/src/data/inteceptors/general_fasih_header_interceptor.dart';
 import 'package:get_it/get_it.dart';
@@ -129,6 +130,16 @@ abstract class RegisterModule {
     if (aliceInterceptors.isNotEmpty) {
       dio.interceptors.addAll(aliceInterceptors);
     }
+
+    // Enforce HTTPS connections for security
+    // This prevents man-in-the-middle attacks by:
+    // 1. Blocking all HTTP (non-HTTPS) requests
+    // 2. Validating SSL certificates
+    // 3. Supporting certificate pinning if configured
+    NetworkSecurityConfig.enforceHttps(
+      dio,
+      pinnedCertificates: apiConfig?.pinnedCertificates,
+    );
 
     return dio;
   }

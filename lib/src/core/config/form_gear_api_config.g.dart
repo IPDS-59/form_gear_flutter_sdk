@@ -19,6 +19,13 @@ FormGearApiConfig _$FormGearApiConfigFromJson(Map<String, dynamic> json) =>
           ) ??
           const {},
       isProduction: json['isProduction'] as bool? ?? true,
+      pinnedCertificates: (json['pinnedCertificates'] as Map<String, dynamic>?)
+          ?.map(
+            (k, e) => MapEntry(
+              k,
+              (e as List<dynamic>).map((e) => e as String).toList(),
+            ),
+          ),
     );
 
 Map<String, dynamic> _$FormGearApiConfigToJson(FormGearApiConfig instance) =>
@@ -30,4 +37,5 @@ Map<String, dynamic> _$FormGearApiConfigToJson(FormGearApiConfig instance) =>
       'authToken': instance.authToken,
       'customHeaders': instance.customHeaders,
       'isProduction': instance.isProduction,
+      'pinnedCertificates': instance.pinnedCertificates,
     };
