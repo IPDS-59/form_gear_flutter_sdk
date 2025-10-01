@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'simple_typed_bridge_test_screen.dart';
-import 'form_engine_selection_screen.dart';
+import 'package:form_gear_engine_sdk/src/presentation/widgets/media_demo_screen.dart';
+import 'assignment_demo_screen.dart';
 import 'clean_architecture_demo_screen.dart';
-import 'version_update_demo_screen.dart';
+import 'form_data_listener_demo_screen.dart';
+import 'form_engine_selection_screen.dart';
 import 'loading_screen_demo.dart';
+import 'simple_typed_bridge_test_screen.dart';
+import 'version_update_demo_screen.dart';
 import '../download_demo_page_enhanced.dart';
 import '../main.dart'; // For Alice access
 
@@ -92,299 +95,272 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+
+            // Core Features Section
             const Text(
-              'Choose a form engine to launch:',
-              style: TextStyle(fontSize: 16),
+              'Core Features:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 16),
+            _DemoCard(
+              title: 'Launch Form Engine',
+              subtitle: 'Test different form engine implementations',
+              icon: Icons.rocket_launch,
+              gradientColors: const [Color(0xFF1E88E5), Color(0xFF1976D2)],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const FormEngineSelectionScreen(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _DemoCard(
+              title: 'Assignment-Based Configuration',
+              subtitle: 'Dynamic configuration per template/assignment',
+              icon: Icons.assignment,
+              gradientColors: const [Color(0xFF9C27B0), Color(0xFF673AB7)],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AssignmentDemoScreen(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _DemoCard(
+              title: 'SaveOrSubmit Listener',
+              subtitle: 'Test custom data persistence strategies',
+              icon: Icons.save_alt,
+              gradientColors: const [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const FormDataListenerDemoScreen(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _DemoCard(
+              title: 'Media Features',
+              subtitle: 'Audio recording and barcode scanning',
+              icon: Icons.perm_media,
+              gradientColors: const [Color(0xFFE91E63), Color(0xFFC2185B)],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MediaDemoScreen(),
+                ),
+              ),
+            ),
+
             const SizedBox(height: 24),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF1E88E5), Color(0xFF1976D2)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF1E88E5).withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ElevatedButton.icon(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const FormEngineSelectionScreen(),
-                  ),
-                ),
-                icon: const Icon(Icons.rocket_launch, size: 24),
-                label: const Text(
-                  'Launch Form Engine',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.all(16),
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
+            const Text(
+              'Additional Demos:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF42D9FF), Color(0xFF00BCD4)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF42D9FF).withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ElevatedButton.icon(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const EnhancedDownloadDemoPage(),
-                  ),
-                ),
-                icon: const Icon(Icons.download, size: 24),
-                label: const Text(
-                  'Download Demo',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.all(16),
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+            _DemoCard(
+              title: 'Download Demo',
+              subtitle: 'Asset download and management',
+              icon: Icons.download,
+              gradientColors: const [Color(0xFF42D9FF), Color(0xFF00BCD4)],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const EnhancedDownloadDemoPage(),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF9C27B0), Color(0xFF673AB7)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF9C27B0).withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ElevatedButton.icon(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CleanArchitectureDemoScreen(),
-                  ),
-                ),
-                icon: const Icon(Icons.architecture, size: 24),
-                label: const Text(
-                  'Clean Architecture Demo',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.all(16),
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+            const SizedBox(height: 12),
+            _DemoCard(
+              title: 'Clean Architecture Demo',
+              subtitle: 'Repository pattern and use cases',
+              icon: Icons.architecture,
+              gradientColors: const [Color(0xFF9C27B0), Color(0xFF673AB7)],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CleanArchitectureDemoScreen(),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFF9800), Color(0xFFFF6F00)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFF9800).withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ElevatedButton.icon(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const VersionUpdateDemoScreen(),
-                  ),
-                ),
-                icon: const Icon(Icons.system_update, size: 24),
-                label: const Text(
-                  'Version Update Demo',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.all(16),
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+            const SizedBox(height: 12),
+            _DemoCard(
+              title: 'Version Update Demo',
+              subtitle: 'Version checking and updates',
+              icon: Icons.system_update,
+              gradientColors: const [Color(0xFFFF9800), Color(0xFFFF6F00)],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const VersionUpdateDemoScreen(),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF8BC34A), Color(0xFF689F38)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF8BC34A).withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ElevatedButton.icon(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const LoadingScreenDemo(),
-                  ),
-                ),
-                icon: const Icon(Icons.hourglass_empty, size: 24),
-                label: const Text(
-                  'Loading Screen Demo',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.all(16),
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+            const SizedBox(height: 12),
+            _DemoCard(
+              title: 'Loading Screen Demo',
+              subtitle: 'Loading states and animations',
+              icon: Icons.hourglass_empty,
+              gradientColors: const [Color(0xFF8BC34A), Color(0xFF689F38)],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const LoadingScreenDemo(),
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+            _DemoCard(
+              title: 'Bridge Test',
+              subtitle: 'JavaScript bridge integration',
+              icon: Icons.code,
+              gradientColors: const [Color(0xFF673AB7), Color(0xFF512DA8)],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SimpleTypedBridgeTestScreen(),
+                ),
+              ),
+            ),
+
             const SizedBox(height: 32),
             const Divider(),
             const SizedBox(height: 16),
             const Text(
-              'SDK Features (Auto-Registered):',
+              'SDK Features:',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
             const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('🔧 Simple Typed Bridge System'),
-                Text('📷 Camera Action (Auto-handled)'),
-                Text('📁 File Picker Action (Auto-handled)'),
-                Text('📍 Location Action (Auto-handled)'),
-                Text('🔒 Internal Permission Management'),
-                Text('🎯 Custom Handler Support'),
+                Text('✅ Assignment-Based Dynamic Configuration'),
+                Text('✅ FormGear & FasihForm Engine Support'),
+                Text('✅ Custom SaveOrSubmit Listener System'),
+                Text('✅ Media Actions (Camera, Audio, Barcode)'),
+                Text('✅ JavaScript Bridge for WebView Integration'),
+                Text('✅ Offline & Online Lookup Modes'),
+                Text('✅ Form State Management (Open, Submitted, Approved)'),
+                Text('✅ Encryption & Data Security'),
               ],
             ),
           ],
         ),
       ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          // Alice HTTP Inspector Button
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(28),
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFF5722), Color(0xFFE64A19)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFFF5722).withValues(alpha: 0.4),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: FloatingActionButton(
-              onPressed: () => alice.showInspector(),
-              heroTag: "alice_inspector",
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              child: const Icon(Icons.network_check, color: Colors.white),
-            ),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFF5722), Color(0xFFE64A19)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          const SizedBox(height: 16),
-          // SDK Integration Button
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(28),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF4CAF50), Color(0xFF45A049)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF4CAF50).withValues(alpha: 0.4),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFF5722).withValues(alpha: 0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
-            child: FloatingActionButton.extended(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SimpleTypedBridgeTestScreen(),
-                ),
-              ),
-              icon: const Icon(Icons.analytics, color: Colors.white),
-              label: const Text(
-                'SDK Integration',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              heroTag: "sdk_integration",
-            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: () => alice.showInspector(),
+          tooltip: 'HTTP Inspector (Alice)',
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: const Icon(Icons.network_check, color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
+
+class _DemoCard extends StatelessWidget {
+  const _DemoCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.gradientColors,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final List<Color> gradientColors;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          colors: gradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: gradientColors.first.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
         ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white.withValues(alpha: 0.7),
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

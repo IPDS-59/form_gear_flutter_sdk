@@ -60,11 +60,13 @@ Map<String, dynamic> _$FormGearConfigToJson(FormGearConfig instance) =>
 const _$FormGearClientModeEnumMap = {
   FormGearClientMode.cawi: 'cawi',
   FormGearClientMode.capi: 'capi',
+  FormGearClientMode.test: 'test',
 };
 
 const _$FormGearLookupModeEnumMap = {
   FormGearLookupMode.online: 'online',
   FormGearLookupMode.offline: 'offline',
+  FormGearLookupMode.local: 'local',
 };
 
 const _$FormGearFormModeEnumMap = {
@@ -72,6 +74,7 @@ const _$FormGearFormModeEnumMap = {
   FormGearFormMode.rejected: 'rejected',
   FormGearFormMode.submitted: 'submitted',
   FormGearFormMode.approved: 'approved',
+  FormGearFormMode.debug: 'debug',
 };
 
 const _$FormGearInitialModeEnumMap = {

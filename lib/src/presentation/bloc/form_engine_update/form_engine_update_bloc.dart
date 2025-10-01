@@ -22,6 +22,12 @@ class FormEngineUpdateBloc
   final VersionCheckResult versionResult;
   final Future<void> Function() onDownload;
 
+  /// Public method to update progress from outside the BLoC
+  /// This allows download callbacks to report progress directly
+  void updateProgress(int progress) {
+    add(FormEngineUpdateProgressEvent(progress));
+  }
+
   Future<void> _onStartDownload(
     FormEngineStartDownloadEvent event,
     Emitter<FormEngineUpdateState> emit,
@@ -29,8 +35,37 @@ class FormEngineUpdateBloc
     emit(state.copyWith(isDownloading: true, progress: 0));
 
     try {
-      await onDownload();
-      add(const FormEngineDownloadCompletedEvent());
+      // Check if this is a server download by looking for download URL
+      final hasDownloadUrl =
+          versionResult.formEngine.linkDownload != null &&
+          versionResult.formEngine.linkDownload!.isNotEmpty;
+
+      if (hasDownloadUrl) {
+        // For server downloads, execute without blocking the BLoC
+        // The download manager will report progress via updateProgress()
+        // We use unawaited here to allow progress events to be processed
+        // while the download is running
+        unawaited(
+          onDownload()
+              .then((_) {
+                // Download completed successfully
+                add(const FormEngineDownloadCompletedEvent());
+              })
+              .catchError((Object error) {
+                // Download failed
+                add(FormEngineDownloadFailedEvent(error.toString()));
+              }),
+        );
+      } else {
+        // Only for asset downloads (demo mode), simulate progress
+        // This provides better UX when copying from bundled assets
+        for (var i = 1; i <= 10; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          add(FormEngineUpdateProgressEvent(i * 10));
+        }
+        await onDownload();
+        add(const FormEngineDownloadCompletedEvent());
+      }
     } on Exception catch (e) {
       add(FormEngineDownloadFailedEvent(e.toString()));
     }
