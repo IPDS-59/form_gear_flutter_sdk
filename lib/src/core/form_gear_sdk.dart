@@ -976,17 +976,37 @@ window.Android = window.Android || new Proxy({
         else if (prop.includes('Preset')) {
           return JSON.stringify({ description: 'Default Preset', dataKey: 'default_preset', predata: [] });
         }
-        // getResponse -> actual object with details and answers
+        // getResponse -> actual object with details, dataKey, and metadata
         else if (prop.includes('Response')) {
-          return JSON.stringify({ details: { answers: [] } });
+          return JSON.stringify({
+            dataKey: '',
+            description: '',
+            details: { answers: [] },
+            templateVersion: '0.0.1',
+            validationVersion: '0.0.1',
+            updatedAt: new Date().toISOString(),
+            updatedBy: 'default_user',
+            createdAt: new Date().toISOString(),
+            createdBy: 'default_user',
+            isForceSubmit: false
+          });
         }
         // getMedia -> actual object with media array
         else if (prop.includes('Media')) {
           return JSON.stringify({ details: { media: [] } });
         }
-        // getRemark -> actual object with notes
+        // getRemark -> actual object with dataKey and notes
         else if (prop.includes('Remark')) {
-          return JSON.stringify({ dataKey: 'default_remark', notes: [] });
+          return JSON.stringify({
+            dataKey: 'default_remark',
+            notes: [],
+            templateVersion: '0.0.1',
+            validationVersion: '0.0.1',
+            updatedAt: new Date().toISOString(),
+            updatedBy: 'default_user',
+            createdAt: new Date().toISOString(),
+            createdBy: 'default_user'
+          });
         }
         // getUserName -> 'default_user'
         else if (prop.includes('User')) {
