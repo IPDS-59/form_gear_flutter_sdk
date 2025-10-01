@@ -8,12 +8,13 @@ abstract class FormGearWebViewEvent extends Equatable {
 }
 
 class InitializeWebView extends FormGearWebViewEvent {
-  const InitializeWebView(this.controller);
+  const InitializeWebView(this.controller, [this.htmlContent]);
 
   final InAppWebViewController controller;
+  final String? htmlContent;
 
   @override
-  List<Object?> get props => [controller];
+  List<Object?> get props => [controller, htmlContent];
 }
 
 class InjectBridge extends FormGearWebViewEvent {

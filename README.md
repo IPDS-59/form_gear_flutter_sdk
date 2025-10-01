@@ -5,7 +5,7 @@
 
   [![pub package](https://img.shields.io/pub/v/form_gear_engine_sdk.svg)](https://pub.dev/packages/form_gear_engine_sdk)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-  [![Flutter](https://img.shields.io/badge/Flutter-%3E%3D3.9.2-blue.svg)](https://flutter.dev)
+  [![Flutter](https://img.shields.io/badge/Flutter-stable-blue.svg)](https://flutter.dev)
 </div>
 
 A Flutter SDK for [FormGear](https://github.com/bps-statistics/form-gear) - A flexible, JSON-driven form generation framework for dynamic data collection with 30+ input control types, nested forms, GPS, photo capture, and complex validation capabilities.
@@ -49,6 +49,7 @@ Originally developed for BPS - Statistics Indonesia's data collection needs, now
 - [Quick Start](#quick-start)
 - [Assignment-Based Configuration](#assignment-based-configuration)
 - [SaveOrSubmit Listener Architecture](#saveorsubmit-listener-architecture)
+- [FileUpload Listener Architecture](#fileupload-listener-architecture)
 - [FASIH App Integration](#fasih-app-integration)
 - [API Reference](#api-reference)
 - [Examples](#examples)
@@ -89,6 +90,16 @@ Originally developed for BPS - Statistics Indonesia's data collection needs, now
 - **Lifecycle management**: onStarted, onCompleted, and onError callbacks for operation tracking
 - **Legacy compatibility**: Backward compatibility with existing callback patterns
 - **Type-safe architecture**: Complete data models for FormGear (6 params) and FasihForm (4 params)
+
+### 📤 FileUpload Listener Architecture (NEW)
+- **Custom upload logic**: Implement your own file upload backend (S3, server, etc.)
+- **S3 integration**: Pre-signed URL support matching FASIH native Android patterns
+- **Progress tracking**: Real-time upload progress callbacks for UX
+- **Error recovery**: Built-in error handling with retry capabilities
+- **Assignment context**: Full assignment metadata for file organization
+- **Lifecycle callbacks**: onUploadProgress, onUploadCompleted, onUploadError
+- **Backward compatible**: Falls back to local verification if no listener registered
+- **Example implementations**: FasihS3UploadListener template for FASIH apps
 
 ### 📷 Media Handling & JavaScript Callbacks (NEW)
 - **FASIH-compatible media handling**: Camera and file picker with proper FormGear JS integration
@@ -175,6 +186,8 @@ graph TB
         CA[Client App UI]
         SDK[FormGear Flutter SDK]
         DI[Isolated GetIt Instance]
+        SDL[SaveOrSubmit Listener]
+        FUL[FileUpload Listener]
     end
 
     subgraph "SDK Core Components"
@@ -183,6 +196,7 @@ graph TB
         DM[Download Manager + Asset Processing]
         HS[HTTP Server + CORS Support]
         VM[Version Manager + 3-State Logic]
+        LM[Listener Manager]
     end
 
     subgraph "Form Engines"
@@ -205,18 +219,32 @@ graph TB
         NET[Network + Error Handling]
     end
 
+    subgraph "Backend Services"
+        API[FASIH API]
+        S3[AWS S3 Storage]
+        DB[Backend Database]
+    end
+
     CA --> SDK
     SDK --> DI
     SDK --> WV
+    SDK --> LM
     WV --> JS
     SDK --> DM
     SDK --> HS
     SDK --> VM
 
+    LM --> SDL
+    LM --> FUL
+
     JS --> CAM
     JS --> GPS
     JS --> FS
     JS --> NET
+    JS --> LM
+
+    SDL --> DB
+    FUL --> S3
 
     WV --> FE1
     WV --> FE2
@@ -225,6 +253,7 @@ graph TB
     DM --> AT
     DM --> LD
     DM --> MD
+    DM --> API
     JS --> JQ
 
     HS --> AT
@@ -276,6 +305,8 @@ graph LR
         UC[Use Cases]
         JS[JS Bridge Handlers]
         DM[Download Manager]
+        SDL[SaveOrSubmit Listener]
+        FUL[FileUpload Listener]
     end
 
     subgraph "Data Layer"
@@ -289,20 +320,28 @@ graph LR
     subgraph "External Services"
         DEV[Device Services]
         NET[Network]
+        S3[S3 Upload Service]
+        DB[Database Service]
     end
 
     UI --> SDK
     SDK --> UC
+    SDK --> SDL
+    SDK --> FUL
     UC --> REPO
     REPO --> DS
     WV --> JS
     SDK --> DM
     SDK --> HS
     JS --> DEV
+    JS --> SDL
+    JS --> FUL
     DM --> NET
     DS --> NET
     HS --> AS
     FM --> AS
+    FUL --> S3
+    SDL --> DB
 ```
 
 ## 🚀 Installation
@@ -1030,6 +1069,322 @@ await JSExecutorService.instance.executeJavaScript(callbackCommand);
 
 This ensures that all media operations properly notify the FormGear JavaScript engine, enabling immediate media display without requiring page refreshes or manual form reloading.
 
+## 📤 FileUpload Listener Architecture
+
+The FileUpload listener system allows you to implement custom file upload logic for handling file uploads from FormGear/FasihForm forms. Instead of relying on local file verification, you can upload files to your backend (S3, custom server, etc.) and provide the uploaded URL back to the form.
+
+### 🎯 Key Benefits
+
+- **Custom Upload Backend**: Implement uploads to any backend (AWS S3, Azure Blob, custom server)
+- **FASIH S3 Compliance**: Direct mapping to native Android FASIH pre-signed URL upload patterns
+- **Progress Tracking**: Real-time upload progress callbacks for user feedback
+- **Error Recovery**: Built-in error handling with optional retry logic
+- **Assignment Context**: Full assignment metadata for proper file organization
+- **Backward Compatible**: Falls back to local verification if no listener is registered
+
+### 🏗️ Basic Usage
+
+```dart
+// 1. Create your custom file upload listener
+class MyFileUploadListener implements FileUploadListener {
+  @override
+  Future<FileUploadResult> onFileUpload(FileUploadData data) async {
+    try {
+      // Upload file to your backend
+      final uploadedUrl = await myBackend.uploadFile(
+        file: data.file,
+        fileName: data.fileName,
+        assignmentId: data.assignmentId,
+      );
+
+      return FileUploadResult.success(uploadedUrl: uploadedUrl);
+    } catch (e) {
+      return FileUploadResult.failure(error: 'Upload failed: $e');
+    }
+  }
+
+  @override
+  void onUploadProgress(String fileName, int sent, int total) {
+    final progress = (sent / total * 100).toInt();
+    print('Upload progress: $fileName - $progress%');
+  }
+}
+
+// 2. Register your listener
+FormGearSDK.instance.setFileUploadListener(MyFileUploadListener());
+
+// 3. The SDK automatically calls your listener when file upload occurs from WebView
+```
+
+### 📊 Data Models
+
+#### FileUploadData
+Contains all information needed to upload a file:
+
+```dart
+class FileUploadData extends Equatable {
+  final String assignmentId;        // Assignment identifier
+  final String templateId;          // Template identifier
+  final String dataKey;             // Form field key for this file
+  final File file;                  // Actual file to upload
+  final String fileName;            // Original file name
+  final String fileUri;             // Local file URI (file://)
+  final Map<String, dynamic>? metadata;  // Optional metadata (MIME type, size, etc.)
+}
+```
+
+#### FileUploadResult
+Represents the upload operation outcome:
+
+```dart
+class FileUploadResult extends Equatable {
+  final bool isSuccess;             // Upload success status
+  final String? uploadedUrl;        // URL of uploaded file (required on success)
+  final String? error;              // Error message (required on failure)
+  final Map<String, dynamic>? metadata;  // Optional metadata
+
+  // Factory constructors
+  const FileUploadResult.success({required String uploadedUrl});
+  const FileUploadResult.failure({required String error});
+}
+```
+
+### 🔄 FASIH S3 Upload Example
+
+The SDK includes a complete example implementation for FASIH apps using S3 pre-signed URLs:
+
+```dart
+import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
+
+class FasihS3UploadListener implements FileUploadListener {
+  final AssignmentRepository repository;
+
+  const FasihS3UploadListener({required this.repository});
+
+  @override
+  Future<FileUploadResult> onFileUpload(FileUploadData data) async {
+    try {
+      // Step 1: Get pre-signed URL from FASIH API
+      final presignedUrl = await repository.getPresignedUrl(
+        assignmentId: data.assignmentId,
+        fileName: data.fileName,
+      );
+
+      // Step 2: Upload file to S3 using pre-signed URL
+      final s3Url = await _uploadToS3(
+        presignedUrl: presignedUrl,
+        file: data.file,
+        onProgress: (sent, total) {
+          onUploadProgress(data.fileName, sent, total);
+        },
+      );
+
+      // Step 3: Return success with S3 URL
+      return FileUploadResult.success(
+        uploadedUrl: s3Url,
+        metadata: {
+          'assignmentId': data.assignmentId,
+          'uploadedAt': DateTime.now().toIso8601String(),
+        },
+      );
+    } catch (e, st) {
+      await onUploadError(data.fileName, e, st);
+      return FileUploadResult.failure(
+        error: 'Failed to upload ${data.fileName}: $e',
+      );
+    }
+  }
+
+  @override
+  void onUploadProgress(String fileName, int sent, int total) {
+    final progress = (sent / total * 100).toInt();
+    print('Upload progress: $fileName - $progress% ($sent/$total bytes)');
+  }
+
+  @override
+  Future<void> onUploadCompleted(String fileName, FileUploadResult result) async {
+    print('File upload completed: $fileName -> ${result.uploadedUrl}');
+    // Update local database, send analytics, etc.
+  }
+
+  @override
+  Future<void> onUploadError(String fileName, Object error, StackTrace stackTrace) async {
+    print('File upload error: $fileName - $error');
+    // Log to crash reporting, queue for retry, etc.
+  }
+
+  Future<String> _uploadToS3({
+    required String presignedUrl,
+    required File file,
+    required void Function(int sent, int total)? onProgress,
+  }) async {
+    final dio = Dio();
+    final fileLength = await file.length();
+
+    await dio.put(
+      presignedUrl,
+      data: file.openRead(),
+      options: Options(
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'Content-Length': fileLength,
+        },
+      ),
+      onSendProgress: onProgress,
+    );
+
+    // Extract S3 URL from pre-signed URL (remove query params)
+    final uri = Uri.parse(presignedUrl);
+    return uri.replace(query: '').toString();
+  }
+}
+
+// Register the listener
+final repository = getIt<AssignmentRepository>();
+FormGearSDK.instance.setFileUploadListener(
+  FasihS3UploadListener(repository: repository),
+);
+```
+
+### 🔧 Listener Lifecycle
+
+The FileUploadListener provides three optional lifecycle callbacks:
+
+#### 1. onUploadProgress
+Called periodically during file upload to report progress.
+
+```dart
+@override
+void onUploadProgress(String fileName, int sent, int total) {
+  final progress = (sent / total * 100).toInt();
+  // Update UI progress bar, show notification, etc.
+}
+```
+
+#### 2. onUploadCompleted
+Called after successful file upload.
+
+```dart
+@override
+Future<void> onUploadCompleted(String fileName, FileUploadResult result) async {
+  // Update local database
+  // Send analytics event
+  // Show success notification
+}
+```
+
+#### 3. onUploadError
+Called when file upload fails with an error.
+
+```dart
+@override
+Future<void> onUploadError(String fileName, Object error, StackTrace stackTrace) async {
+  // Log to crash reporting service (Sentry, Firebase Crashlytics, etc.)
+  // Queue for retry with exponential backoff
+  // Show error notification to user
+}
+```
+
+### 🎨 Integration with ActionHandler
+
+The SDK's ActionHandler automatically checks for a registered FileUploadListener when handling file upload actions:
+
+```dart
+// In ActionHandler (internal SDK code)
+if (FormGearSDK.instance.hasFileUploadListener) {
+  // Create upload data
+  final uploadData = FileUploadData(
+    assignmentId: FormGearSDK.instance.currentAssignment?.assignmentId ?? '',
+    templateId: FormGearSDK.instance.currentAssignment?.templateId ?? '',
+    dataKey: dataKey,
+    file: file,
+    fileName: fileName,
+    fileUri: fileUri,
+    metadata: fileInfo,
+  );
+
+  // Call listener
+  final result = await FormGearSDK.instance.fileUploadListener!.onFileUpload(uploadData);
+
+  if (result.isSuccess) {
+    // Return uploaded URL to FormGear
+    return ActionInfoJs(success: true, result: jsonEncode({
+      'filename': fileName,
+      'uri': result.uploadedUrl,
+      'uploaded': true,
+    }));
+  }
+} else {
+  // No listener: fall back to local verification (legacy behavior)
+  return ActionInfoJs(success: true, result: jsonEncode({
+    'filename': fileName,
+    'uri': fileUri,
+    'uploaded': false,
+    'message': 'File verified locally (no upload configured)',
+  }));
+}
+```
+
+### 🧪 Testing Your Listener
+
+You can test file upload operations using FormGear's FILE_UPLOAD action or by implementing a test screen in your app:
+
+```dart
+class FileUploadTestScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('File Upload Test')),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () async {
+            // Simulate file upload
+            final file = File('/path/to/test/file.jpg');
+            final uploadData = FileUploadData(
+              assignmentId: 'test_assignment',
+              templateId: 'test_template',
+              dataKey: 'photo_field',
+              file: file,
+              fileName: 'test_photo.jpg',
+              fileUri: 'file://${file.path}',
+            );
+
+            final result = await FormGearSDK.instance.fileUploadListener
+                ?.onFileUpload(uploadData);
+
+            if (result?.isSuccess ?? false) {
+              print('Upload successful: ${result!.uploadedUrl}');
+            } else {
+              print('Upload failed: ${result!.error}');
+            }
+          },
+          child: Text('Test File Upload'),
+        ),
+      ),
+    );
+  }
+}
+```
+
+### 🔧 Advanced Features
+
+- **Assignment Context**: Full access to current assignment via `FormGearSDK.instance.currentAssignment`
+- **Metadata Support**: Pass additional metadata in both request and response
+- **Progress Tracking**: Real-time upload progress for UX improvements
+- **Error Handling**: Comprehensive error callbacks for retry logic
+- **Backward Compatibility**: Automatic fallback to local verification when no listener is registered
+
+### 📝 Example Implementation Location
+
+**Template Location**: `lib/src/core/listeners/examples/fasih_s3_upload_listener.dart`
+
+This example provides a complete template for implementing FASIH-compatible S3 uploads with:
+- ✅ Pre-signed URL retrieval from FASIH API
+- ✅ S3 upload with progress tracking
+- ✅ Error handling and recovery
+- ✅ Metadata management
+- ✅ Lifecycle callbacks
+
 ## 📱 FASIH App Integration
 
 ### Integration Flow Sequence
@@ -1038,15 +1393,21 @@ This ensures that all media operations properly notify the FormGear JavaScript e
 sequenceDiagram
     participant FA as FASIH App
     participant SDK as FormGear SDK
+    participant SDL as SaveOrSubmit Listener
+    participant FUL as FileUpload Listener
     participant DM as Download Manager
     participant WV as WebView
     participant JS as JS Bridge
     participant DEV as Device Services
+    participant S3 as AWS S3
+    participant DB as Backend DB
 
-    Note over FA, DEV: FASIH App Form Flow
+    Note over FA, DB: FASIH App Form Flow
 
-    FA->>SDK: Initialize SDK
+    FA->>SDK: Initialize SDK + Register Listeners
     SDK->>SDK: Start HTTP Server
+    FA->>SDK: setFormDataListener(SDL)
+    FA->>SDK: setFileUploadListener(FUL)
 
     FA->>DM: Download form assets
     DM->>DM: Download templates, engines, lookups
@@ -1057,21 +1418,34 @@ sequenceDiagram
     WV->>WV: Load form engine
     WV->>JS: Setup JavaScript bridge
 
-    Note over WV, JS: Form Interaction
+    Note over WV, DB: Form Interaction & Media Upload
 
     WV->>JS: User fills form
     JS->>DEV: Request camera access
     DEV-->>JS: Photo captured
+
+    JS->>FUL: FILE_UPLOAD action
+    FUL->>S3: Get pre-signed URL + Upload
+    S3-->>FUL: S3 URL
+    FUL-->>JS: Upload complete (S3 URL)
+    JS-->>WV: Update form with media URL
+
     JS->>DEV: Request GPS location
     DEV-->>JS: Location acquired
+
+    Note over WV, DB: Form Validation & Submission
 
     WV->>JS: Form validation
     JS->>JS: Validate data
     JS-->>WV: Validation result
 
     WV->>JS: Submit form
-    JS-->>FA: Form data ready
-    FA->>FA: Process form data
+    JS->>SDL: saveOrSubmit / saveOrSubmitFasihForm
+    SDL->>DB: Save/Submit to backend
+    DB-->>SDL: Success response
+    SDL-->>JS: Submission ID
+    JS-->>WV: Submission complete
+    WV-->>FA: Form submitted successfully
 ```
 
 ### FASIH App Implementation Example
@@ -1091,6 +1465,12 @@ class FasihFormIntegration {
     );
 
     await _sdk.initialize(config);
+
+    // Register listeners for data persistence and file uploads
+    _sdk.setFormDataListener(FasihDatabaseListener());
+    _sdk.setFileUploadListener(FasihS3UploadListener(
+      repository: getIt<AssignmentRepository>(),
+    ));
   }
 
   Future<void> prepareFasihFormAssets() async {
