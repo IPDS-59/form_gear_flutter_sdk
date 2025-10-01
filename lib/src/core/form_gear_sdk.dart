@@ -161,6 +161,10 @@ class FormGearSDK {
       // Inject actual vendor asset content into placeholders
       processedHtml = await _injectVendorAssets(processedHtml);
 
+      // Inject placeholder Android bridge to prevent race condition
+      // The actual handlers will be added later via addJavaScriptHandler
+      processedHtml = _injectPlaceholderBridge(processedHtml);
+
       final preparedEngine = PreparedEngine(
         html: processedHtml,
         baseUrl: baseUrl ?? 'about:blank',
@@ -922,6 +926,42 @@ class FormGearSDK {
     }
 
     return processedHtml;
+  }
+
+  /// Injects a placeholder Android bridge object into HTML to prevent race condition
+  /// The bridge will be populated with actual handlers later via addJavaScriptHandler
+  String _injectPlaceholderBridge(String htmlContent) {
+    // Create a minimal Android object that will be extended later
+    const placeholderBridge = '''
+<script>
+// Placeholder Android bridge - prevents "Android is not defined" errors
+// Will be populated with actual handlers via addJavaScriptHandler
+window.Android = window.Android || {
+  _initialized: false,
+  _pendingCalls: [],
+  // Queue calls until handlers are registered
+  _queueOrExecute: function(method, args) {
+    if (this._initialized && this[method] && typeof this[method] === 'function') {
+      return this[method].apply(this, args);
+    } else {
+      this._pendingCalls.push({ method: method, args: args });
+      console.log('Android.' + method + ' queued (handlers not ready yet)');
+      return null;
+    }
+  }
+};
+</script>
+''';
+
+    // Inject at the beginning of <head> to load before any other scripts
+    if (htmlContent.contains('<head>')) {
+      return htmlContent.replaceFirst('<head>', '<head>\n$placeholderBridge');
+    } else if (htmlContent.contains('<html>')) {
+      return htmlContent.replaceFirst('<html>', '<html>\n$placeholderBridge');
+    } else {
+      // Fallback: prepend to the beginning
+      return placeholderBridge + htmlContent;
+    }
   }
 
   /// Determines the FormEngineType based on template ID

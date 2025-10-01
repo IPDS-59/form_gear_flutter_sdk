@@ -230,7 +230,18 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
 
       Map<String, dynamic> fileInfo;
       try {
-        fileInfo = jsonDecode(data) as Map<String, dynamic>;
+        final parsed = jsonDecode(data);
+
+        // FormGear sends array of files, FasihForm sends single file object
+        if (parsed is List && parsed.isNotEmpty) {
+          fileInfo = parsed[0] as Map<String, dynamic>;
+        } else if (parsed is Map<String, dynamic>) {
+          fileInfo = parsed;
+        } else {
+          throw FormatException(
+            'Expected Map or List, got ${parsed.runtimeType}',
+          );
+        }
       } on Exception catch (e) {
         FormGearLogger.webviewError('Failed to parse file data: $e');
         return ActionInfoJs(
@@ -240,7 +251,8 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
       }
 
       // Extract file information
-      final fileName = fileInfo['filename'] as String?;
+      final fileName =
+          fileInfo['filename'] as String? ?? fileInfo['uri'] as String?;
       final fileUri = fileInfo['uri'] as String?;
 
       if (fileName == null || fileUri == null) {
