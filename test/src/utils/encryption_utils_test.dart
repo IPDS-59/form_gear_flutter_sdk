@@ -3,26 +3,48 @@ import 'package:form_gear_engine_sdk/src/utils/encryption_utils.dart';
 
 void main() {
   group('EncryptionUtils Tests', () {
+    // Test encryption key (minimum 16 characters required)
+    const testKey = 'test-encryption-key-1234567890';
+
     group('Basic Encryption/Decryption', () {
-      test('should encrypt non-empty string', () {
+      test('should encrypt non-empty string with required key', () {
         const data = 'sensitive information';
-        final encrypted = EncryptionUtils.encryptData(data);
+        final encrypted = EncryptionUtils.encryptData(data, key: testKey);
 
         expect(encrypted, isNotEmpty);
         expect(encrypted, isNot(equals(data)));
       });
 
+      test('should throw error when encrypting without key', () {
+        const data = 'sensitive information';
+
+        expect(
+          () => EncryptionUtils.encryptData(data, key: ''),
+          throwsArgumentError,
+        );
+      });
+
+      test('should throw error when key is too short', () {
+        const data = 'sensitive information';
+        const shortKey = 'short';
+
+        expect(
+          () => EncryptionUtils.encryptData(data, key: shortKey),
+          throwsArgumentError,
+        );
+      });
+
       test('should return empty string when encrypting empty string', () {
         const data = '';
-        final encrypted = EncryptionUtils.encryptData(data);
+        final encrypted = EncryptionUtils.encryptData(data, key: testKey);
 
         expect(encrypted, isEmpty);
       });
 
       test('should decrypt encrypted data back to original', () {
         const original = 'test data 123';
-        final encrypted = EncryptionUtils.encryptData(original);
-        final decrypted = EncryptionUtils.decryptData(encrypted);
+        final encrypted = EncryptionUtils.encryptData(original, key: testKey);
+        final decrypted = EncryptionUtils.decryptData(encrypted, key: testKey);
 
         expect(decrypted, equals(original));
       });
@@ -40,37 +62,32 @@ void main() {
         expect(decrypted, equals(data));
       });
 
-      test('should fail to decrypt with wrong key', () {
+      test('should throw exception when decrypting with wrong key', () {
         const data = 'secret message';
-        const key1 = 'key-1';
-        const key2 = 'key-2';
+        const key1 = 'correct-encryption-key-123';
+        const key2 = 'wrong-decryption-key-456';
 
         final encrypted = EncryptionUtils.encryptData(data, key: key1);
-        final decrypted = EncryptionUtils.decryptData(encrypted, key: key2);
 
-        expect(decrypted, isNot(equals(data)));
+        expect(
+          () => EncryptionUtils.decryptData(encrypted, key: key2),
+          throwsException,
+        );
       });
 
       test('should handle decryption of empty string', () {
-        final decrypted = EncryptionUtils.decryptData('');
+        final decrypted = EncryptionUtils.decryptData('', key: testKey);
 
         expect(decrypted, isEmpty);
       });
 
-      test('should handle unencrypted data prefix', () {
-        const data = 'test data';
-        const unencrypted = 'UNENCRYPTED:$data';
-
-        final decrypted = EncryptionUtils.decryptData(unencrypted);
-
-        expect(decrypted, equals(data));
-      });
-
-      test('should return original data if decryption fails', () {
+      test('should throw exception if decryption fails', () {
         const invalidEncrypted = 'not-base64-data';
-        final decrypted = EncryptionUtils.decryptData(invalidEncrypted);
 
-        expect(decrypted, equals(invalidEncrypted));
+        expect(
+          () => EncryptionUtils.decryptData(invalidEncrypted, key: testKey),
+          throwsException,
+        );
       });
     });
 
@@ -136,6 +153,7 @@ void main() {
 
         final encrypted = EncryptionUtils.encryptFormData(
           formData,
+          encryptionKey: testKey,
           sensitiveFields: ['name', 'email'],
         );
 
@@ -149,7 +167,7 @@ void main() {
       test('should add encryption metadata', () {
         final formData = <String, dynamic>{'name': 'Test'};
 
-        final encrypted = EncryptionUtils.encryptFormData(formData);
+        final encrypted = EncryptionUtils.encryptFormData(formData, encryptionKey: testKey);
 
         expect(encrypted['_encryption'], isNotNull);
         expect(encrypted['_encryption']['encrypted'], isTrue);
@@ -169,6 +187,7 @@ void main() {
 
         final encrypted = EncryptionUtils.encryptFormData(
           formData,
+          encryptionKey: testKey,
           sensitiveFields: ['personal'],
         );
 
@@ -184,7 +203,7 @@ void main() {
           'randomField': 'Not sensitive',
         };
 
-        final encrypted = EncryptionUtils.encryptFormData(formData);
+        final encrypted = EncryptionUtils.encryptFormData(formData, encryptionKey: testKey);
 
         expect(encrypted['name'], isNot(equals('Test User')));
         expect(encrypted['phone'], isNot(equals('08123456789')));
@@ -211,7 +230,7 @@ void main() {
           'email': true, // Boolean instead of string
         };
 
-        final encrypted = EncryptionUtils.encryptFormData(formData);
+        final encrypted = EncryptionUtils.encryptFormData(formData, encryptionKey: testKey);
 
         expect(encrypted['name'], equals(123)); // Should remain unchanged
         expect(encrypted['email'], equals(true)); // Should remain unchanged
@@ -226,8 +245,8 @@ void main() {
           'email': 'john@example.com',
         };
 
-        final encrypted = EncryptionUtils.encryptFormData(original);
-        final decrypted = EncryptionUtils.decryptFormData(encrypted);
+        final encrypted = EncryptionUtils.encryptFormData(original, encryptionKey: testKey);
+        final decrypted = EncryptionUtils.decryptFormData(encrypted, encryptionKey: testKey);
 
         expect(decrypted['name'], equals('John Doe'));
         expect(decrypted['age'], equals(30));
@@ -241,14 +260,14 @@ void main() {
           'age': 25,
         };
 
-        final result = EncryptionUtils.decryptFormData(unencrypted);
+        final result = EncryptionUtils.decryptFormData(unencrypted, encryptionKey: testKey);
 
         expect(result, equals(unencrypted));
       });
 
       test('should decrypt with custom key', () {
-        final original = <String, dynamic>{'secret': 'confidential'};
-        const key = 'my-custom-key';
+        final original = <String, dynamic>{'name': 'confidential'};
+        const key = 'my-custom-encryption-key-1234';
 
         final encrypted = EncryptionUtils.encryptFormData(
           original,
@@ -259,7 +278,7 @@ void main() {
           encryptionKey: key,
         );
 
-        expect(decrypted['secret'], equals('confidential'));
+        expect(decrypted['name'], equals('confidential'));
       });
 
       test('should handle nested encrypted objects', () {
@@ -272,16 +291,17 @@ void main() {
 
         final encrypted = EncryptionUtils.encryptFormData(
           original,
+          encryptionKey: testKey,
           sensitiveFields: ['personal'],
         );
-        final decrypted = EncryptionUtils.decryptFormData(encrypted);
+        final decrypted = EncryptionUtils.decryptFormData(encrypted, encryptionKey: testKey);
 
         expect(decrypted['personal'], isA<Map<String, dynamic>>());
       });
 
       test('should handle empty encrypted data', () {
         final encrypted = <String, dynamic>{};
-        final decrypted = EncryptionUtils.decryptFormData(encrypted);
+        final decrypted = EncryptionUtils.decryptFormData(encrypted, encryptionKey: testKey);
 
         expect(decrypted, isEmpty);
       });
@@ -373,40 +393,40 @@ void main() {
     group('Edge Cases and Special Characters', () {
       test('should handle special characters in data', () {
         const data = 'Special: !@#\$%^&*()_+-={}[]|\\:";\'<>?,./';
-        final encrypted = EncryptionUtils.encryptData(data);
-        final decrypted = EncryptionUtils.decryptData(encrypted);
+        final encrypted = EncryptionUtils.encryptData(data, key: testKey);
+        final decrypted = EncryptionUtils.decryptData(encrypted, key: testKey);
 
         expect(decrypted, equals(data));
       });
 
       test('should handle unicode characters', () {
         const data = '你好世界 🌍 مرحبا بالعالم';
-        final encrypted = EncryptionUtils.encryptData(data);
-        final decrypted = EncryptionUtils.decryptData(encrypted);
+        final encrypted = EncryptionUtils.encryptData(data, key: testKey);
+        final decrypted = EncryptionUtils.decryptData(encrypted, key: testKey);
 
         expect(decrypted, equals(data));
       });
 
       test('should handle very long strings', () {
         final longData = 'A' * 10000;
-        final encrypted = EncryptionUtils.encryptData(longData);
-        final decrypted = EncryptionUtils.decryptData(encrypted);
+        final encrypted = EncryptionUtils.encryptData(longData, key: testKey);
+        final decrypted = EncryptionUtils.decryptData(encrypted, key: testKey);
 
         expect(decrypted, equals(longData));
       });
 
       test('should handle newlines and tabs', () {
         const data = 'Line 1\nLine 2\tTabbed';
-        final encrypted = EncryptionUtils.encryptData(data);
-        final decrypted = EncryptionUtils.decryptData(encrypted);
+        final encrypted = EncryptionUtils.encryptData(data, key: testKey);
+        final decrypted = EncryptionUtils.decryptData(encrypted, key: testKey);
 
         expect(decrypted, equals(data));
       });
 
       test('should handle data with colons (salt separator)', () {
         const data = 'data:with:many:colons:in:it';
-        final encrypted = EncryptionUtils.encryptData(data);
-        final decrypted = EncryptionUtils.decryptData(encrypted);
+        final encrypted = EncryptionUtils.encryptData(data, key: testKey);
+        final decrypted = EncryptionUtils.decryptData(encrypted, key: testKey);
 
         expect(decrypted, equals(data));
       });
@@ -423,8 +443,8 @@ void main() {
         ];
 
         for (final testCase in testCases) {
-          final encrypted = EncryptionUtils.encryptData(testCase);
-          final decrypted = EncryptionUtils.decryptData(encrypted);
+          final encrypted = EncryptionUtils.encryptData(testCase, key: testKey);
+          final decrypted = EncryptionUtils.decryptData(encrypted, key: testKey);
           expect(decrypted, equals(testCase), reason: 'Failed for: $testCase');
         }
       });
@@ -440,8 +460,8 @@ void main() {
           'married': true,
         };
 
-        final encrypted = EncryptionUtils.encryptFormData(original);
-        final decrypted = EncryptionUtils.decryptFormData(encrypted);
+        final encrypted = EncryptionUtils.encryptFormData(original, encryptionKey: testKey);
+        final decrypted = EncryptionUtils.decryptFormData(encrypted, encryptionKey: testKey);
 
         expect(decrypted['name'], equals(original['name']));
         expect(decrypted['nik'], equals(original['nik']));
