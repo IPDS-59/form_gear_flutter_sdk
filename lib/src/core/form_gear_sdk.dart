@@ -950,64 +950,44 @@ window.Android = window.Android || new Proxy({
     return function() {
       console.log('Android.' + prop + ' called on placeholder (returning default)');
 
-      // Return appropriate defaults based on method name
+      // Return appropriate defaults - ALREADY AS JSON STRINGS (bridge will use them as-is)
       if (prop.startsWith('get')) {
         // getFormMode, getIsNew, getRolePetugas, getUserRole -> '1'
         if (prop.includes('Mode') || prop.includes('New') || prop.includes('Role')) {
           return '1';
         }
-        // getPrincipalCollection -> [] (actual array, not string)
+        // getPrincipalCollection -> '[]' (JSON string)
         else if (prop.includes('Principal') || prop.includes('Collection')) {
-          return JSON.stringify([]);
+          return '[]';
         }
-        // getTemplate -> actual object with components structure
+        // getTemplate -> JSON string with components structure
         else if (prop.includes('Template')) {
-          return JSON.stringify({ components: [[]] });
+          return '{"components":[[]]}';
         }
-        // getValidation -> actual object with testFunctions
+        // getValidation -> JSON string with testFunctions
         else if (prop.includes('Validation')) {
-          return JSON.stringify({ testFunctions: [] });
+          return '{"testFunctions":[]}';
         }
-        // getReference -> actual object with details and sidebar
+        // getReference -> JSON string with details and sidebar
         else if (prop.includes('Reference')) {
-          return JSON.stringify({ details: [], sidebar: [] });
+          return '{"details":[],"sidebar":[]}';
         }
-        // getPreset -> actual object with preset structure
+        // getPreset -> JSON string with preset structure
         else if (prop.includes('Preset')) {
-          return JSON.stringify({ description: 'Default Preset', dataKey: 'default_preset', predata: [] });
+          return '{"description":"Default Preset","dataKey":"default_preset","predata":[]}';
         }
-        // getResponse -> actual FASIH structure with answers at root
+        // getResponse -> JSON string with FASIH structure (answers at root)
         else if (prop.includes('Response')) {
-          return JSON.stringify({
-            dataKey: '',
-            description: '',
-            answers: [],
-            templateDataKey: '',
-            gearVersion: '1.1.0',
-            templateVersion: '0.0.1',
-            validationVersion: '0.0.1',
-            docState: 'E',
-            summary: { answer: 0, blank: 0, error: 0, remark: 0, clean: 0 },
-            createdBy: 'default_user',
-            createdAt: new Date().toISOString(),
-            createdAtTimezone: 'UTC',
-            createdAtGMT: 0,
-            updatedBy: 'default_user',
-            updatedAt: new Date().toISOString(),
-            updatedAtTimezone: 'UTC',
-            updatedAtGMT: 0
-          });
+          const now = new Date().toISOString();
+          return '{"dataKey":"","description":"","answers":[],"templateDataKey":"","gearVersion":"1.1.0","templateVersion":"0.0.1","validationVersion":"0.0.1","docState":"E","summary":{"answer":0,"blank":0,"error":0,"remark":0,"clean":0},"createdBy":"default_user","createdAt":"' + now + '","createdAtTimezone":"UTC","createdAtGMT":0,"updatedBy":"default_user","updatedAt":"' + now + '","updatedAtTimezone":"UTC","updatedAtGMT":0}';
         }
-        // getMedia -> actual object with media array
+        // getMedia -> JSON string with media array
         else if (prop.includes('Media')) {
-          return JSON.stringify({ details: { media: [] } });
+          return '{"details":{"media":[]}}';
         }
-        // getRemark -> actual FASIH structure with dataKey and notes
+        // getRemark -> JSON string with FASIH structure
         else if (prop.includes('Remark')) {
-          return JSON.stringify({
-            dataKey: '',
-            notes: []
-          });
+          return '{"dataKey":"","notes":[]}';
         }
         // getUserName -> 'default_user'
         else if (prop.includes('User')) {
