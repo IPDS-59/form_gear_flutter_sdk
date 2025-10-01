@@ -1,4 +1,5 @@
-// Main SDK Entry Point - All functionality accessed through FormGearSDK.instance
+// Main SDK Entry Point - All functionality accessed through
+// FormGearSDK.instance
 // Result Pattern for Error Handling
 export 'src/core/base/result.dart';
 // Core Configuration Models

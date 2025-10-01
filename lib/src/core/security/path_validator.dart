@@ -228,7 +228,7 @@ class PathValidator {
     try {
       final stat = file.statSync();
       return stat.type == FileSystemEntityType.link;
-    } catch (e) {
+    } on FileSystemException {
       // If we can't determine, assume it's not a symlink
       return false;
     }

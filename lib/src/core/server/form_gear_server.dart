@@ -163,7 +163,7 @@ class FormGearServer {
       String? lookupData;
       try {
         lookupData = await lookupFile.readAsString();
-      } catch (e) {
+      } on FileSystemException catch (e) {
         FormGearLogger.serverError('Failed to read lookup file: $e');
         return Response.internalServerError(
           body: jsonEncode({'error': 'Failed to load local lookup data'}),

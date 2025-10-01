@@ -126,7 +126,7 @@ class NetworkSecurityConfig {
     try {
       final uri = Uri.parse(url);
       return uri.scheme.toLowerCase() == 'https';
-    } catch (e) {
+    } on FormatException {
       return false;
     }
   }
@@ -186,7 +186,8 @@ class NetworkSecurityConfig {
     }
   }
 
-  /// Creates a Dio instance with enforced HTTPS and optional certificate pinning.
+  /// Creates a Dio instance with enforced HTTPS and optional certificate
+  /// pinning.
   ///
   /// This is a convenience method that creates a pre-configured Dio instance
   /// with security settings applied.
