@@ -1,8 +1,18 @@
+<div align="center">
+
+<img src="assets/logo/form-gear.svg" alt="FormGear Logo" width="200"/>
+
 # FormGear Flutter SDK
+
+**A flexible, JSON-driven form generation framework for dynamic data collection**
 
 [![pub package](https://img.shields.io/pub/v/form_gear_engine_sdk.svg)](https://pub.dev/packages/form_gear_engine_sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Flutter](https://img.shields.io/badge/Flutter-stable-blue.svg)](https://flutter.dev)
+
+</div>
+
+---
 
 A Flutter SDK for FormGear - A flexible, JSON-driven form generation framework for dynamic data collection, originally developed for BPS - Statistics Indonesia's FASIH App.
 
