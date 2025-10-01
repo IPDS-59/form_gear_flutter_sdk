@@ -1,12 +1,21 @@
 import 'dart:developer' as developer;
 
+import 'package:form_gear_engine_sdk/src/utils/log_sanitizer.dart';
+
 /// Centralized logging utility for FormGear SDK
 ///
 /// Provides consistent logging across the SDK with proper categorization
 /// and formatting. Supports both internal SDK logs and forwarded console logs
 /// from WebView JavaScript.
+///
+/// **Security Note:** All logs are automatically sanitized in production builds
+/// to prevent PII leakage. Sensitive data like NIK, phone numbers, emails,
+/// and passwords are redacted before logging.
 class FormGearLogger {
   static const String _sdkName = 'FormGearSDK';
+
+  /// Enable sanitization in debug mode (default: false for easier debugging)
+  static bool sanitizeInDebugMode = false;
 
   // Log categories for different components
   static const String _webview = 'WebView';
@@ -18,8 +27,13 @@ class FormGearLogger {
 
   /// Log general SDK messages
   static void info(String message, {String? category}) {
-    developer.log(
+    final sanitized = LogSanitizer.sanitize(
       message,
+      enableInDebug: sanitizeInDebugMode,
+    );
+
+    developer.log(
+      sanitized,
       name: category != null ? '$_sdkName.$category' : _sdkName,
       level: 800, // Info level
     );
@@ -27,8 +41,13 @@ class FormGearLogger {
 
   /// Log debug messages
   static void debug(String message, {String? category}) {
-    developer.log(
+    final sanitized = LogSanitizer.sanitize(
       message,
+      enableInDebug: sanitizeInDebugMode,
+    );
+
+    developer.log(
+      sanitized,
       name: category != null ? '$_sdkName.$category' : _sdkName,
       level: 700, // Debug level
     );
@@ -36,8 +55,13 @@ class FormGearLogger {
 
   /// Log warning messages
   static void warning(String message, {String? category}) {
-    developer.log(
+    final sanitized = LogSanitizer.sanitize(
       message,
+      enableInDebug: sanitizeInDebugMode,
+    );
+
+    developer.log(
+      sanitized,
       name: category != null ? '$_sdkName.$category' : _sdkName,
       level: 900, // Warning level
     );
@@ -50,12 +74,20 @@ class FormGearLogger {
     Object? error,
     StackTrace? stackTrace,
   }) {
-    developer.log(
+    final sanitizedError = LogSanitizer.sanitizeError(
       message,
+      stackTrace,
+      enableInDebug: sanitizeInDebugMode,
+    );
+
+    developer.log(
+      sanitizedError.message,
       name: category != null ? '$_sdkName.$category' : _sdkName,
       level: 1000, // Error level
       error: error,
-      stackTrace: stackTrace,
+      stackTrace: sanitizedError.stackTrace != null
+          ? StackTrace.fromString(sanitizedError.stackTrace!)
+          : null,
     );
   }
 
@@ -156,8 +188,14 @@ class FormGearLogger {
     // Add visual indicators for different log levels
     final indicator = _getLogLevelIndicator(level);
 
+    // Sanitize the message to prevent PII leakage
+    final sanitizedMessage = LogSanitizer.sanitize(
+      message,
+      enableInDebug: sanitizeInDebugMode,
+    );
+
     // Format the message with clear indication it's from WebView JS
-    final formattedMessage = '[$timeStr] $indicator $message';
+    final formattedMessage = '[$timeStr] $indicator $sanitizedMessage';
 
     // Use appropriate log level based on JavaScript console level
     switch (level.toLowerCase()) {
