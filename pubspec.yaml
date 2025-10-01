@@ -1,6 +1,6 @@
 name: form_gear_engine_sdk
 description: "Flutter SDK for FormGear - A flexible, JSON-driven form generation framework for dynamic data collection with 30+ input control types, nested forms, GPS, photo capture, and complex validation capabilities."
-version: 0.1.0
+version: 0.1.1
 repository: https://github.com/IPDS-59/form_gear_flutter_sdk
 homepage: https://github.com/bps-statistics/form-gear
 
