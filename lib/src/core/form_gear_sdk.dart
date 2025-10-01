@@ -976,36 +976,37 @@ window.Android = window.Android || new Proxy({
         else if (prop.includes('Preset')) {
           return JSON.stringify({ description: 'Default Preset', dataKey: 'default_preset', predata: [] });
         }
-        // getResponse -> actual object with details, dataKey, and metadata
+        // getResponse -> actual FASIH structure with answers at root
         else if (prop.includes('Response')) {
           return JSON.stringify({
             dataKey: '',
             description: '',
-            details: { answers: [] },
+            answers: [],
+            templateDataKey: '',
+            gearVersion: '1.1.0',
             templateVersion: '0.0.1',
             validationVersion: '0.0.1',
-            updatedAt: new Date().toISOString(),
-            updatedBy: 'default_user',
-            createdAt: new Date().toISOString(),
+            docState: 'E',
+            summary: { answer: 0, blank: 0, error: 0, remark: 0, clean: 0 },
             createdBy: 'default_user',
-            isForceSubmit: false
+            createdAt: new Date().toISOString(),
+            createdAtTimezone: 'UTC',
+            createdAtGMT: 0,
+            updatedBy: 'default_user',
+            updatedAt: new Date().toISOString(),
+            updatedAtTimezone: 'UTC',
+            updatedAtGMT: 0
           });
         }
         // getMedia -> actual object with media array
         else if (prop.includes('Media')) {
           return JSON.stringify({ details: { media: [] } });
         }
-        // getRemark -> actual object with dataKey and notes
+        // getRemark -> actual FASIH structure with dataKey and notes
         else if (prop.includes('Remark')) {
           return JSON.stringify({
-            dataKey: 'default_remark',
-            notes: [],
-            templateVersion: '0.0.1',
-            validationVersion: '0.0.1',
-            updatedAt: new Date().toISOString(),
-            updatedBy: 'default_user',
-            createdAt: new Date().toISOString(),
-            createdBy: 'default_user'
+            dataKey: '',
+            notes: []
           });
         }
         // getUserName -> 'default_user'
