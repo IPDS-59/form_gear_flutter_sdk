@@ -396,34 +396,38 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    AnimatedSwitcher(
-                                      duration: const Duration(
-                                        milliseconds: 500,
-                                      ),
-                                      child: Text(
-                                        _loadingTexts[_currentTextIndex],
-                                        key: ValueKey(_currentTextIndex),
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white,
+                                AnimatedSize(
+                                  duration: const Duration(milliseconds: 500),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      AnimatedSwitcher(
+                                        duration: const Duration(
+                                          milliseconds: 500,
+                                        ),
+                                        child: Text(
+                                          _loadingTexts[_currentTextIndex],
+                                          key: ValueKey(_currentTextIndex),
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    if (widget.progress != null)
-                                      Text(
-                                        '${widget.progress}%',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.white70,
+                                      if (widget.progress != null)
+                                        Text(
+                                          '${widget.progress}%',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.white70,
+                                          ),
                                         ),
-                                      ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ],
                             )

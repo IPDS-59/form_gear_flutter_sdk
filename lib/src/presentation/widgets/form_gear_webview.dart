@@ -173,16 +173,17 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
                     child: SafeArea(
                       child: InAppWebView(
                         initialSettings: _webViewSettings,
-                        initialUrlRequest: URLRequest(url: WebUri(widget.url)),
-                        initialData: widget.htmlContent != null
-                            ? InAppWebViewInitialData(data: widget.htmlContent!)
+                        initialUrlRequest: widget.htmlContent == null
+                            ? URLRequest(url: WebUri(widget.url))
                             : null,
+                        // DON'T use initialData - it loads before bridge injection
+                        // Instead, load HTML after bridge is ready in onWebViewCreated
                         onWebViewCreated: (controller) async {
                           widget.onWebViewCreated?.call(controller);
 
-                          // Initialize WebView with BLoC
+                          // Initialize WebView with BLoC (this injects the bridge)
                           context.read<FormGearWebViewBloc>().add(
-                            InitializeWebView(controller),
+                            InitializeWebView(controller, widget.htmlContent),
                           );
                         },
                         onLoadStart: (controller, url) {
