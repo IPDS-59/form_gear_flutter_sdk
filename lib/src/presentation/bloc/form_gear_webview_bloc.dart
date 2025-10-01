@@ -440,7 +440,7 @@ $bridgeJs
 ''';
   }
 
-  /// Inject bridge script into HTML <head>
+  /// Inject bridge script into HTML head tag
   String _injectBridgeIntoHtml(String html, String bridgeScript) {
     // Try to inject into <head> tag first
     if (html.contains('<head>')) {

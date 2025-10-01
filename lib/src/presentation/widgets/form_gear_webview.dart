@@ -176,14 +176,17 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
                         initialUrlRequest: widget.htmlContent == null
                             ? URLRequest(url: WebUri(widget.url))
                             : null,
-                        // DON'T use initialData - it loads before bridge injection
-                        // Instead, load HTML after bridge is ready in onWebViewCreated
+                        // DON'T use initialData - loads before bridge
+                        // Instead, load HTML after bridge is ready
                         onWebViewCreated: (controller) async {
                           widget.onWebViewCreated?.call(controller);
 
-                          // Initialize WebView with BLoC (this injects the bridge)
+                          // Initialize WebView with BLoC
                           context.read<FormGearWebViewBloc>().add(
-                            InitializeWebView(controller, widget.htmlContent),
+                            InitializeWebView(
+                              controller,
+                              widget.htmlContent,
+                            ),
                           );
                         },
                         onLoadStart: (controller, url) {
