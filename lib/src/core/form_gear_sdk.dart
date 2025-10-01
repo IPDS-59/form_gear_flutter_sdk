@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,15 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/config/form_config.dart';
-import 'package:form_gear_engine_sdk/src/core/constants/directory_constants.dart';
 import 'package:form_gear_engine_sdk/src/core/di/injection.dart';
-import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/action_handler.dart';
-import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/android_action_handler.dart';
-import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/android_data_handler.dart';
-import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/client_action_handler.dart';
-import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/execute_handler.dart';
-import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/mobile_exit_handler.dart';
-import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
+import 'package:form_gear_engine_sdk/src/core/engine/engine_asset_loader.dart';
+import 'package:form_gear_engine_sdk/src/core/engine/handler_factory.dart';
+import 'package:form_gear_engine_sdk/src/core/engine/webview_builder.dart';
 import 'package:form_gear_engine_sdk/src/core/server/form_gear_server.dart';
 import 'package:form_gear_engine_sdk/src/core/version/form_gear_version_manager.dart';
 import 'package:form_gear_engine_sdk/src/domain/usecases/is_form_engine_downloaded_usecase.dart';
@@ -38,7 +31,7 @@ class FormGearSDK {
 
   // Current form configuration (legacy)
   FormConfig? _currentFormConfig;
-  PreparedEngine? _currentPreparedEngine;
+  late PreparedEngine? _currentPreparedEngine;
   FormEngineType? _currentEngineType;
 
   // Current assignment context (new assignment-based system)
@@ -55,6 +48,9 @@ class FormGearSDK {
 
   // Version manager
   late FormGearVersionManager _versionManager;
+
+  // Engine asset loader
+  final EngineAssetLoader _assetLoader = EngineAssetLoader();
 
   /// Initializes the FormGear SDK with global configuration
   /// This is the new assignment-based initialization method
@@ -133,7 +129,8 @@ class FormGearSDK {
 
   /// Prepares the form engine by loading HTML, JS, and CSS assets internally
   /// Now accepts only FormEngineType enum for cleaner API
-  Future<PreparedEngine> prepareEngine({
+  /// Internal method - use openFormWithAssignment instead
+  Future<PreparedEngine> _prepareEngine({
     required FormEngineType engineType,
     String? baseUrl,
     String? historyUrl,
@@ -148,8 +145,8 @@ class FormGearSDK {
     );
 
     try {
-      // Load engine assets internally based on FormEngineType
-      final engineAssets = await _loadEngineAssets(
+      // Load engine assets using the asset loader
+      final engineAssets = await _assetLoader.loadEngineAssets(
         engineType,
         onProgress: onProgress,
       );
@@ -171,10 +168,10 @@ class FormGearSDK {
       );
 
       // Fix hardcoded Android asset paths by replacing with placeholders
-      processedHtml = _fixAssetPaths(processedHtml);
+      processedHtml = _assetLoader.fixAssetPaths(processedHtml);
 
       // Inject actual vendor asset content into placeholders
-      processedHtml = await _injectVendorAssets(processedHtml);
+      processedHtml = await _assetLoader.injectVendorAssets(processedHtml);
 
       final preparedEngine = PreparedEngine(
         html: processedHtml,
@@ -351,7 +348,7 @@ class FormGearSDK {
       );
     }
 
-    final preparedEngine = await prepareEngine(
+    final preparedEngine = await _prepareEngine(
       engineType: engineType,
       onProgress: onProgress,
     );
@@ -386,7 +383,7 @@ class FormGearSDK {
       // Navigate to a full-screen page with the WebView
       await Navigator.of(context).push<void>(
         MaterialPageRoute(
-          builder: (context) => _FormGearEnginePage(
+          builder: (context) => WebViewBuilder.createFormGearEnginePage(
             title: title ?? 'FormGear - ${assignment.templateId}',
             webView: webView,
           ),
@@ -402,71 +399,10 @@ class FormGearSDK {
     }
   }
 
-  /// Launches the prepared engine in a WebView page (legacy method)
-  /// For backward compatibility - use openFormWithAssignment for new projects
-  Future<void> launchPreparedEngine(
-    BuildContext context, {
-    String? title,
-  }) async {
-    if (!_isInitialized) {
-      throw Exception('FormGear SDK not initialized. Call initialize() first.');
-    }
-
-    if (_currentPreparedEngine == null) {
-      throw Exception('No engine prepared. Call prepareEngine() first.');
-    }
-
-    // Start server for lookup requests (FasihForm uses http://localhost:3310/lookup)
-    // Note: HTML/CSS/JS are loaded directly inline, but server is needed for API calls
-    if (_server?.isRunning != true) {
-      await _startServer();
-    }
-
-    final webView = _createWebViewFromPreparedEngine();
-
-    try {
-      // Check if context is still mounted before navigation
-      if (!context.mounted) return;
-
-      // Navigate to a full-screen page with the WebView
-      await Navigator.of(context).push<void>(
-        MaterialPageRoute(
-          builder: (context) => _FormGearEnginePage(
-            title: title ?? 'FormGear Engine',
-            webView: webView,
-          ),
-        ),
-      );
-    } finally {
-      // Stop server when page is disposed to free resources
-      if (_server != null && _server!.isRunning) {
-        await _server!.stop();
-        FormGearLogger.sdk('FormGear server stopped - WebView closed');
-      }
-    }
-  }
-
-  /// Creates WebView from prepared engine
-  FormGearWebView _createWebViewFromPreparedEngine() {
-    final preparedEngine = _currentPreparedEngine!;
-
-    return FormGearWebView(
-      url: 'about:blank',
-      htmlContent: preparedEngine.html,
-      jsHandlers: _createRequiredHandlers(),
-      onWebViewCreated: (controller) {
-        // WebView created - ready for JS bridge
-        // Register JavaScript executor service for action handlers
-        JSExecutorService().registerController(
-          controller,
-          _currentEngineType?.id.toString(),
-        );
-      },
-    );
-  }
-
   /// Creates debug-only WebView for testing bridge functionality
-  /// (DEBUG MODE ONLY)
+  /// **DEBUG/TESTING ONLY** - Not for production use
+  /// Use openFormWithAssignment for production forms
+  @Deprecated('Only for testing - use openFormWithAssignment for production')
   Future<FormGearWebView?> createDebugBridgeTest({
     List<JSHandler<dynamic>> customHandlers = const [],
     void Function(InAppWebViewController controller)? onWebViewCreated,
@@ -504,7 +440,15 @@ class FormGearSDK {
     return FormGearWebView(
       url: 'about:blank',
       htmlContent: bridgeTestHtml,
-      jsHandlers: [..._createRequiredHandlers(), ...customHandlers],
+      jsHandlers: [
+        ...HandlerFactory.createRequiredHandlers(
+          currentFormConfig: _currentFormConfig,
+          config: _config,
+          getCurrentAssignment: () => _currentAssignment,
+          formDataListener: _formDataListener,
+        ),
+        ...customHandlers,
+      ],
       onWebViewCreated: onWebViewCreated,
       onLoadStart: onLoadStart,
       onLoadStop: onLoadStop,
@@ -526,465 +470,12 @@ class FormGearSDK {
 
       // Process the HTML through vendor asset injection to replace jQuery
       // placeholder
-      final processedHtml = await _injectVendorAssets(htmlContent);
+      final processedHtml = await _assetLoader.injectVendorAssets(htmlContent);
       return processedHtml;
     } on Exception catch (e) {
       FormGearLogger.sdkError('Failed to load debug bridge test HTML: $e');
       return null;
     }
-  }
-
-  /// Creates required handlers for FormGear and FasihForm compatibility
-  List<JSHandler<dynamic>> _createRequiredHandlers() {
-    final dataHandler = AndroidDataHandler(
-      getCurrentAssignment: () => _currentAssignment,
-      onGetReference: () async =>
-          _currentFormConfig?.reference ??
-          {
-            'details': <dynamic>[],
-            'sidebar': <dynamic>[],
-          },
-      onGetTemplate: () async =>
-          _currentFormConfig?.template ??
-          {
-            'components': <dynamic>[<dynamic>[]],
-          },
-      onGetPreset: () async =>
-          _currentFormConfig?.preset ??
-          {
-            'description': 'Default Preset',
-            'dataKey': 'default_preset',
-            'predata': <dynamic>[],
-          },
-      onGetResponse: () async =>
-          _currentFormConfig?.response ??
-          {
-            'details': {'answers': <dynamic>[]},
-          },
-      onGetValidation: () async =>
-          _currentFormConfig?.validation ??
-          {
-            'testFunctions': <dynamic>[],
-          },
-      onGetMedia: () async =>
-          _currentFormConfig?.media ??
-          {
-            'details': {'media': <dynamic>[]},
-          },
-      onGetRemark: () async =>
-          _currentFormConfig?.remark ??
-          {
-            'dataKey': 'default_remark',
-            'notes': <dynamic>[],
-          },
-      onGetUserName: () async => _config?.username ?? 'Default User',
-      onGetFormMode: () async => _currentFormConfig?.formMode ?? 1,
-      onGetIsNew: () async => _currentFormConfig?.isNew ?? 1,
-      onGetPrincipalCollection: () async =>
-          _currentFormConfig?.principals ?? [],
-      onGetRolePetugas: () async => _config?.bpsUser?.jabatan ?? 'USER',
-      onGetUserRole: () async => _config?.bpsUser?.jabatan ?? 'USER',
-    );
-
-    final actionHandler = AndroidActionHandler(
-      onAction: (action, dataKey, data, customData) async {
-        FormGearLogger.webview(
-          'FormGear fallback Action: $action, DataKey: $dataKey',
-        );
-        return 'Fallback action $action completed';
-      },
-      onExecute: (action, dataKey, data) async {
-        FormGearLogger.webview(
-          'FasihForm fallback Execute: $action, DataKey: $dataKey',
-        );
-        return 'Fallback execute $action completed';
-      },
-      onSaveOrSubmit:
-          (response, remark, principal, reference, media, action) async {
-            FormGearLogger.webview('FormGear SaveOrSubmit: $action');
-            return 'form_${DateTime.now().millisecondsSinceEpoch}';
-          },
-      onSaveOrSubmitFasihForm: (response, remark, principal, action) async {
-        FormGearLogger.webview('FasihForm SaveOrSubmit: $action');
-        return 'fasih_form_${DateTime.now().millisecondsSinceEpoch}';
-      },
-      formDataListener: _formDataListener,
-      getCurrentAssignment: () => _currentAssignment,
-    );
-
-    // Individual action handlers following web_view pattern
-    final actionCameraHandler = ActionHandler();
-    final executeHandler = ExecuteHandler();
-    final mobileExitHandler = MobileExitHandler();
-
-    // Client action handlers for FormGear JavaScript integration
-    final clientActionHandler = ClientActionHandler(
-      onCameraCapture: (fileName, result) async {
-        FormGearLogger.webview('Camera captured: $fileName -> $result');
-        return result;
-      },
-      onFileUpload: (fileData, updateCallback, {required bool isReload}) async {
-        FormGearLogger.webview('File upload: $fileData (reload: $isReload)');
-        return 'upload_completed';
-      },
-      onLocationUpdate: (locationData) async {
-        FormGearLogger.webview('Location updated: $locationData');
-      },
-      onMapOpen: (coordinates) async {
-        FormGearLogger.webview('Map opened with coordinates: $coordinates');
-      },
-      onResponseSave: (response, media, remark, principal, reference) async {
-        FormGearLogger.webview('Response saved to mobile storage');
-      },
-      onSubmitSave: (response, media, remark, principal, reference) async {
-        FormGearLogger.webview('Submission saved to mobile storage');
-      },
-    );
-
-    // Get only save/submit handlers from the factory
-    final saveSubmitHandlers = actionHandler
-        .createHandlers()
-        .where(
-          (handler) =>
-              handler.handlerName == 'saveOrSubmit' ||
-              handler.handlerName == 'saveOrSubmitFasihForm',
-        )
-        .toList();
-
-    return [
-      ...dataHandler.createHandlers(),
-      actionCameraHandler, // Individual action handler
-      executeHandler, // Individual execute handler
-      mobileExitHandler, // Mobile exit handler
-      ...clientActionHandler.createHandlers(), // Client action handlers
-      ...saveSubmitHandlers,
-    ];
-  }
-
-  // Engine asset loading methods
-
-  /// Loads engine assets from local storage or falls back to bundle assets
-  Future<_EngineAssets> _loadEngineAssets(
-    FormEngineType engineType, {
-    void Function(int received, int total)? onProgress,
-  }) async {
-    try {
-      // Try to load from downloaded engine files first (using
-      // DirectoryConstants)
-      final engineAssets = await _loadEngineFromLocal(
-        engineType,
-        onProgress: onProgress,
-      );
-      if (engineAssets != null) {
-        FormGearLogger.sdk(
-          'Loaded ${engineType.displayName} engine from local storage',
-        );
-        return engineAssets;
-      }
-    } on Exception catch (e) {
-      FormGearLogger.sdkError(
-        'Failed to load ${engineType.displayName} from local storage: $e',
-      );
-    }
-
-    // Fallback to bundle assets
-    FormGearLogger.sdk(
-      'Loading ${engineType.displayName} engine from bundle assets (fallback)',
-    );
-    return _loadEngineFromAssets(engineType);
-  }
-
-  /// Loads engine assets from local downloaded files using DirectoryConstants
-  Future<_EngineAssets?> _loadEngineFromLocal(
-    FormEngineType engineType, {
-    void Function(int received, int total)? onProgress,
-  }) async {
-    try {
-      final engineId = engineType.id.toString();
-      final engineDir = await DirectoryConstants.getFormEngineDirectory(
-        engineId,
-      );
-
-      // Check if engine files exist locally
-      final htmlFile = File('${engineDir.path}/index.html');
-      if (!htmlFile.existsSync()) {
-        FormGearLogger.sdkError(
-          'Engine files not found locally for engine ID: $engineId. '
-          'Please ensure engine is downloaded before calling prepareEngine().',
-        );
-        return null;
-      }
-
-      // Load HTML template
-      final htmlTemplate = htmlFile.readAsStringSync();
-
-      // Load JS file based on engine type
-      var jsContent = '';
-      final jsFileName = _getJSFileName(engineType);
-      final jsFile = File('${engineDir.path}/$jsFileName');
-
-      if (jsFile.existsSync()) {
-        jsContent = jsFile.readAsStringSync();
-      } else {
-        // Try alternative JS file names
-        final alternativeJsFiles = _getAlternativeJSFileNames(engineType);
-        for (final altJsFileName in alternativeJsFiles) {
-          final altJsFile = File('${engineDir.path}/$altJsFileName');
-          if (altJsFile.existsSync()) {
-            jsContent = altJsFile.readAsStringSync();
-            break;
-          }
-        }
-      }
-
-      // Load CSS content (optional)
-      var cssContent = '';
-      final cssFile = File('${engineDir.path}/style.css');
-      if (cssFile.existsSync()) {
-        cssContent = cssFile.readAsStringSync();
-      }
-
-      FormGearLogger.sdk(
-        'Loaded local engine files: HTML(${htmlTemplate.length}), '
-        'JS(${jsContent.length}), CSS(${cssContent.length})',
-      );
-
-      return _EngineAssets(
-        htmlTemplate: htmlTemplate,
-        jsContent: jsContent,
-        cssContent: cssContent,
-      );
-    } on Exception catch (e) {
-      FormGearLogger.sdkError('Error loading engine from local: $e');
-      return null;
-    }
-  }
-
-  /// Loads engine assets from bundle assets (fallback)
-  Future<_EngineAssets> _loadEngineFromAssets(FormEngineType engineType) async {
-    final engineId = engineType.id.toString();
-
-    try {
-      // Load HTML template from assets
-      final htmlTemplate = await rootBundle.loadString(
-        'assets/formengine/$engineId/index.html',
-      );
-
-      // Load JS file based on engine type
-      var jsContent = '';
-      final jsFileName = _getJSFileName(engineType);
-
-      try {
-        jsContent = await rootBundle.loadString(
-          'assets/formengine/$engineId/$jsFileName',
-        );
-      } on Exception {
-        // Try alternative JS file names
-        final alternativeJsFiles = _getAlternativeJSFileNames(engineType);
-        for (final altJsFileName in alternativeJsFiles) {
-          try {
-            jsContent = await rootBundle.loadString(
-              'assets/formengine/$engineId/$altJsFileName',
-            );
-            break;
-          } on Exception {
-            // Continue to next alternative
-          }
-        }
-
-        if (jsContent.isEmpty) {
-          throw Exception(
-            'No valid JS file found for ${engineType.displayName}',
-          );
-        }
-      }
-
-      // Load CSS content (optional)
-      var cssContent = '';
-      try {
-        cssContent = await rootBundle.loadString(
-          'assets/formengine/$engineId/style.css',
-        );
-      } on Exception {
-        // CSS is optional, continue without it
-        FormGearLogger.sdk('No CSS file found for ${engineType.displayName}');
-      }
-
-      FormGearLogger.sdk(
-        'Loaded asset files: HTML(${htmlTemplate.length}), '
-        'JS(${jsContent.length}), CSS(${cssContent.length})',
-      );
-
-      return _EngineAssets(
-        htmlTemplate: htmlTemplate,
-        jsContent: jsContent,
-        cssContent: cssContent,
-      );
-    } catch (e) {
-      throw Exception(
-        'Failed to load ${engineType.displayName} from assets: $e',
-      );
-    }
-  }
-
-  /// Gets the primary JS file name for the engine type
-  String _getJSFileName(FormEngineType engineType) {
-    switch (engineType) {
-      case FormEngineType.formGear:
-        return 'form-gear.es.js';
-      case FormEngineType.fasihForm:
-        return 'fasih-form.es.js';
-    }
-  }
-
-  /// Gets alternative JS file names to try if primary fails
-  List<String> _getAlternativeJSFileNames(FormEngineType engineType) {
-    switch (engineType) {
-      case FormEngineType.formGear:
-        return [
-          'form-gear.umd.js',
-          'formgear.js',
-          'main.js',
-          'index.js',
-        ];
-      case FormEngineType.fasihForm:
-        return [
-          'fasih-form.umd.js',
-          'fasihform.js',
-          'main.js',
-          'index.js',
-        ];
-    }
-  }
-
-  /// Fixes hardcoded Android asset paths by injecting content directly
-  /// Processes HTML content at runtime to replace server-provided script tags
-  /// with inline content from SDK assets
-  String _fixAssetPaths(String htmlContent) {
-    var fixedHtml = htmlContent;
-    var replacementCount = 0;
-
-    // Order matters: Do specific replacements before generic ones
-
-    // 1. Fix jQuery - inject directly from SDK assets
-    const jqueryOriginal =
-        '<script src="file:///android_asset/asset/jquery-3.5.1.js"></script>';
-    if (fixedHtml.contains(jqueryOriginal)) {
-      // Replace with inline script tag containing jQuery content
-      fixedHtml = fixedHtml.replaceAll(
-        jqueryOriginal,
-        '<!-- jQuery injected by FormGear SDK -->\n<script>/*JQUERY_CONTENT*/</script>',
-      );
-      replacementCount++;
-      FormGearLogger.sdk('Marked jQuery for inline injection');
-    }
-
-    // 2. Fix other specific vendor library asset paths (Bootstrap, etc.)
-    const vendorAssetPaths = [
-      'file:///android_asset/asset/bootstrap.js',
-      'file:///android_asset/asset/bootstrap.css',
-      'file:///android_asset/asset/bootstrap.min.js',
-      'file:///android_asset/asset/bootstrap.min.css',
-    ];
-
-    for (final originalPath in vendorAssetPaths) {
-      if (fixedHtml.contains(originalPath)) {
-        final fileName = originalPath.split('/').last;
-        final fixedPath =
-            'https://formgear.assets/assets/packages/form_gear_engine_sdk/assets/vendor/$fileName';
-        fixedHtml = fixedHtml.replaceAll(originalPath, fixedPath);
-        replacementCount++;
-        FormGearLogger.sdk('Fixed vendor asset: $fileName');
-      }
-    }
-
-    // 3. Fix remaining generic asset directory paths (after specific ones)
-    // Only replace if not already replaced by specific rules above
-    const assetDirOriginal = 'file:///android_asset/asset/';
-    const assetDirFixed =
-        'https://formgear.assets/assets/packages/form_gear_engine_sdk/assets/vendor/';
-    if (fixedHtml.contains(assetDirOriginal)) {
-      // Skip if this would double-replace already fixed URLs
-      if (!fixedHtml.contains(
-        'https://formgear.assets/assets/packages/form_gear_engine_sdk/assets/vendor/https://formgear.assets',
-      )) {
-        final beforeCount = assetDirOriginal.allMatches(fixedHtml).length;
-        fixedHtml = fixedHtml.replaceAll(assetDirOriginal, assetDirFixed);
-        replacementCount += beforeCount;
-        FormGearLogger.sdk('Fixed $beforeCount generic asset directory paths');
-      }
-    }
-
-    // 4. Fix generic Android asset root paths (most generic, do last)
-    // Only replace remaining file:///android_asset/ that haven't been fixed
-    const androidAssetOriginal = 'file:///android_asset/';
-    if (fixedHtml.contains(androidAssetOriginal)) {
-      // Only replace paths that haven't been handled by more specific rules
-      final remainingMatches = RegExp(
-        'file:///android_asset/(?!asset/)',
-      ).allMatches(fixedHtml);
-      if (remainingMatches.isNotEmpty) {
-        const fixedPath = 'https://formgear.assets/assets/';
-        fixedHtml = fixedHtml.replaceAll(
-          RegExp('file:///android_asset/(?!asset/)'),
-          fixedPath,
-        );
-        replacementCount += remainingMatches.length;
-        FormGearLogger.sdk(
-          'Fixed ${remainingMatches.length} generic Android asset paths',
-        );
-      }
-    }
-
-    // CSS and JS placeholders are handled by prepareEngine direct injection
-    if (fixedHtml.contains('/*style*/')) {
-      FormGearLogger.sdk(
-        'CSS placeholder detected - will be injected directly',
-      );
-    }
-    if (fixedHtml.contains('//formgear_js')) {
-      FormGearLogger.sdk('JS placeholder detected - will be injected directly');
-    }
-
-    if (replacementCount > 0) {
-      FormGearLogger.sdk(
-        'Fixed $replacementCount asset paths in HTML template',
-      );
-    } else {
-      FormGearLogger.sdk('No asset paths needed fixing in HTML template');
-    }
-
-    return fixedHtml;
-  }
-
-  /// Inject actual jQuery content into HTML placeholders
-  Future<String> _injectVendorAssets(String htmlContent) async {
-    var processedHtml = htmlContent;
-
-    // Inject jQuery content if placeholder exists
-    if (processedHtml.contains('/*JQUERY_CONTENT*/')) {
-      try {
-        const jqueryAssetPath =
-            'packages/form_gear_engine_sdk/assets/vendor/jquery-3.5.1.js';
-        final jqueryContent = await rootBundle.loadString(jqueryAssetPath);
-        processedHtml = processedHtml.replaceAll(
-          '/*JQUERY_CONTENT*/',
-          jqueryContent,
-        );
-        FormGearLogger.sdk(
-          '✅ jQuery content injected (${jqueryContent.length} chars)',
-        );
-      } on Exception catch (e) {
-        FormGearLogger.sdkError('❌ Failed to load jQuery: $e');
-        // Fallback: remove the broken script tag
-        processedHtml = processedHtml.replaceAll(
-          '<script>/*JQUERY_CONTENT*/</script>',
-          '<!-- jQuery injection failed -->',
-        );
-      }
-    }
-
-    return processedHtml;
   }
 
   /// Determines the FormEngineType based on template ID
@@ -1011,175 +502,15 @@ class FormGearSDK {
 
   /// Creates WebView with assignment-specific handlers
   FormGearWebView _createWebViewWithAssignment(AssignmentContext assignment) {
-    return FormGearWebView(
-      url: 'about:blank',
-      htmlContent: _currentPreparedEngine!.html,
-      jsHandlers: _createAssignmentAwareHandlers(assignment),
-      onWebViewCreated: (controller) {
-        FormGearLogger.sdk(
-          'WebView created for assignment: ${assignment.assignmentId}',
-        );
-        // Register JavaScript executor service for action handlers
-        JSExecutorService().registerController(
-          controller,
-          _currentEngineType?.id.toString(),
-        );
-      },
-    );
-  }
-
-  /// Creates handlers with assignment context awareness
-  List<JSHandler<dynamic>> _createAssignmentAwareHandlers(
-    AssignmentContext assignment,
-  ) {
-    final dataHandler = AndroidDataHandler(
+    return WebViewBuilder.createWebViewWithAssignment(
+      assignment: assignment,
+      preparedEngine: _currentPreparedEngine!,
+      currentEngineType: _currentEngineType,
+      currentFormConfig: _currentFormConfig,
+      config: _config,
       getCurrentAssignment: () => _currentAssignment,
-      onGetReference: () async =>
-          _currentFormConfig?.reference ??
-          {
-            'details': <dynamic>[],
-            'sidebar': <dynamic>[],
-          },
-      onGetTemplate: () async =>
-          _currentFormConfig?.template ??
-          {
-            'components': <dynamic>[<dynamic>[]],
-          },
-      onGetPreset: () async =>
-          _currentFormConfig?.preset ??
-          {
-            'description': 'Default Preset',
-            'dataKey': 'default_preset',
-            'predata': <dynamic>[],
-          },
-      onGetResponse: () async =>
-          _currentFormConfig?.response ??
-          {
-            'details': {'answers': <dynamic>[]},
-          },
-      onGetValidation: () async =>
-          _currentFormConfig?.validation ??
-          {
-            'testFunctions': <dynamic>[],
-          },
-      onGetMedia: () async =>
-          _currentFormConfig?.media ??
-          {
-            'details': {'media': <dynamic>[]},
-          },
-      onGetRemark: () async =>
-          _currentFormConfig?.remark ??
-          {
-            'dataKey': 'default_remark',
-            'notes': <dynamic>[],
-          },
-      onGetUserName: () async => _config?.username ?? 'Default User',
-      onGetFormMode: () async => _currentFormConfig?.formMode ?? 1,
-      onGetIsNew: () async => _currentFormConfig?.isNew ?? 1,
-      onGetPrincipalCollection: () async =>
-          _currentFormConfig?.principals ?? [],
-      onGetRolePetugas: () async => _config?.bpsUser?.jabatan ?? 'USER',
-      onGetUserRole: () async => _config?.bpsUser?.jabatan ?? 'USER',
-    );
-
-    final actionHandler = AndroidActionHandler(
-      onAction: (action, dataKey, data, customData) async {
-        FormGearLogger.webview(
-          'FormGear Action for ${assignment.assignmentId}: $action, '
-          'DataKey: $dataKey',
-        );
-        return 'Action $action completed for assignment '
-            '${assignment.assignmentId}';
-      },
-      onExecute: (action, dataKey, data) async {
-        FormGearLogger.webview(
-          'FasihForm Execute for ${assignment.assignmentId}: $action, '
-          'DataKey: $dataKey',
-        );
-        return 'Execute $action completed for assignment '
-            '${assignment.assignmentId}';
-      },
-      onSaveOrSubmit:
-          (response, remark, principal, reference, media, action) async {
-            FormGearLogger.webview(
-              'FormGear SaveOrSubmit for ${assignment.assignmentId}: $action',
-            );
-            return 'form_${assignment.assignmentId}_'
-                '${DateTime.now().millisecondsSinceEpoch}';
-          },
-      onSaveOrSubmitFasihForm: (response, remark, principal, action) async {
-        FormGearLogger.webview(
-          'FasihForm SaveOrSubmit for ${assignment.assignmentId}: $action',
-        );
-        return 'fasih_form_${assignment.assignmentId}_'
-            '${DateTime.now().millisecondsSinceEpoch}';
-      },
       formDataListener: _formDataListener,
-      getCurrentAssignment: () => _currentAssignment,
     );
-
-    // Individual action handlers
-    final actionCameraHandler = ActionHandler();
-    final executeHandler = ExecuteHandler();
-    final mobileExitHandler = MobileExitHandler();
-
-    // Assignment-aware client action handlers
-    final clientActionHandler = ClientActionHandler(
-      onCameraCapture: (fileName, result) async {
-        FormGearLogger.webview(
-          'Camera captured for ${assignment.assignmentId}: '
-          '$fileName -> $result',
-        );
-        return result;
-      },
-      onFileUpload: (fileData, updateCallback, {required bool isReload}) async {
-        FormGearLogger.webview(
-          'File upload for ${assignment.assignmentId}: '
-          '$fileData (reload: $isReload)',
-        );
-        return 'upload_completed';
-      },
-      onLocationUpdate: (locationData) async {
-        FormGearLogger.webview(
-          'Location updated for ${assignment.assignmentId}: $locationData',
-        );
-      },
-      onMapOpen: (coordinates) async {
-        FormGearLogger.webview(
-          'Map opened for ${assignment.assignmentId} '
-          'with coordinates: $coordinates',
-        );
-      },
-      onResponseSave: (response, media, remark, principal, reference) async {
-        FormGearLogger.webview(
-          'Response saved for assignment ${assignment.assignmentId}',
-        );
-      },
-      onSubmitSave: (response, media, remark, principal, reference) async {
-        FormGearLogger.webview(
-          'Submission saved for assignment ${assignment.assignmentId}',
-        );
-      },
-    );
-
-    // Get only save/submit handlers from the factory
-    final saveSubmitHandlers = actionHandler
-        .createHandlers()
-        .where(
-          (handler) =>
-              handler.handlerName == 'saveOrSubmit' ||
-              handler.handlerName == 'saveOrSubmitFasihForm',
-        )
-        .toList();
-
-    return [
-      ...dataHandler.createHandlers(),
-      actionCameraHandler,
-      executeHandler,
-      mobileExitHandler,
-      ...clientActionHandler.createHandlers(),
-      ...saveSubmitHandlers,
-    ];
   }
 
   Future<void> _startServer() async {
@@ -1253,35 +584,4 @@ class FormGearSDK {
 
   /// Checks if the SDK is initialized
   bool get isInitialized => _isInitialized;
-}
-
-/// Internal page widget for displaying FormGear engine
-class _FormGearEnginePage extends StatelessWidget {
-  const _FormGearEnginePage({
-    required this.title,
-    required this.webView,
-  });
-
-  final String title;
-  final FormGearWebView webView;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: webView,
-    );
-  }
-}
-
-/// Internal class to hold engine assets (HTML, JS, CSS)
-class _EngineAssets {
-  const _EngineAssets({
-    required this.htmlTemplate,
-    required this.jsContent,
-    required this.cssContent,
-  });
-
-  final String htmlTemplate;
-  final String jsContent;
-  final String cssContent;
 }
