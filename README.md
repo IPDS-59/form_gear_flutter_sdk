@@ -72,20 +72,39 @@ void main() async {
 }
 ```
 
-### 2. Open a Form
+### 2. Open a Form with Assignment
 
 ```dart
 class FormPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Form')),
-      body: FormGearSDK.instance.createWebView(
-        formEngineId: '1', // '1' for FormGear, '2' for FasihForm
-        onLoadStop: (controller, url) {
-          print('Form loaded: $url');
-        },
-      ),
+    return ElevatedButton(
+      onPressed: () async {
+        // Create assignment context
+        final assignment = AssignmentContext(
+          assignmentId: 'assignment_001',
+          templateId: 'demo_template',
+          surveyId: 'survey_2024',
+          config: AssignmentConfig(
+            lookupMode: FormGearLookupMode.offline,
+            formMode: FormGearFormMode.open,
+            clientMode: FormGearClientMode.capi,
+          ),
+          data: AssignmentData(
+            template: {/* template data */},
+            validation: {/* validation rules */},
+            response: {/* form responses */},
+          ),
+        );
+
+        // Open form with assignment
+        await FormGearSDK.instance.openFormWithAssignment(
+          context: context,
+          assignment: assignment,
+          title: 'Survey Form',
+        );
+      },
+      child: Text('Open Form'),
     );
   }
 }
@@ -129,7 +148,7 @@ Main SDK entry point.
 | Method | Description |
 |--------|-------------|
 | `initialize(FormGearConfig config)` | Initialize SDK with configuration |
-| `createWebView({String formEngineId, ...})` | Create WebView widget for forms |
+| `openFormWithAssignment({BuildContext, AssignmentContext, ...})` | **Primary API** - Open form with assignment context |
 | `checkFormEngineVersion({BuildContext? context, String? engineId})` | Check for engine updates |
 | `isFormEngineDownloaded(String engineId)` | Check if engine exists locally |
 | `setFormDataListener(FormDataListener listener)` | Register save/submit listener |
