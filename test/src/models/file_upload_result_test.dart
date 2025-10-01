@@ -5,7 +5,7 @@ void main() {
   group('FileUploadResult Tests', () {
     group('Construction', () {
       test('should create success result with uploadedUrl', () {
-        final result = FileUploadResult.success(
+        const result = FileUploadResult.success(
           uploadedUrl: 'https://s3.amazonaws.com/bucket/file.jpg',
         );
 
@@ -33,7 +33,7 @@ void main() {
       });
 
       test('should create failure result with error', () {
-        final result = FileUploadResult.failure(
+        const result = FileUploadResult.failure(
           error: 'Network timeout',
         );
 
@@ -66,8 +66,6 @@ void main() {
         expect(
           () => FileUploadResult(
             isSuccess: true,
-            uploadedUrl: null,
-            error: null,
           ),
           throwsA(isA<AssertionError>()),
         );
@@ -77,8 +75,6 @@ void main() {
         expect(
           () => FileUploadResult(
             isSuccess: false,
-            uploadedUrl: null,
-            error: null,
           ),
           throwsA(isA<AssertionError>()),
         );
@@ -86,10 +82,9 @@ void main() {
 
       test('should allow success with uploadedUrl', () {
         expect(
-          () => FileUploadResult(
+          () => const FileUploadResult(
             isSuccess: true,
             uploadedUrl: 'https://example.com/file.jpg',
-            error: null,
           ),
           returnsNormally,
         );
@@ -97,9 +92,8 @@ void main() {
 
       test('should allow failure with error', () {
         expect(
-          () => FileUploadResult(
+          () => const FileUploadResult(
             isSuccess: false,
-            uploadedUrl: null,
             error: 'Upload failed',
           ),
           returnsNormally,
@@ -109,11 +103,11 @@ void main() {
 
     group('Equality', () {
       test('should be equal when all properties match (success)', () {
-        final result1 = FileUploadResult.success(
+        const result1 = FileUploadResult.success(
           uploadedUrl: 'https://example.com/file.jpg',
         );
 
-        final result2 = FileUploadResult.success(
+        const result2 = FileUploadResult.success(
           uploadedUrl: 'https://example.com/file.jpg',
         );
 
@@ -122,11 +116,11 @@ void main() {
       });
 
       test('should be equal when all properties match (failure)', () {
-        final result1 = FileUploadResult.failure(
+        const result1 = FileUploadResult.failure(
           error: 'Upload failed',
         );
 
-        final result2 = FileUploadResult.failure(
+        const result2 = FileUploadResult.failure(
           error: 'Upload failed',
         );
 
@@ -135,11 +129,11 @@ void main() {
       });
 
       test('should not be equal when uploadedUrl differs', () {
-        final result1 = FileUploadResult.success(
+        const result1 = FileUploadResult.success(
           uploadedUrl: 'https://example.com/file1.jpg',
         );
 
-        final result2 = FileUploadResult.success(
+        const result2 = FileUploadResult.success(
           uploadedUrl: 'https://example.com/file2.jpg',
         );
 
@@ -147,11 +141,11 @@ void main() {
       });
 
       test('should not be equal when error differs', () {
-        final result1 = FileUploadResult.failure(
+        const result1 = FileUploadResult.failure(
           error: 'Network error',
         );
 
-        final result2 = FileUploadResult.failure(
+        const result2 = FileUploadResult.failure(
           error: 'Server error',
         );
 
@@ -159,12 +153,12 @@ void main() {
       });
 
       test('should not be equal when metadata differs', () {
-        final result1 = FileUploadResult.success(
+        const result1 = FileUploadResult.success(
           uploadedUrl: 'https://example.com/file.jpg',
           metadata: {'key': 'value1'},
         );
 
-        final result2 = FileUploadResult.success(
+        const result2 = FileUploadResult.success(
           uploadedUrl: 'https://example.com/file.jpg',
           metadata: {'key': 'value2'},
         );
@@ -175,7 +169,7 @@ void main() {
 
     group('copyWith', () {
       test('should create copy with modified uploadedUrl', () {
-        final original = FileUploadResult.success(
+        const original = FileUploadResult.success(
           uploadedUrl: 'https://example.com/file1.jpg',
         );
 
@@ -188,7 +182,7 @@ void main() {
       });
 
       test('should create copy with modified metadata', () {
-        final original = FileUploadResult.success(
+        const original = FileUploadResult.success(
           uploadedUrl: 'https://example.com/file.jpg',
         );
 
@@ -200,7 +194,7 @@ void main() {
       });
 
       test('should keep original values when not specified', () {
-        final original = FileUploadResult.failure(
+        const original = FileUploadResult.failure(
           error: 'Upload failed',
           metadata: {'retries': 3},
         );
@@ -215,7 +209,7 @@ void main() {
 
     group('toString', () {
       test('should have formatted string for success', () {
-        final result = FileUploadResult.success(
+        const result = FileUploadResult.success(
           uploadedUrl: 'https://s3.amazonaws.com/bucket/file.jpg',
         );
 
@@ -226,7 +220,7 @@ void main() {
       });
 
       test('should have formatted string for failure', () {
-        final result = FileUploadResult.failure(
+        const result = FileUploadResult.failure(
           error: 'Network timeout occurred',
         );
 
@@ -273,7 +267,7 @@ void main() {
 
     group('Use Cases', () {
       test('should represent successful S3 upload', () {
-        final result = FileUploadResult.success(
+        const result = FileUploadResult.success(
           uploadedUrl: 'https://fasih-bucket.s3.amazonaws.com/assignments/001/photo_123.jpg',
           metadata: {
             'uploadDuration': 2500,
@@ -289,7 +283,7 @@ void main() {
       });
 
       test('should represent network error failure', () {
-        final result = FileUploadResult.failure(
+        const result = FileUploadResult.failure(
           error: 'Failed to upload: Network connection lost',
           metadata: {
             'errorType': 'NetworkError',
@@ -304,7 +298,7 @@ void main() {
       });
 
       test('should represent S3 pre-signed URL upload', () {
-        final result = FileUploadResult.success(
+        const result = FileUploadResult.success(
           uploadedUrl: 'https://fasih-media.s3.amazonaws.com/photo.jpg',
           metadata: {
             'uploadMethod': 'pre-signed-url',
@@ -319,7 +313,7 @@ void main() {
       });
 
       test('should represent server validation error', () {
-        final result = FileUploadResult.failure(
+        const result = FileUploadResult.failure(
           error: 'File too large: Maximum size is 5MB',
           metadata: {
             'errorCode': 'FILE_TOO_LARGE',
@@ -333,7 +327,7 @@ void main() {
       });
 
       test('should handle retry logic metadata', () {
-        final result = FileUploadResult.failure(
+        const result = FileUploadResult.failure(
           error: 'Upload failed after maximum retries',
           metadata: {
             'retryCount': 5,
