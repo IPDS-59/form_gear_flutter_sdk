@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
+import 'package:form_gear_engine_sdk/src/core/security/path_validator.dart';
 import 'package:form_gear_engine_sdk/src/presentation/bloc/barcode_scanner_bloc.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/audio_recorder_screen.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/barcode_scanner_screen.dart';
@@ -265,17 +266,27 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
         'File upload: fileName=$fileName, uri=$fileUri',
       );
 
-      // Verify file exists
+      // Verify file exists and validate path
       final filePath = fileUri.replaceFirst('file://', '');
-      final file = File(filePath);
 
-      if (!file.existsSync()) {
-        FormGearLogger.webviewError('File not found: $filePath');
+      // Validate file path for security
+      final validationResult = PathValidator.validate(
+        filePath,
+        type: PathValidationType.media,
+        checkExists: true,
+      );
+
+      if (!validationResult.isValid) {
+        FormGearLogger.webviewError(
+          'Invalid file path: ${validationResult.error}',
+        );
         return ActionInfoJs(
           success: false,
-          error: 'File not found: $fileName',
+          error: 'Invalid file path: ${validationResult.error}',
         );
       }
+
+      final file = File(validationResult.sanitizedPath);
 
       // Check if FileUploadListener is registered
       if (FormGearSDK.instance.hasFileUploadListener) {
@@ -393,7 +404,25 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
 
       if (result != null && result.files.single.path != null) {
         final filePath = result.files.single.path!;
-        final originalFile = File(filePath);
+
+        // Validate picked file path
+        final validationResult = PathValidator.validate(
+          filePath,
+          type: PathValidationType.media,
+          checkExists: true,
+        );
+
+        if (!validationResult.isValid) {
+          FormGearLogger.webviewError(
+            'Invalid picked file path: ${validationResult.error}',
+          );
+          return ActionInfoJs(
+            success: false,
+            error: 'Invalid file selected: ${validationResult.error}',
+          );
+        }
+
+        final originalFile = File(validationResult.sanitizedPath);
 
         // Follow FASIH pattern: save to assignment media directory
         final assignmentId = data.isNotEmpty ? data : 'current_assignment';
@@ -938,7 +967,22 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
     try {
       // Try to load from lookup directory first
       final lookupDir = await FormDataFileManager.getLookupDirectory(surveyId);
-      final lookupFile = File('${lookupDir.path}/$lookupType.json');
+      final lookupFilePath = '${lookupDir.path}/$lookupType.json';
+
+      // Validate lookup file path
+      final validationResult = PathValidator.validate(
+        lookupFilePath,
+        type: PathValidationType.data,
+      );
+
+      if (!validationResult.isValid) {
+        FormGearLogger.webviewError(
+          'Invalid lookup file path: ${validationResult.error}',
+        );
+        return [];
+      }
+
+      final lookupFile = File(validationResult.sanitizedPath);
 
       if (lookupFile.existsSync()) {
         final content = await lookupFile.readAsString();

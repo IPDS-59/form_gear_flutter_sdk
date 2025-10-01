@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:form_gear_engine_sdk/src/core/di/injection.dart';
-import 'package:form_gear_engine_sdk/src/core/download/form_gear_download_manager.dart';
+import 'package:form_gear_engine_sdk/src/core/constants/directory_constants.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_static/shelf_static.dart';
@@ -24,8 +24,8 @@ class FormGearServer {
   Future<String?> start() async {
     try {
       // Get the BPS data directory for static file serving
-      final downloadManager = getIt<FormGearDownloadManager>();
-      final dataDir = await downloadManager.getFormGearDataDirectory();
+      final appDocDir = await getApplicationDocumentsDirectory();
+      final dataDir = Directory('${appDocDir.path}/BPS');
 
       // Create static file handler for FormGear/BPS assets
       final staticHandler = createStaticHandler(
@@ -145,29 +145,26 @@ class FormGearServer {
         'Loading lookup: $lookupId v$version (conditions: $conditions)',
       );
 
-      final downloadManager = getIt<FormGearDownloadManager>();
+      // Load lookup data from local directory
+      final lookupDir = await DirectoryConstants.getLookupDirectory(lookupId);
+      final lookupFile = File('${lookupDir.path}/$version.json');
 
-      // Check if lookup data exists locally
-      if (!await downloadManager.isLookupDownloaded(lookupId, version)) {
-        // Try to download it first
-        final downloaded = await downloadManager.downloadLookupData(
-          lookupId,
-          version,
+      if (!lookupFile.existsSync()) {
+        return Response.notFound(
+          jsonEncode({
+            'error':
+                'Lookup data not found: $lookupId v$version. '
+                'Please ensure lookup is downloaded before use.',
+          }),
         );
-        if (!downloaded) {
-          return Response.notFound(
-            jsonEncode({'error': 'Lookup data not found: $lookupId v$version'}),
-          );
-        }
       }
 
-      // Load from local documents directory
-      final lookupData = await downloadManager.loadLocalLookup(
-        lookupId,
-        version,
-      );
-
-      if (lookupData == null) {
+      // Load and parse lookup data
+      String? lookupData;
+      try {
+        lookupData = await lookupFile.readAsString();
+      } on FileSystemException catch (e) {
+        FormGearLogger.serverError('Failed to read lookup file: $e');
         return Response.internalServerError(
           body: jsonEncode({'error': 'Failed to load local lookup data'}),
           headers: {'Content-Type': 'application/json'},

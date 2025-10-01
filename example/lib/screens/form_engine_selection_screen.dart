@@ -1,6 +1,12 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:form_gear_engine_sdk/src/presentation/screens/form_engine_update_screen.dart';
+import 'package:path_provider/path_provider.dart';
+
 import 'template_selection_screen.dart';
 
 class FormEngineSelectionScreen extends StatefulWidget {
@@ -12,7 +18,6 @@ class FormEngineSelectionScreen extends StatefulWidget {
 }
 
 class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
-  late final FormGearDownloadManager downloadManager;
   List<FormEngineMetadata> availableEngines = [];
   List<String> downloadedEngines = [];
   bool isLoading = true;
@@ -20,7 +25,6 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
   @override
   void initState() {
     super.initState();
-    downloadManager = getIt<FormGearDownloadManager>();
     _loadEngines();
   }
 
@@ -55,24 +59,28 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
       ];
 
       for (final config in engineConfigs) {
-        // Get actual version from local version.json
-        String version = 'Unknown';
+        // Check if engine is downloaded and get actual version
+        String version = 'Not Installed';
         try {
-          final localVersion = await downloadManager.getLocalFormEngineVersion(
-            config['id'] as String,
-          );
-          if (localVersion != null && localVersion.isNotEmpty) {
-            version = localVersion;
-            debugPrint(
-              'Found local version $localVersion for engine ${config['id']}',
-            );
+          final engineId = config['id'] as String;
+          final isDownloaded = await FormGearSDK.instance
+              .isFormEngineDownloaded(engineId);
+
+          if (isDownloaded) {
+            // Read version from BPS directory
+            final versionFromBPS = await _readVersionFromBPS(engineId);
+            version = versionFromBPS ?? 'Installed';
+            debugPrint('Engine $engineId is downloaded with version: $version');
           } else {
+            // Read version from bundled assets
+            final bundledVersion = await _readVersionFromAssets(engineId);
+            version = bundledVersion ?? 'Available';
             debugPrint(
-              'No version.json found for engine ${config['id']} - not downloaded or version file missing',
+              'Engine $engineId not downloaded, bundled version: $version',
             );
           }
         } catch (e) {
-          debugPrint('Error reading version for engine ${config['id']}: $e');
+          debugPrint('Error checking engine ${config['id']}: $e');
         }
 
         engines.add(
@@ -101,11 +109,11 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
     try {
       final downloaded = <String>[];
 
-      if (await downloadManager.isEngineDownloaded('1')) {
+      if (await FormGearSDK.instance.isFormEngineDownloaded('1')) {
         downloaded.add('1');
       }
 
-      if (await downloadManager.isEngineDownloaded('2')) {
+      if (await FormGearSDK.instance.isFormEngineDownloaded('2')) {
         downloaded.add('2');
       }
 
@@ -185,12 +193,7 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
   void _navigateToTemplateSelection(FormEngineMetadata engine) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => TemplateSelectionScreen(
-          formEngineId: engine.id,
-          engineName: '${engine.name} v${engine.version}',
-        ),
-      ),
+      MaterialPageRoute(builder: (context) => const TemplateSelectionScreen()),
     );
   }
 
@@ -228,28 +231,77 @@ class _FormEngineSelectionScreenState extends State<FormEngineSelectionScreen> {
 
     try {
       // Use the actual download manager to download the form engine
-      final success = await downloadManager.downloadFormEngine(
-        engine.id,
-        onProgress: (bytesReceived, totalBytes) {
-          if (totalBytes > 0) {
-            final progress = ((bytesReceived / totalBytes) * 100).round();
-            onProgress(progress);
-          }
-        },
+      // Simulate download progress (SDK no longer handles downloads)
+      // In real app, implement your own download logic
+      for (var i = 0; i <= 100; i += 10) {
+        await Future.delayed(const Duration(milliseconds: 300));
+        onProgress(i);
+      }
+
+      debugPrint(
+        'Successfully simulated download for ${engine.name} v${engine.version}',
       );
 
-      if (success) {
-        debugPrint('Successfully downloaded ${engine.name} v${engine.version}');
-
-        // Refresh the downloaded engines list
-        await _loadDownloadedEngines();
-      } else {
-        debugPrint('Failed to download ${engine.name} v${engine.version}');
-        throw Exception('Download failed for ${engine.name}');
-      }
+      // Refresh the downloaded engines list
+      await _loadDownloadedEngines();
     } catch (e) {
       debugPrint('Error downloading engine: $e');
       rethrow;
+    }
+  }
+
+  /// Read version from BPS directory (local storage)
+  Future<String?> _readVersionFromBPS(String engineId) async {
+    try {
+      // Use the same directory logic as DirectoryConstants
+      Directory baseDir;
+      if (Platform.isAndroid) {
+        try {
+          final externalDir = await getExternalStorageDirectory();
+          baseDir = externalDir != null
+              ? Directory('${externalDir.path}/BPS')
+              : Directory(
+                  '${(await getApplicationDocumentsDirectory()).path}/BPS',
+                );
+        } catch (e) {
+          baseDir = Directory(
+            '${(await getApplicationDocumentsDirectory()).path}/BPS',
+          );
+        }
+      } else {
+        baseDir = Directory(
+          '${(await getApplicationDocumentsDirectory()).path}/BPS',
+        );
+      }
+
+      final versionFile = File(
+        '${baseDir.path}/formengine/$engineId/version.json',
+      );
+
+      if (!await versionFile.exists()) {
+        return null;
+      }
+
+      final content = await versionFile.readAsString();
+      final json = jsonDecode(content) as Map<String, dynamic>;
+      return json['version'] as String?;
+    } catch (e) {
+      debugPrint('Error reading version from BPS for engine $engineId: $e');
+      return null;
+    }
+  }
+
+  /// Read version from bundled assets
+  Future<String?> _readVersionFromAssets(String engineId) async {
+    try {
+      final content = await rootBundle.loadString(
+        'assets/formengine/$engineId/version.json',
+      );
+      final json = jsonDecode(content) as Map<String, dynamic>;
+      return json['version'] as String?;
+    } catch (e) {
+      debugPrint('Error reading version from assets for engine $engineId: $e');
+      return null;
     }
   }
 }

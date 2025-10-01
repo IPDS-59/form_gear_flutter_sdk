@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/models/response_models.dart';
+import 'package:form_gear_engine_sdk/src/core/security/path_validator.dart';
 import 'package:form_gear_engine_sdk/src/utils/location_service_helper.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
 import 'package:image_picker/image_picker.dart';
@@ -149,15 +150,25 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
       // File is already selected from previous file-open event
       // Just verify it exists and return success
       final filePath = fileUri.replaceFirst('file://', '');
-      final file = File(filePath);
 
-      if (!file.existsSync()) {
-        FormGearLogger.webviewError('File not found: $filePath');
+      // Validate file path for security
+      final validationResult = PathValidator.validate(
+        filePath,
+        type: PathValidationType.media,
+        checkExists: true,
+      );
+
+      if (!validationResult.isValid) {
+        FormGearLogger.webviewError(
+          'Invalid file path: ${validationResult.error}',
+        );
         return ActionInfoJs(
           success: false,
-          error: 'File not found: $fileName',
+          error: 'Invalid file path: ${validationResult.error}',
         );
       }
+
+      final file = File(validationResult.sanitizedPath);
 
       // In a real implementation, this would upload to server
       // For now, we just confirm the file exists and is ready

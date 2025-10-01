@@ -6,10 +6,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
+import 'package:form_gear_engine_sdk/src/core/config/form_config.dart';
 import 'package:form_gear_engine_sdk/src/core/constants/directory_constants.dart';
+import 'package:form_gear_engine_sdk/src/core/di/injection.dart';
+import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/action_handler.dart';
+import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/android_action_handler.dart';
+import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/android_data_handler.dart';
+import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/client_action_handler.dart';
+import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/execute_handler.dart';
+import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/mobile_exit_handler.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
 import 'package:form_gear_engine_sdk/src/core/server/form_gear_server.dart';
 import 'package:form_gear_engine_sdk/src/core/version/form_gear_version_manager.dart';
+import 'package:form_gear_engine_sdk/src/domain/usecases/is_form_engine_downloaded_usecase.dart';
 import 'package:form_gear_engine_sdk/src/models/models.dart';
 import 'package:form_gear_engine_sdk/src/presentation/presentation.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
@@ -699,25 +708,11 @@ class FormGearSDK {
       // Check if engine files exist locally
       final htmlFile = File('${engineDir.path}/index.html');
       if (!htmlFile.existsSync()) {
-        // Try to download/copy engine files from assets first
-        FormGearLogger.sdk(
-          'Engine files not found locally, copying from assets...',
+        FormGearLogger.sdkError(
+          'Engine files not found locally for engine ID: $engineId. '
+          'Please ensure engine is downloaded before calling prepareEngine().',
         );
-        final downloadManager = getIt<FormGearDownloadManager>();
-        final downloaded = await downloadManager.downloadFormEngine(
-          engineId,
-          onProgress: onProgress,
-        );
-
-        if (!downloaded) {
-          FormGearLogger.sdkError('Failed to copy engine files from assets');
-          return null;
-        }
-
-        // Check again after download
-        if (!htmlFile.existsSync()) {
-          return null;
-        }
+        return null;
       }
 
       // Load HTML template
@@ -1239,6 +1234,18 @@ class FormGearSDK {
       showNotifications: showNotifications,
       context: context,
     );
+  }
+
+  /// Checks if form engine is downloaded locally
+  ///
+  /// Returns true if engine directory exists with version.json file
+  Future<bool> isFormEngineDownloaded(String engineId) async {
+    if (!_isInitialized) {
+      throw Exception('FormGear SDK not initialized. Call initialize() first.');
+    }
+
+    final useCase = getIt<IsFormEngineDownloadedUseCase>();
+    return useCase(engineId);
   }
 
   /// Gets the current configuration
