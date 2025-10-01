@@ -4,13 +4,15 @@ import 'package:json_annotation/json_annotation.dart';
 part 'form_gear_api_config.g.dart';
 
 /// API configuration for FormGear SDK endpoints
+///
+/// This configuration is used for form engine version checking only.
+/// All other data (templates, lookups, etc.) should be provided by the
+/// client application through the SDK's public API.
 @JsonSerializable()
 class FormGearApiConfig extends Equatable {
   const FormGearApiConfig({
     this.baseUrl,
-    this.templateZipEndpoint,
     this.formEngineEndpoint,
-    this.lookupEndpoint,
     this.authToken,
     this.customHeaders = const {},
     this.isProduction = true,
@@ -20,18 +22,12 @@ class FormGearApiConfig extends Equatable {
   factory FormGearApiConfig.fromJson(Map<String, dynamic> json) =>
       _$FormGearApiConfigFromJson(json);
 
-  /// Base URL for all FASIH API endpoints
+  /// Base URL for FASIH API endpoints
   final String? baseUrl;
 
-  /// Template ZIP download endpoint (with {templateId} placeholder)
-  /// FASIH endpoint: /mobile/assignment-sync/api/mobile/template/zip/{templateId}
-  final String? templateZipEndpoint;
-
   /// Form engine version check endpoint
+  /// Example: /mobile/notification-service/api/mobile/check-form-engine-release
   final String? formEngineEndpoint;
-
-  /// Lookup data endpoint for survey lookups
-  final String? lookupEndpoint;
 
   /// Authentication token for API requests
   final String? authToken;
@@ -61,51 +57,31 @@ class FormGearApiConfig extends Equatable {
   /// fingerprints for your production servers.
   final Map<String, List<String>>? pinnedCertificates;
 
-  /// Get full template ZIP download URL for a specific template ID
-  /// Used for FASIH-compatible ZIP downloads
-  String? getTemplateZipUrl(String templateId) {
-    if (baseUrl == null || templateZipEndpoint == null) return null;
-    return '$baseUrl${templateZipEndpoint!.replaceAll(
-      '{templateId}',
-      templateId,
-    )}';
-  }
-
   /// Get full form engine API URL
   String? get formEngineUrl {
     if (baseUrl == null || formEngineEndpoint == null) return null;
     return '$baseUrl$formEngineEndpoint';
   }
 
-  /// Get full lookup API URL
-  String? get lookupUrl {
-    if (baseUrl == null || lookupEndpoint == null) return null;
-    return '$baseUrl$lookupEndpoint';
-  }
-
-  /// Check if form engine download is supported
-  bool get supportsFormEngineDownload =>
+  /// Check if form engine version check is supported
+  bool get supportsFormEngineVersionCheck =>
       baseUrl != null && formEngineEndpoint != null;
 
   Map<String, dynamic> toJson() => _$FormGearApiConfigToJson(this);
 
   @override
   List<Object?> get props => [
-    baseUrl,
-    templateZipEndpoint,
-    formEngineEndpoint,
-    lookupEndpoint,
-    authToken,
-    customHeaders,
-    isProduction,
-    pinnedCertificates,
-  ];
+        baseUrl,
+        formEngineEndpoint,
+        authToken,
+        customHeaders,
+        isProduction,
+        pinnedCertificates,
+      ];
 
   FormGearApiConfig copyWith({
     String? baseUrl,
-    String? templateZipEndpoint,
     String? formEngineEndpoint,
-    String? lookupEndpoint,
     String? authToken,
     Map<String, String>? customHeaders,
     bool? isProduction,
@@ -113,9 +89,7 @@ class FormGearApiConfig extends Equatable {
   }) {
     return FormGearApiConfig(
       baseUrl: baseUrl ?? this.baseUrl,
-      templateZipEndpoint: templateZipEndpoint ?? this.templateZipEndpoint,
       formEngineEndpoint: formEngineEndpoint ?? this.formEngineEndpoint,
-      lookupEndpoint: lookupEndpoint ?? this.lookupEndpoint,
       authToken: authToken ?? this.authToken,
       customHeaders: customHeaders ?? this.customHeaders,
       isProduction: isProduction ?? this.isProduction,
