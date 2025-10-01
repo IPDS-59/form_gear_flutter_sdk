@@ -403,25 +403,6 @@ class FormGearSDK {
     }
   }
 
-  /// Creates WebView from prepared engine
-  FormGearWebView _createWebViewFromPreparedEngine() {
-    final preparedEngine = _currentPreparedEngine!;
-
-    return FormGearWebView(
-      url: 'about:blank',
-      htmlContent: preparedEngine.html,
-      jsHandlers: _createRequiredHandlers(),
-      onWebViewCreated: (controller) {
-        // WebView created - ready for JS bridge
-        // Register JavaScript executor service for action handlers
-        JSExecutorService().registerController(
-          controller,
-          _currentEngineType?.id.toString(),
-        );
-      },
-    );
-  }
-
   /// Creates debug-only WebView for testing bridge functionality
   /// **DEBUG/TESTING ONLY** - Not for production use
   /// Use openFormWithAssignment for production forms
