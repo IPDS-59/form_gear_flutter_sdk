@@ -31,7 +31,7 @@ class FormGearSDK {
 
   // Current form configuration (legacy)
   FormConfig? _currentFormConfig;
-  PreparedEngine? _currentPreparedEngine;
+  late PreparedEngine? _currentPreparedEngine;
   FormEngineType? _currentEngineType;
 
   // Current assignment context (new assignment-based system)
