@@ -201,15 +201,9 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
         );
       }
 
-      // Request storage permission based on file type
-      // For images/videos, request photos permission
-      // For other files (CSV, documents), request storage permission
-      final isMediaFile =
-          acceptType != null &&
-          (acceptType.contains('image') || acceptType.contains('video'));
-
-      if (isMediaFile) {
-        // Request photos permission for images/videos
+      // Use ImagePicker for images to avoid double picker issue on Android 13+
+      if (acceptType != null && acceptType.contains('image')) {
+        // Request photos permission for images
         final mediaStatus = await Permission.photos.request();
         if (mediaStatus.isDenied) {
           return ActionInfoJs(
@@ -217,15 +211,43 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
             error: 'Photos permission denied',
           );
         }
-      } else {
-        // Request storage permission for other files (CSV, documents, etc.)
-        final storageStatus = await Permission.storage.request();
-        if (storageStatus.isDenied) {
-          // Storage permission is optional on newer Android versions
+
+        // Use ImagePicker for images (direct gallery access)
+        final picker = ImagePicker();
+        final image = await picker.pickImage(source: ImageSource.gallery);
+
+        if (image != null) {
+          final filePath = image.path;
+          final fileName = image.name;
           FormGearLogger.webview(
-            'Storage permission denied, but continuing with file picker',
+            'FasihForm image picker executed: $filePath (filename: $fileName)',
+          );
+
+          // Notify FasihForm of file selection via JavaScript callback
+          await _notifyFasihFormOfFileSelection(
+            dataKey: dataKey,
+            filePath: filePath,
+            fileName: fileName,
+          );
+
+          return ActionInfoJs(success: true, result: filePath);
+        } else {
+          FormGearLogger.webview('FasihForm image picker cancelled by user');
+          return ActionInfoJs(
+            success: false,
+            error: 'Image picker cancelled by user',
           );
         }
+      }
+
+      // For other file types, use FilePicker
+      // Request storage permission for non-image files
+      final storageStatus = await Permission.storage.request();
+      if (storageStatus.isDenied) {
+        // Storage permission is optional on newer Android versions
+        FormGearLogger.webview(
+          'Storage permission denied, but continuing with file picker',
+        );
       }
 
       // Open file picker with appropriate type
@@ -237,8 +259,6 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
             type: FileType.custom,
             allowedExtensions: ['csv'],
           );
-        } else if (acceptType.contains('image')) {
-          result = await FilePicker.platform.pickFiles(type: FileType.image);
         } else if (acceptType.contains('video')) {
           result = await FilePicker.platform.pickFiles(type: FileType.video);
         } else if (acceptType.contains('audio')) {
