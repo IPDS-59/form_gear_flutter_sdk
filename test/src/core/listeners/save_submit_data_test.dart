@@ -151,7 +151,7 @@ void main() {
           assignmentId: 'assignment_001',
           templateId: 'template_001',
           surveyId: 'survey_2024',
-          config: AssignmentConfig.capi(isEncrypted: false),
+          config: AssignmentConfig.capi(),
           data: AssignmentData.empty(),
         );
 
@@ -242,7 +242,6 @@ void main() {
       test('should handle null reference and media for FormGear', () {
         final data = SaveSubmitData(
           assignmentContext: testContext,
-          engineType: SaveSubmitEngineType.formGear,
           formData: '{"test": 1}',
           remark: '{"note": "test"}',
           principal: '{"user": "test"}',
@@ -437,7 +436,6 @@ void main() {
         final customTimestamp = DateTime(2024, 1, 15, 10, 30);
         final data = SaveSubmitData(
           assignmentContext: testContext,
-          engineType: SaveSubmitEngineType.formGear,
           formData: '{}',
           remark: '{}',
           principal: '{}',
@@ -534,7 +532,6 @@ void main() {
 
         final data1 = SaveSubmitData(
           assignmentContext: testContext,
-          engineType: SaveSubmitEngineType.formGear,
           formData: '{"test": 1}',
           remark: '{}',
           principal: '{}',
@@ -546,7 +543,6 @@ void main() {
 
         final data2 = SaveSubmitData(
           assignmentContext: testContext,
-          engineType: SaveSubmitEngineType.formGear,
           formData: '{"test": 1}',
           remark: '{}',
           principal: '{}',
@@ -602,7 +598,6 @@ void main() {
 
         final data1 = SaveSubmitData(
           assignmentContext: testContext,
-          engineType: SaveSubmitEngineType.formGear,
           formData: '{"test": 1}',
           remark: '{}',
           principal: '{}',
@@ -614,7 +609,6 @@ void main() {
 
         final data2 = SaveSubmitData(
           assignmentContext: testContext,
-          engineType: SaveSubmitEngineType.formGear,
           formData: '{"test": 1}',
           remark: '{}',
           principal: '{}',

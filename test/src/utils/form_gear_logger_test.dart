@@ -422,14 +422,14 @@ void main() {
 
       test('should handle null error gracefully', () {
         expect(
-          () => FormGearLogger.error('Error', error: null),
+          () => FormGearLogger.error('Error'),
           returnsNormally,
         );
       });
 
       test('should handle null stack trace gracefully', () {
         expect(
-          () => FormGearLogger.error('Error', stackTrace: null),
+          () => FormGearLogger.error('Error'),
           returnsNormally,
         );
       });

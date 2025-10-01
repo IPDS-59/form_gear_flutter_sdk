@@ -7,16 +7,6 @@ import 'package:form_gear_engine_sdk/src/models/file_upload_result.dart';
 
 // Mock implementation for testing
 class MockFileUploadListener implements FileUploadListener {
-  final Future<FileUploadResult> Function(FileUploadData)? _onFileUploadImpl;
-  final void Function(String, int, int)? _onUploadProgressImpl;
-  final Future<void> Function(String, FileUploadResult)? _onUploadCompletedImpl;
-  final Future<void> Function(String, Object, StackTrace)? _onUploadErrorImpl;
-
-  // Track calls
-  final List<FileUploadData> uploadCalls = [];
-  final List<Map<String, dynamic>> progressCalls = [];
-  final List<Map<String, dynamic>> completedCalls = [];
-  final List<Map<String, dynamic>> errorCalls = [];
 
   MockFileUploadListener({
     Future<FileUploadResult> Function(FileUploadData)? onFileUpload,
@@ -27,6 +17,16 @@ class MockFileUploadListener implements FileUploadListener {
         _onUploadProgressImpl = onUploadProgress,
         _onUploadCompletedImpl = onUploadCompleted,
         _onUploadErrorImpl = onUploadError;
+  final Future<FileUploadResult> Function(FileUploadData)? _onFileUploadImpl;
+  final void Function(String, int, int)? _onUploadProgressImpl;
+  final Future<void> Function(String, FileUploadResult)? _onUploadCompletedImpl;
+  final Future<void> Function(String, Object, StackTrace)? _onUploadErrorImpl;
+
+  // Track calls
+  final List<FileUploadData> uploadCalls = [];
+  final List<Map<String, dynamic>> progressCalls = [];
+  final List<Map<String, dynamic>> completedCalls = [];
+  final List<Map<String, dynamic>> errorCalls = [];
 
   @override
   Future<FileUploadResult> onFileUpload(FileUploadData data) async {
@@ -117,7 +117,7 @@ void main() {
 
       test('should have onUploadCompleted method', () {
         final listener = MockFileUploadListener();
-        final result = FileUploadResult.success(uploadedUrl: 'https://example.com/file.jpg');
+        const result = FileUploadResult.success(uploadedUrl: 'https://example.com/file.jpg');
         expect(
           listener.onUploadCompleted('file.jpg', result),
           isA<Future<void>>(),
@@ -145,7 +145,7 @@ void main() {
       });
 
       test('should return custom result from implementation', () async {
-        final customResult = FileUploadResult.success(
+        const customResult = FileUploadResult.success(
           uploadedUrl: 'https://s3.amazonaws.com/bucket/file.jpg',
           metadata: {'uploadDuration': 2000},
         );
@@ -162,7 +162,7 @@ void main() {
       });
 
       test('should handle upload failure', () async {
-        final failureResult = FileUploadResult.failure(
+        const failureResult = FileUploadResult.failure(
           error: 'Network error',
         );
 
@@ -248,7 +248,7 @@ void main() {
     group('onUploadCompleted', () {
       test('should be called after successful upload', () async {
         final listener = MockFileUploadListener();
-        final result = FileUploadResult.success(
+        const result = FileUploadResult.success(
           uploadedUrl: 'https://example.com/file.jpg',
         );
 
@@ -260,7 +260,7 @@ void main() {
       });
 
       test('should call custom completion handler', () async {
-        bool handlerCalled = false;
+        var handlerCalled = false;
 
         final listener = MockFileUploadListener(
           onUploadCompleted: (fileName, result) async {
@@ -268,7 +268,7 @@ void main() {
           },
         );
 
-        final result = FileUploadResult.success(
+        const result = FileUploadResult.success(
           uploadedUrl: 'https://example.com/file.jpg',
         );
 
@@ -278,7 +278,7 @@ void main() {
       });
 
       test('should handle async completion operations', () async {
-        int completionDelay = 0;
+        var completionDelay = 0;
 
         final listener = MockFileUploadListener(
           onUploadCompleted: (fileName, result) async {
@@ -287,7 +287,7 @@ void main() {
           },
         );
 
-        final result = FileUploadResult.success(
+        const result = FileUploadResult.success(
           uploadedUrl: 'https://example.com/file.jpg',
         );
 
@@ -343,7 +343,7 @@ void main() {
 
         await listener.onUploadError(
           'file3.jpg',
-          FileSystemException('File not found'),
+          const FileSystemException('File not found'),
           StackTrace.current,
         );
 
@@ -399,7 +399,7 @@ void main() {
         final listener = MockFileUploadListener(
           onFileUpload: (data) async {
             return FileUploadResult.failure(
-              error: 'Upload failed: ${error.toString()}',
+              error: 'Upload failed: $error',
             );
           },
           onUploadProgress: (fileName, sent, total) {
@@ -440,7 +440,7 @@ void main() {
           onFileUpload: (data) async {
             return FileUploadResult.success(
               uploadedUrl: 'https://fasih-bucket.s3.amazonaws.com/${data.fileName}',
-              metadata: {'uploadDuration': 100},
+              metadata: const {'uploadDuration': 100},
             );
           },
           onUploadProgress: (fileName, sent, total) {
@@ -449,7 +449,7 @@ void main() {
         );
 
         // Simulate progress tracking
-        final totalSize = 1024;
+        const totalSize = 1024;
         for (var i = 0; i <= 100; i += 20) {
           final sent = (totalSize * i / 100).round();
           listener.onUploadProgress(testData.fileName, sent, totalSize);
@@ -463,7 +463,7 @@ void main() {
       });
 
       test('should handle retry logic on network failure', () async {
-        int attemptCount = 0;
+        var attemptCount = 0;
 
         final listener = MockFileUploadListener(
           onFileUpload: (data) async {
