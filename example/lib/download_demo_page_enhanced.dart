@@ -25,8 +25,27 @@ class _EnhancedDownloadDemoPageState extends State<EnhancedDownloadDemoPage> {
   }
 
   Future<void> _checkAssetStatus() async {
-    final appDocDir = await getApplicationDocumentsDirectory();
-    final bpsDir = Directory('${appDocDir.path}/BPS');
+    // Use the same directory logic as DirectoryConstants
+    Directory baseDir;
+    if (Platform.isAndroid) {
+      try {
+        final externalDir = await getExternalStorageDirectory();
+        baseDir = externalDir != null
+            ? Directory('${externalDir.path}/BPS')
+            : Directory(
+                '${(await getApplicationDocumentsDirectory()).path}/BPS',
+              );
+      } catch (e) {
+        baseDir = Directory(
+          '${(await getApplicationDocumentsDirectory()).path}/BPS',
+        );
+      }
+    } else {
+      baseDir = Directory(
+        '${(await getApplicationDocumentsDirectory()).path}/BPS',
+      );
+    }
+    final bpsDir = baseDir;
 
     setState(() {
       _assetStatus['FormGear Engine (ID 1)'] = AssetStatus(

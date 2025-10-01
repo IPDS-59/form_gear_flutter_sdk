@@ -37,14 +37,45 @@ void main() async {
 /// Copy bundled form engines and templates from assets to local BPS directory
 Future<void> _initializeAssets() async {
   try {
-    final appDocDir = await getApplicationDocumentsDirectory();
-    final bpsDir = Directory('${appDocDir.path}/BPS');
+    // Use the same directory logic as DirectoryConstants to ensure consistency
+    Directory baseDir;
+    if (Platform.isAndroid) {
+      try {
+        final externalDir = await getExternalStorageDirectory();
+        baseDir = externalDir != null
+            ? Directory('${externalDir.path}/BPS')
+            : Directory(
+                '${(await getApplicationDocumentsDirectory()).path}/BPS',
+              );
+      } catch (e) {
+        baseDir = Directory(
+          '${(await getApplicationDocumentsDirectory()).path}/BPS',
+        );
+      }
+    } else {
+      baseDir = Directory(
+        '${(await getApplicationDocumentsDirectory()).path}/BPS',
+      );
+    }
+    final bpsDir = baseDir;
 
-    // Check if already initialized
+    // Check if already initialized and engines exist
     final initMarker = File('${bpsDir.path}/.initialized');
-    if (await initMarker.exists()) {
-      debugPrint('Assets already initialized, skipping...');
+    final engine1Dir = Directory('${bpsDir.path}/formengine/1');
+    final engine2Dir = Directory('${bpsDir.path}/formengine/2');
+
+    // Only skip if marker exists AND both engines are present
+    if (await initMarker.exists() &&
+        await engine1Dir.exists() &&
+        await engine2Dir.exists()) {
+      debugPrint('Assets already initialized and engines present, skipping...');
       return;
+    }
+
+    // If marker exists but engines missing, delete marker and re-initialize
+    if (await initMarker.exists()) {
+      debugPrint('Marker exists but engines missing, re-initializing...');
+      await initMarker.delete();
     }
 
     debugPrint('Initializing bundled assets to local storage...');
