@@ -272,9 +272,9 @@ class _CleanArchitectureDemoScreenState
         final isForced = _versionCheckResult!.isForced;
         final localVersion = _versionCheckResult!.localVersion;
 
-        // Also check with Download Manager for additional info
-        final downloadManager = getIt<FormGearDownloadManager>();
-        final isDownloaded = await downloadManager.isEngineDownloaded(engineId);
+        // Check if engine is downloaded using SDK method
+        final isDownloaded =
+            await FormGearSDK.instance.isFormEngineDownloaded(engineId);
 
         String statusIcon;
         String statusText;

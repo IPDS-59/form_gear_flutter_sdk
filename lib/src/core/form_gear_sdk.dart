@@ -7,9 +7,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/constants/directory_constants.dart';
+import 'package:form_gear_engine_sdk/src/core/di/injection.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
 import 'package:form_gear_engine_sdk/src/core/server/form_gear_server.dart';
 import 'package:form_gear_engine_sdk/src/core/version/form_gear_version_manager.dart';
+import 'package:form_gear_engine_sdk/src/domain/usecases/is_form_engine_downloaded_usecase.dart';
 import 'package:form_gear_engine_sdk/src/models/models.dart';
 import 'package:form_gear_engine_sdk/src/presentation/presentation.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
@@ -1239,6 +1241,18 @@ class FormGearSDK {
       showNotifications: showNotifications,
       context: context,
     );
+  }
+
+  /// Checks if form engine is downloaded locally
+  ///
+  /// Returns true if engine directory exists with version.json file
+  Future<bool> isFormEngineDownloaded(String engineId) async {
+    if (!_isInitialized) {
+      throw Exception('FormGear SDK not initialized. Call initialize() first.');
+    }
+
+    final useCase = getIt<IsFormEngineDownloadedUseCase>();
+    return useCase(engineId);
   }
 
   /// Gets the current configuration
