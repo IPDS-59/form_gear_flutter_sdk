@@ -167,7 +167,10 @@ void main() {
       test('should add encryption metadata', () {
         final formData = <String, dynamic>{'name': 'Test'};
 
-        final encrypted = EncryptionUtils.encryptFormData(formData, encryptionKey: testKey);
+        final encrypted = EncryptionUtils.encryptFormData(
+          formData,
+          encryptionKey: testKey,
+        );
 
         expect(encrypted['_encryption'], isNotNull);
         expect(encrypted['_encryption']['encrypted'], isTrue);
@@ -203,7 +206,10 @@ void main() {
           'randomField': 'Not sensitive',
         };
 
-        final encrypted = EncryptionUtils.encryptFormData(formData, encryptionKey: testKey);
+        final encrypted = EncryptionUtils.encryptFormData(
+          formData,
+          encryptionKey: testKey,
+        );
 
         expect(encrypted['name'], isNot(equals('Test User')));
         expect(encrypted['phone'], isNot(equals('08123456789')));
@@ -230,7 +236,10 @@ void main() {
           'email': true, // Boolean instead of string
         };
 
-        final encrypted = EncryptionUtils.encryptFormData(formData, encryptionKey: testKey);
+        final encrypted = EncryptionUtils.encryptFormData(
+          formData,
+          encryptionKey: testKey,
+        );
 
         expect(encrypted['name'], equals(123)); // Should remain unchanged
         expect(encrypted['email'], equals(true)); // Should remain unchanged
@@ -245,8 +254,14 @@ void main() {
           'email': 'john@example.com',
         };
 
-        final encrypted = EncryptionUtils.encryptFormData(original, encryptionKey: testKey);
-        final decrypted = EncryptionUtils.decryptFormData(encrypted, encryptionKey: testKey);
+        final encrypted = EncryptionUtils.encryptFormData(
+          original,
+          encryptionKey: testKey,
+        );
+        final decrypted = EncryptionUtils.decryptFormData(
+          encrypted,
+          encryptionKey: testKey,
+        );
 
         expect(decrypted['name'], equals('John Doe'));
         expect(decrypted['age'], equals(30));
@@ -260,7 +275,10 @@ void main() {
           'age': 25,
         };
 
-        final result = EncryptionUtils.decryptFormData(unencrypted, encryptionKey: testKey);
+        final result = EncryptionUtils.decryptFormData(
+          unencrypted,
+          encryptionKey: testKey,
+        );
 
         expect(result, equals(unencrypted));
       });
@@ -294,14 +312,20 @@ void main() {
           encryptionKey: testKey,
           sensitiveFields: ['personal'],
         );
-        final decrypted = EncryptionUtils.decryptFormData(encrypted, encryptionKey: testKey);
+        final decrypted = EncryptionUtils.decryptFormData(
+          encrypted,
+          encryptionKey: testKey,
+        );
 
         expect(decrypted['personal'], isA<Map<String, dynamic>>());
       });
 
       test('should handle empty encrypted data', () {
         final encrypted = <String, dynamic>{};
-        final decrypted = EncryptionUtils.decryptFormData(encrypted, encryptionKey: testKey);
+        final decrypted = EncryptionUtils.decryptFormData(
+          encrypted,
+          encryptionKey: testKey,
+        );
 
         expect(decrypted, isEmpty);
       });
@@ -444,7 +468,10 @@ void main() {
 
         for (final testCase in testCases) {
           final encrypted = EncryptionUtils.encryptData(testCase, key: testKey);
-          final decrypted = EncryptionUtils.decryptData(encrypted, key: testKey);
+          final decrypted = EncryptionUtils.decryptData(
+            encrypted,
+            key: testKey,
+          );
           expect(decrypted, equals(testCase), reason: 'Failed for: $testCase');
         }
       });
@@ -460,8 +487,14 @@ void main() {
           'married': true,
         };
 
-        final encrypted = EncryptionUtils.encryptFormData(original, encryptionKey: testKey);
-        final decrypted = EncryptionUtils.decryptFormData(encrypted, encryptionKey: testKey);
+        final encrypted = EncryptionUtils.encryptFormData(
+          original,
+          encryptionKey: testKey,
+        );
+        final decrypted = EncryptionUtils.decryptFormData(
+          encrypted,
+          encryptionKey: testKey,
+        );
 
         expect(decrypted['name'], equals(original['name']));
         expect(decrypted['nik'], equals(original['nik']));

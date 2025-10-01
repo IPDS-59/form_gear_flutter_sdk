@@ -273,8 +273,9 @@ class _CleanArchitectureDemoScreenState
         final localVersion = _versionCheckResult!.localVersion;
 
         // Check if engine is downloaded using SDK method
-        final isDownloaded =
-            await FormGearSDK.instance.isFormEngineDownloaded(engineId);
+        final isDownloaded = await FormGearSDK.instance.isFormEngineDownloaded(
+          engineId,
+        );
 
         String statusIcon;
         String statusText;

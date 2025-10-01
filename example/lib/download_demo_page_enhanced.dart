@@ -1,8 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// Demo page showing how to copy assets from bundle to local storage
@@ -69,7 +69,7 @@ class _EnhancedDownloadDemoPageState extends State<EnhancedDownloadDemoPage> {
       // List all files in the asset directory
       final manifestContent = await rootBundle.loadString('AssetManifest.json');
       final manifestMap = Map<String, dynamic>.from(
-        Uri.decodeComponent(manifestContent) as Map,
+        json.decode(manifestContent) as Map,
       );
 
       // Filter assets that start with our path
@@ -81,7 +81,9 @@ class _EnhancedDownloadDemoPageState extends State<EnhancedDownloadDemoPage> {
         throw Exception('No assets found in ${status.assetPath}');
       }
 
-      debugPrint('Copying ${assetFiles.length} files from ${status.assetPath}...');
+      debugPrint(
+        'Copying ${assetFiles.length} files from ${status.assetPath}...',
+      );
 
       for (var i = 0; i < assetFiles.length; i++) {
         final assetFile = assetFiles[i];
@@ -115,9 +117,9 @@ class _EnhancedDownloadDemoPageState extends State<EnhancedDownloadDemoPage> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✓ $name copied successfully')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('✓ $name copied successfully')));
       }
     } catch (e) {
       setState(() {
@@ -147,9 +149,9 @@ class _EnhancedDownloadDemoPageState extends State<EnhancedDownloadDemoPage> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✓ $name deleted')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('✓ $name deleted')));
       }
     }
   }
@@ -190,9 +192,9 @@ class _EnhancedDownloadDemoPageState extends State<EnhancedDownloadDemoPage> {
               children: [
                 Text(
                   'Asset Management',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -270,10 +272,7 @@ class _EnhancedDownloadDemoPageState extends State<EnhancedDownloadDemoPage> {
                       const SizedBox(height: 4),
                       Text(
                         status.path,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ],
                   ),
@@ -288,10 +287,7 @@ class _EnhancedDownloadDemoPageState extends State<EnhancedDownloadDemoPage> {
                 backgroundColor: Colors.grey[200],
               ),
               const SizedBox(height: 4),
-              Text(
-                '${status.progress}%',
-                style: const TextStyle(fontSize: 12),
-              ),
+              Text('${status.progress}%', style: const TextStyle(fontSize: 12)),
             ],
             if (status.error != null) ...[
               const SizedBox(height: 8),

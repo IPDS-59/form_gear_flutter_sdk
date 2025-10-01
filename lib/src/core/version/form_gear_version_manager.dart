@@ -118,10 +118,12 @@ class FormGearVersionManager {
     }
 
     // Get local version for comparison
-    final localVersionResult =
-        await _getLocalFormEngineVersionUseCase(formEngineIdStr);
-    final localVersion =
-        localVersionResult is Success<String?> ? localVersionResult.data : null;
+    final localVersionResult = await _getLocalFormEngineVersionUseCase(
+      formEngineIdStr,
+    );
+    final localVersion = localVersionResult is Success<String?>
+        ? localVersionResult.data
+        : null;
 
     // STATE 2: Missing version file (treat as missing)
     if (localVersion == null) {

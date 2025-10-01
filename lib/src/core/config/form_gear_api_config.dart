@@ -71,13 +71,13 @@ class FormGearApiConfig extends Equatable {
 
   @override
   List<Object?> get props => [
-        baseUrl,
-        formEngineEndpoint,
-        authToken,
-        customHeaders,
-        isProduction,
-        pinnedCertificates,
-      ];
+    baseUrl,
+    formEngineEndpoint,
+    authToken,
+    customHeaders,
+    isProduction,
+    pinnedCertificates,
+  ];
 
   FormGearApiConfig copyWith({
     String? baseUrl,

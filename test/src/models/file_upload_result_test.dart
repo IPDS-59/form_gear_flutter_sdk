@@ -10,7 +10,10 @@ void main() {
         );
 
         expect(result.isSuccess, isTrue);
-        expect(result.uploadedUrl, equals('https://s3.amazonaws.com/bucket/file.jpg'));
+        expect(
+          result.uploadedUrl,
+          equals('https://s3.amazonaws.com/bucket/file.jpg'),
+        );
         expect(result.error, isNull);
         expect(result.metadata, isNull);
       });
@@ -268,7 +271,8 @@ void main() {
     group('Use Cases', () {
       test('should represent successful S3 upload', () {
         const result = FileUploadResult.success(
-          uploadedUrl: 'https://fasih-bucket.s3.amazonaws.com/assignments/001/photo_123.jpg',
+          uploadedUrl:
+              'https://fasih-bucket.s3.amazonaws.com/assignments/001/photo_123.jpg',
           metadata: {
             'uploadDuration': 2500,
             'fileSize': 1024000,

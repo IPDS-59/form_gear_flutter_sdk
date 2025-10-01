@@ -140,7 +140,7 @@ class LogSanitizer {
       final lowerKey = key.toLowerCase();
 
       // Check if field name is sensitive
-      if (_sensitiveFields.any((field) => lowerKey.contains(field))) {
+      if (_sensitiveFields.any(lowerKey.contains)) {
         sanitized[key] = '[REDACTED]';
       } else if (value is Map<String, dynamic>) {
         // Recursively sanitize nested maps

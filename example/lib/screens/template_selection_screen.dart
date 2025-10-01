@@ -27,8 +27,8 @@ class TemplateSelectionScreen extends StatelessWidget {
               Text(
                 'Template Management',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -46,14 +46,19 @@ class TemplateSelectionScreen extends StatelessWidget {
                     children: [
                       Text(
                         'For template usage, see:',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 12),
-                      _buildBulletPoint('• Assignment Demo - shows assignment-based configuration'),
-                      _buildBulletPoint('• Clean Architecture Demo - shows version checking'),
-                      _buildBulletPoint('• SaveOrSubmit Listener Demo - shows form submission'),
+                      _buildBulletPoint(
+                        '• Assignment Demo - shows assignment-based configuration',
+                      ),
+                      _buildBulletPoint(
+                        '• Clean Architecture Demo - shows version checking',
+                      ),
+                      _buildBulletPoint(
+                        '• SaveOrSubmit Listener Demo - shows form submission',
+                      ),
                     ],
                   ),
                 ),
