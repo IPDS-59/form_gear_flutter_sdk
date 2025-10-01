@@ -34,4 +34,5 @@ migrate_working_dir/
 # Documentation and analysis files
 CLAUDE.md
 FASIH_INTEGRATION_ANALYSIS.md
+FASIH_DATA_LOADING_ANALYSIS.md
 FULL_LOG.txt

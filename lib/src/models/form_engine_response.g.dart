@@ -21,5 +21,5 @@ Map<String, dynamic> _$FormEngineResponseToJson(FormEngineResponse instance) =>
       'success': instance.success,
       'errorCode': instance.errorCode,
       'message': instance.message,
-      'data': instance.data,
+      'data': instance.data?.toJson(),
     };

@@ -148,6 +148,21 @@ class DirectoryConstants {
     return lookupDir;
   }
 
+  /// Gets the media directory path for assignments (FASIH pattern)
+  /// Returns: {bps_dir}/assignments/{assignmentId}/media/
+  static Future<Directory> getMediaDirectory(String assignmentId) async {
+    final bpsDir = await getBpsDirectory();
+    final mediaDir = Directory(
+      '${bpsDir.path}/assignments/$assignmentId/media',
+    );
+
+    if (!mediaDir.existsSync()) {
+      await mediaDir.create(recursive: true);
+    }
+
+    return mediaDir;
+  }
+
   /// Gets the version file path for a form engine
   /// Returns: {bps_dir}/formengine/{engineId}/version.json
   static Future<File> getFormEngineVersionFile(String engineId) async {

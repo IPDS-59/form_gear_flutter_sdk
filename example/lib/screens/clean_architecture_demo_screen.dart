@@ -13,17 +13,27 @@ class CleanArchitectureDemoScreen extends StatefulWidget {
 
 class _CleanArchitectureDemoScreenState
     extends State<CleanArchitectureDemoScreen> {
+  // Static token persisted during app lifetime (cleared on app restart)
+  static String? _persistedToken;
+
   final TextEditingController _tokenController = TextEditingController();
   bool _isLoading = false;
   String _status =
       'Ready to demonstrate clean architecture patterns through SDK API';
   VersionCheckResult? _versionCheckResult;
 
+  // Selected form engine (1 = FormGear, 2 = FasihForm)
+  String _selectedEngineId = '1';
+
   // Loading states for individual operations
 
   @override
   void initState() {
     super.initState();
+    // Load persisted token if available
+    if (_persistedToken != null) {
+      _tokenController.text = _persistedToken!;
+    }
     _status =
         'SDK initialized with clean architecture pattern:\n'
         '• Repository Pattern for data access\n'
@@ -104,6 +114,9 @@ class _CleanArchitectureDemoScreenState
       dioInterceptors: [dioAdapter],
     );
 
+    // Persist token during app lifetime
+    _persistedToken = token;
+
     setState(() {
       _status =
           'API Token Updated Successfully!\n'
@@ -113,7 +126,8 @@ class _CleanArchitectureDemoScreenState
           '✅ API config authToken updated for HTTP requests\n'
           '✅ Repository layer will use new authentication\n'
           '✅ All API calls now authenticated with new token\n'
-          '✅ SDK properly re-initialized with updated configuration';
+          '✅ SDK properly re-initialized with updated configuration\n'
+          '✅ Token persisted for app lifetime (cleared on restart)';
     });
   }
 
@@ -162,16 +176,19 @@ class _CleanArchitectureDemoScreenState
   }
 
   Future<void> _demonstrateFormEngineVersionCheck() async {
+    final engineName = _selectedEngineId == '1' ? 'FormGear' : 'FasihForm';
+
     setState(() {
       _isLoading = true;
       _status =
-          'Checking form engine version using SDK public API...\n'
+          'Checking $engineName (ID: $_selectedEngineId) version using SDK public API...\n'
           '(Internally uses clean architecture with 3-state version logic)';
     });
 
     try {
       final versionResult = await FormGearSDK.instance.checkFormEngineVersion(
         context: context,
+        engineId: _selectedEngineId,
         showNotifications: false, // Don't show UI notifications for demo
       );
 
@@ -255,9 +272,10 @@ class _CleanArchitectureDemoScreenState
         final isForced = _versionCheckResult!.isForced;
         final localVersion = _versionCheckResult!.localVersion;
 
-        // Also check with Download Manager for additional info
-        final downloadManager = getIt<FormGearDownloadManager>();
-        final isDownloaded = await downloadManager.isEngineDownloaded(engineId);
+        // Check if engine is downloaded using SDK method
+        final isDownloaded = await FormGearSDK.instance.isFormEngineDownloaded(
+          engineId,
+        );
 
         String statusIcon;
         String statusText;
@@ -311,43 +329,6 @@ class _CleanArchitectureDemoScreenState
             'Clean architecture handled the error gracefully:\n'
             '✅ Exception contained within service layer\n'
             '✅ UI remains responsive and informed';
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _demonstrateTemplateDataFetch() async {
-    setState(() {
-      _isLoading = true;
-      _status =
-          'Template data is managed through Download Manager...\n'
-          'Clean architecture separates concerns properly';
-    });
-
-    try {
-      // Use public SDK API instead of internal use cases
-      final downloadManager = getIt<FormGearDownloadManager>();
-      final templates = await downloadManager.getDownloadedTemplates();
-
-      setState(() {
-        _status =
-            'Template Management Demonstration!\n'
-            'Downloaded Templates: ${templates.length}\n'
-            'Templates: ${templates.isNotEmpty ? templates.join(', ') : 'None downloaded'}\n\n'
-            'Architecture Benefits:\n'
-            '✅ Download Manager abstracts template storage\n'
-            '✅ Templates retrieved through consistent API\n'
-            '✅ Business logic isolated from UI concerns\n'
-            '✅ Future enhancement: Template use case integration';
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _status =
-            'Error accessing template data: $e\n\n'
-            'Clean architecture benefits:\n'
-            '✅ Error isolated and handled gracefully\n'
-            '✅ UI remains responsive despite backend issues';
         _isLoading = false;
       });
     }
@@ -449,112 +430,6 @@ class _CleanArchitectureDemoScreenState
     }
   }
 
-  Future<void> _testTemplateEndpoint() async {
-    setState(() {
-      _isLoading = true;
-      _status = 'Testing Template Download Endpoint...';
-    });
-
-    try {
-      final config = FormGearSDK.instance.config;
-      final apiConfig = config?.apiConfig;
-
-      if (apiConfig?.baseUrl == null ||
-          apiConfig?.templateZipEndpoint == null) {
-        throw Exception('Template endpoint not configured');
-      }
-
-      // Test with a sample template ID
-      const testTemplateId = '1';
-      final templateUrl = apiConfig!.getTemplateZipUrl(testTemplateId);
-
-      // Use the download manager to test template endpoint
-      final downloadManager = getIt<FormGearDownloadManager>();
-
-      // Just test the endpoint availability (don't actually download)
-      try {
-        await downloadManager.downloadTemplate(testTemplateId);
-      } catch (e) {
-        // Expected to fail on actual download, but we can test endpoint reachability
-        rethrow;
-      }
-
-      setState(() {
-        _status =
-            'Template Endpoint Test Results!\n'
-            '🌐 Base URL: ${apiConfig.baseUrl}\n'
-            '📁 Template Endpoint: ${apiConfig.templateZipEndpoint}\n'
-            '🔗 Full URL: $templateUrl\n'
-            '🔑 Auth Token: ${apiConfig.authToken?.substring(0, 10) ?? 'None'}...\n\n'
-            'Template API Benefits:\n'
-            '✅ Dynamic URL generation with template ID\n'
-            '✅ Authenticated ZIP download capability\n'
-            '✅ Repository pattern for file downloads\n'
-            '✅ Error handling for network issues';
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _status =
-            'Template Endpoint Test Results!\n'
-            '⚠️ Endpoint accessible but error occurred: $e\n\n'
-            'This is often expected for test calls without valid template ID.\n'
-            'Check Alice HTTP Inspector for actual HTTP response:\n'
-            '✅ 401 = Authentication issue\n'
-            '✅ 404 = Template not found (normal for test)\n'
-            '✅ 200 = Successful download\n'
-            '✅ 500 = Server error';
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _testLookupEndpoint() async {
-    setState(() {
-      _isLoading = true;
-      _status = 'Testing Lookup Data Endpoint...';
-    });
-
-    try {
-      final config = FormGearSDK.instance.config;
-      final apiConfig = config?.apiConfig;
-
-      if (apiConfig?.lookupUrl == null) {
-        throw Exception('Lookup endpoint not configured');
-      }
-
-      setState(() {
-        _status =
-            'Lookup Endpoint Configuration!\n'
-            '🌐 Endpoint: ${apiConfig!.lookupUrl}\n'
-            '🔑 Auth Token: ${apiConfig.authToken?.substring(0, 10) ?? 'None'}...\n'
-            '📊 Status: Endpoint configured and ready\n\n'
-            'Lookup API Benefits:\n'
-            '✅ Survey data lookup functionality\n'
-            '✅ Authenticated data retrieval\n'
-            '✅ Repository pattern for lookup data\n'
-            '✅ Error handling for invalid keys\n\n'
-            'Note: Lookup testing requires specific key/value pairs\n'
-            'that are configured on the server side.\n'
-            'Use Alice HTTP Inspector to monitor actual requests.';
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _status =
-            'Lookup Endpoint Test Results!\n'
-            '⚠️ Error: $e\n\n'
-            'Common lookup issues:\n'
-            '• Invalid lookup key/value parameters\n'
-            '• Authentication token issues\n'
-            '• No data found for test parameters\n'
-            '• Server-side lookup configuration\n\n'
-            'Check Alice HTTP Inspector for detailed response';
-        _isLoading = false;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -613,6 +488,81 @@ class _CleanArchitectureDemoScreenState
             ),
             const SizedBox(height: 16),
 
+            // Engine Selector Section
+            Card(
+              color: Colors.purple[50],
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.settings, color: Colors.purple[800]),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Select Form Engine',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.purple[800],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Choose which form engine to check/download:',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _EngineOptionCard(
+                            engineId: '1',
+                            engineName: 'FormGear',
+                            engineIcon: Icons.web,
+                            color: const Color(0xFF1E88E5),
+                            isSelected: _selectedEngineId == '1',
+                            onTap: () {
+                              setState(() {
+                                _selectedEngineId = '1';
+                                _versionCheckResult = null;
+                                _status =
+                                    'FormGear Engine selected.\n'
+                                    'Run version check to see clean architecture in action!';
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _EngineOptionCard(
+                            engineId: '2',
+                            engineName: 'FasihForm',
+                            engineIcon: Icons.dynamic_form,
+                            color: const Color(0xFF8E24AA),
+                            isSelected: _selectedEngineId == '2',
+                            onTap: () {
+                              setState(() {
+                                _selectedEngineId = '2';
+                                _versionCheckResult = null;
+                                _status =
+                                    'FasihForm Engine selected.\n'
+                                    'Run version check to see clean architecture in action!';
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
             // API Token Input Section
             Card(
               color: Colors.amber[50],
@@ -648,6 +598,7 @@ class _CleanArchitectureDemoScreenState
                                 onPressed: () {
                                   setState(() {
                                     _tokenController.clear();
+                                    _persistedToken = null;
                                   });
                                 },
                                 tooltip: 'Clear token',
@@ -683,62 +634,44 @@ class _CleanArchitectureDemoScreenState
             const SizedBox(height: 16),
 
             // Demo Buttons
-            _buildDemoButton(
-              'Check Form Engine Version',
-              'Returns VersionCheckResult with rich state info (missing/outdated/current)',
-              Icons.settings,
-              Colors.blue,
-              _demonstrateFormEngineVersionCheck,
+            _DemoButton(
+              title: 'Check Form Engine Version',
+              subtitle:
+                  'Returns VersionCheckResult with rich state info (missing/outdated/current)',
+              icon: Icons.settings,
+              color: Colors.blue,
+              onPressed: _demonstrateFormEngineVersionCheck,
+              isLoading: _isLoading,
             ),
             const SizedBox(height: 12),
-            _buildDemoButton(
-              'Check Engine Download Status',
-              'Uses enhanced version result data for intelligent download decisions',
-              Icons.download_done,
-              Colors.green,
-              _demonstrateEngineDownloadCheck,
+            _DemoButton(
+              title: 'Check Engine Download Status',
+              subtitle:
+                  'Uses enhanced version result data for intelligent download decisions',
+              icon: Icons.download_done,
+              color: Colors.green,
+              onPressed: _demonstrateEngineDownloadCheck,
+              isLoading: _isLoading,
             ),
             const SizedBox(height: 12),
-            _buildDemoButton(
-              'Analyze Template Management',
-              'Uses Download Manager - Shows clean architecture benefits',
-              Icons.description,
-              Colors.orange,
-              _demonstrateTemplateDataFetch,
+            _DemoButton(
+              title: 'SDK Configuration Analysis',
+              subtitle:
+                  'Shows configuration management and dependency injection',
+              icon: Icons.settings_applications,
+              color: Colors.purple,
+              onPressed: _demonstrateSDKConfiguration,
+              isLoading: _isLoading,
             ),
             const SizedBox(height: 12),
-            _buildDemoButton(
-              'SDK Configuration Analysis',
-              'Shows configuration management and dependency injection',
-              Icons.settings_applications,
-              Colors.purple,
-              _demonstrateSDKConfiguration,
+            _DemoButton(
+              title: 'Test Form Engine Endpoint',
+              subtitle: 'Test version check API endpoint with current token',
+              icon: Icons.api,
+              color: Colors.indigo,
+              onPressed: _testFormEngineEndpoint,
+              isLoading: _isLoading,
             ),
-            const SizedBox(height: 12),
-            _buildDemoButton(
-              'Test Form Engine Endpoint',
-              'Test version check API endpoint with current token',
-              Icons.api,
-              Colors.indigo,
-              _testFormEngineEndpoint,
-            ),
-            const SizedBox(height: 12),
-            _buildDemoButton(
-              'Test Template Download Endpoint',
-              'Test template ZIP download API endpoint',
-              Icons.cloud_download,
-              Colors.teal,
-              _testTemplateEndpoint,
-            ),
-            const SizedBox(height: 12),
-            _buildDemoButton(
-              'Test Lookup Endpoint',
-              'Test lookup data API endpoint for survey data',
-              Icons.search,
-              Colors.cyan,
-              _testLookupEndpoint,
-            ),
-            const SizedBox(height: 12),
 
             const SizedBox(height: 16),
 
@@ -782,18 +715,112 @@ class _CleanArchitectureDemoScreenState
       ),
     );
   }
+}
 
-  Widget _buildDemoButton(
-    String title,
-    String subtitle,
-    IconData icon,
-    Color color,
-    VoidCallback onPressed,
-  ) {
+class _EngineOptionCard extends StatelessWidget {
+  const _EngineOptionCard({
+    required this.engineId,
+    required this.engineName,
+    required this.engineIcon,
+    required this.color,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String engineId;
+  final String engineName;
+  final IconData engineIcon;
+  final Color color;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withValues(alpha: 0.1) : Colors.white,
+          border: Border.all(
+            color: isSelected ? color : Colors.grey[300]!,
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              engineIcon,
+              size: 40,
+              color: isSelected ? color : Colors.grey[600],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              engineName,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? color : Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'ID: $engineId',
+              style: TextStyle(
+                fontSize: 12,
+                color: isSelected ? color : Colors.grey[600],
+              ),
+            ),
+            if (isSelected) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'Selected',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DemoButton extends StatelessWidget {
+  const _DemoButton({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onPressed,
+    required this.isLoading,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onPressed;
+  final bool isLoading;
+
+  @override
+  Widget build(BuildContext context) {
     return Card(
       elevation: 2,
       child: InkWell(
-        onTap: _isLoading ? null : onPressed,
+        onTap: isLoading ? null : onPressed,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
