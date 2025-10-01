@@ -960,13 +960,13 @@ window.Android = window.Android || new Proxy({
         else if (prop.includes('Principal') || prop.includes('Collection')) {
           return '[]';
         }
-        // getTemplate -> JSON string with components structure
+        // getTemplate -> JSON string with complete FASIH template structure
         else if (prop.includes('Template')) {
-          return '{"components":[[]]}';
+          return '{"description":"","dataKey":"","title":"","acronym":"","version":"0.0.1","components":[[]]}';
         }
-        // getValidation -> JSON string with testFunctions
+        // getValidation -> JSON string with complete FASIH validation structure
         else if (prop.includes('Validation')) {
-          return '{"testFunctions":[]}';
+          return '{"description":"","dataKey":"","version":"0.0.1","testFunctions":[]}';
         }
         // getReference -> JSON string with details and sidebar
         else if (prop.includes('Reference')) {
