@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
@@ -52,9 +53,26 @@ class FormGearWebViewBloc
         await Future<void>.delayed(const Duration(milliseconds: 200));
       }
 
-      // Inject Android bridge object using file-based approach
-      await _injectAndroidBridgeFromFile(event.controller);
-      _bridgeInjected = true;
+      // Load HTML content with embedded bridge script (if provided)
+      if (event.htmlContent != null) {
+        // CRITICAL: Build bridge script and inject INTO HTML before loading
+        final bridgeScript = await _buildBridgeScript();
+        final htmlWithBridge = _injectBridgeIntoHtml(
+          event.htmlContent!,
+          bridgeScript,
+        );
+
+        await event.controller.loadData(
+          data: htmlWithBridge,
+          baseUrl: WebUri('about:blank'),
+        );
+        _bridgeInjected = true;
+        FormGearLogger.sdk('HTML loaded with embedded bridge script');
+      } else {
+        // Fallback: Inject bridge for URL-based loading
+        await _injectAndroidBridgeFromFile(event.controller);
+        _bridgeInjected = true;
+      }
 
       emit(
         state.copyWith(
@@ -365,6 +383,77 @@ class FormGearWebViewBloc
   String _jsArrayFromList(List<String> items) {
     final escapedItems = items.map((item) => "'$item'").join(', ');
     return '[$escapedItems]';
+  }
+
+  /// Build complete bridge script with data and bridge code
+  Future<String> _buildBridgeScript() async {
+    final handlerNames = jsHandlers.map((h) => h.handlerName).toList();
+
+    // Pre-load all data from data handlers
+    final preloadedData = <String, dynamic>{};
+    for (final handler in jsHandlers) {
+      if (handler.handlerName.startsWith('get') ||
+          handler.handlerName.contains('Role')) {
+        try {
+          final result = await handler.callback([]);
+          if (result is StringInfoJs) {
+            preloadedData[handler.handlerName] = result.value ?? '';
+          } else if (result is JsonInfoJs) {
+            preloadedData[handler.handlerName] = result.data ?? {};
+          } else if (result is ListInfoJs) {
+            preloadedData[handler.handlerName] = result.data ?? [];
+          }
+        } on Exception catch (e) {
+          FormGearLogger.jsBridgeError(
+            'Failed to pre-load ${handler.handlerName}: $e',
+          );
+          preloadedData[handler.handlerName] =
+              handler.handlerName.contains('get')
+              ? (handler.handlerName.toLowerCase().contains('mode') ||
+                        handler.handlerName.toLowerCase().contains('new')
+                    ? '1'
+                    : (handler.handlerName.toLowerCase().contains('principal')
+                          ? <dynamic>[]
+                          : ''))
+              : <String, dynamic>{};
+        }
+      }
+    }
+
+    // Build data script
+    final dataScript = _buildDataScript(preloadedData, handlerNames);
+
+    // Load bridge JavaScript from assets
+    final bridgeJs = await rootBundle.loadString(
+      'packages/form_gear_engine_sdk/assets/js/android_bridge.js',
+    );
+
+    // Combine data + bridge
+    return '''
+<script>
+// Pre-loaded data for Android bridge
+$dataScript
+
+// Android bridge implementation
+$bridgeJs
+</script>
+''';
+  }
+
+  /// Inject bridge script into HTML <head>
+  String _injectBridgeIntoHtml(String html, String bridgeScript) {
+    // Try to inject into <head> tag first
+    if (html.contains('<head>')) {
+      return html.replaceFirst('<head>', '<head>\n$bridgeScript');
+    }
+    // Fallback: inject at the beginning of <html>
+    else if (html.contains('<html>')) {
+      return html.replaceFirst('<html>', '<html>\n$bridgeScript');
+    }
+    // Last resort: prepend to HTML
+    else {
+      return bridgeScript + html;
+    }
   }
 
   @override

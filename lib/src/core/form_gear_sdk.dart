@@ -296,6 +296,21 @@ class FormGearSDK {
     _currentPreparedEngine = preparedEngine;
     _currentEngineType = engineType;
 
+    // Load form configuration from assignment data
+    loadFormConfig(
+      FormConfig(
+        formId: assignment.assignmentId,
+        template: assignment.data.template,
+        validation: assignment.data.validation,
+        response: assignment.data.response,
+        media: assignment.data.media,
+        reference: assignment.data.reference,
+        remark: assignment.data.remark,
+        preset: assignment.data.preset,
+        principals: assignment.data.principals,
+      ),
+    );
+
     // Start server if configured to auto-start
     await _startServerIfNeeded();
 
