@@ -28,9 +28,7 @@ void main() async {
 Future<void> initializeFormGearSDK() async {
   final apiConfig = FormGearApiConfig(
     baseUrl: Env.baseUrl,
-    templateZipEndpoint: Env.endpointTemplateDownload,
     formEngineEndpoint: Env.endpointVerifyVersion,
-    lookupEndpoint: Env.endpointLookup,
     authToken: Env.wilkerstatBearerToken,
     isProduction: Env.isProduction,
   );

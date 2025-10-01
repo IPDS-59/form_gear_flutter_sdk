@@ -1,21 +1,21 @@
+import 'dart:io';
+
 import 'package:form_gear_engine_sdk/src/core/base/result.dart';
-import 'package:form_gear_engine_sdk/src/core/download/form_gear_download_manager.dart';
+import 'package:form_gear_engine_sdk/src/core/constants/directory_constants.dart';
 import 'package:form_gear_engine_sdk/src/data/datasources/form_engine_remote_data_source.dart';
 import 'package:form_gear_engine_sdk/src/domain/repositories/form_engine_repository.dart';
 import 'package:form_gear_engine_sdk/src/models/form_engine_response.dart';
 import 'package:injectable/injectable.dart';
 
 @LazySingleton(as: FormEngineRepository)
+
 /// Implementation of FormEngineRepository
 class FormEngineRepositoryImpl implements FormEngineRepository {
   const FormEngineRepositoryImpl({
     required FormEngineRemoteDataSource remoteDataSource,
-    required FormGearDownloadManager downloadManager,
-  }) : _remoteDataSource = remoteDataSource,
-       _downloadManager = downloadManager;
+  }) : _remoteDataSource = remoteDataSource;
 
   final FormEngineRemoteDataSource _remoteDataSource;
-  final FormGearDownloadManager _downloadManager;
 
   @override
   Future<Result<FormEngineResponse>> checkFormEngineVersion([
@@ -25,7 +25,16 @@ class FormEngineRepositoryImpl implements FormEngineRepository {
   }
 
   @override
-  Future<bool> isFormEngineDownloaded(String engineId) {
-    return _downloadManager.isEngineDownloaded(engineId);
+  Future<bool> isFormEngineDownloaded(String engineId) async {
+    try {
+      final engineDir = await DirectoryConstants.getFormEngineDirectory(engineId);
+      final versionFile = File('${engineDir.path}/version.json');
+
+      // Check if engine directory exists and contains version file
+      final exists = await engineDir.exists() && await versionFile.exists();
+      return exists;
+    } catch (e) {
+      return false;
+    }
   }
 }
