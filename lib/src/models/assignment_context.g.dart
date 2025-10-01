@@ -14,6 +14,7 @@ AssignmentContext _$AssignmentContextFromJson(Map<String, dynamic> json) =>
       config: AssignmentConfig.fromJson(json['config'] as Map<String, dynamic>),
       data: AssignmentData.fromJson(json['data'] as Map<String, dynamic>),
       metadata: json['metadata'] as Map<String, dynamic>?,
+      formEngineId: json['formEngineId'] as String?,
     );
 
 Map<String, dynamic> _$AssignmentContextToJson(AssignmentContext instance) =>
@@ -24,6 +25,7 @@ Map<String, dynamic> _$AssignmentContextToJson(AssignmentContext instance) =>
       'config': instance.config,
       'data': instance.data,
       'metadata': instance.metadata,
+      'formEngineId': instance.formEngineId,
     };
 
 AssignmentConfig _$AssignmentConfigFromJson(Map<String, dynamic> json) =>

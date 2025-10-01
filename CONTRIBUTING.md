@@ -24,8 +24,8 @@ This project adheres to a code of conduct that we expect all contributors to fol
 
 ### Prerequisites
 
-- Flutter SDK 3.35.3 or later
-- Dart SDK 3.9.2 or later
+- Flutter SDK (stable channel)
+- Dart SDK (compatible with stable Flutter)
 - Git
 - A code editor (VS Code recommended)
 

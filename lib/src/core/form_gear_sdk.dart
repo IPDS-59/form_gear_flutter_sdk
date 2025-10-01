@@ -35,8 +35,14 @@ class FormGearSDK {
   // Current assignment context (new assignment-based system)
   AssignmentContext? _currentAssignment;
 
+  /// Gets the current assignment context
+  AssignmentContext? get currentAssignment => _currentAssignment;
+
   // FormDataListener for save/submit operations
   FormDataListener? _formDataListener;
+
+  // FileUploadListener for file upload operations
+  FileUploadListener? _fileUploadListener;
 
   // Version manager
   late FormGearVersionManager _versionManager;
@@ -253,6 +259,53 @@ class FormGearSDK {
     setFormDataListener(null);
   }
 
+  /// Sets the FileUploadListener for handling file upload operations
+  ///
+  /// Register a custom listener to handle file uploads to your backend.
+  /// The listener will be called when files need to be uploaded from
+  /// FormGear/FasihForm.
+  ///
+  /// Example:
+  /// ```dart
+  /// class MyFileUploadListener implements FileUploadListener {
+  ///   @override
+  ///   Future<FileUploadResult> onFileUpload(FileUploadData data) async {
+  ///     // Upload to S3, server, etc.
+  ///     final url = await uploadToBackend(data.file);
+  ///     return FileUploadResult.success(uploadedUrl: url);
+  ///   }
+  /// }
+  ///
+  /// FormGearSDK.instance.setFileUploadListener(MyFileUploadListener());
+  /// ```
+  void setFileUploadListener(FileUploadListener? listener) {
+    _fileUploadListener = listener;
+
+    if (listener != null) {
+      FormGearLogger.sdk(
+        'FileUploadListener registered: ${listener.runtimeType}',
+      );
+    } else {
+      FormGearLogger.sdk('FileUploadListener removed');
+    }
+  }
+
+  /// Gets the currently registered FileUploadListener
+  ///
+  /// Returns null if no listener is registered.
+  FileUploadListener? get fileUploadListener => _fileUploadListener;
+
+  /// Checks if a FileUploadListener is currently registered
+  bool get hasFileUploadListener => _fileUploadListener != null;
+
+  /// Removes the currently registered FileUploadListener
+  ///
+  /// After calling this method, file upload operations will fall back
+  /// to default behavior (local file verification only).
+  void removeFileUploadListener() {
+    setFileUploadListener(null);
+  }
+
   /// Opens form with assignment context (new assignment-based method)
   /// This method uses dynamic configuration based on assignment context
   Future<void> openFormWithAssignment({
@@ -277,14 +330,39 @@ class FormGearSDK {
       );
     }
 
-    // Prepare engine based on assignment template
-    final engineType = _determineEngineTypeFromTemplate(assignment.templateId);
+    // Prepare engine based on explicit engine ID or determine from template
+    final engineType = assignment.formEngineId != null
+        ? FormEngineType.fromId(int.tryParse(assignment.formEngineId!))
+        : _determineEngineTypeFromTemplate(assignment.templateId);
+
+    if (engineType == null) {
+      throw Exception(
+        'Invalid form engine ID: ${assignment.formEngineId}. '
+        'Valid IDs are: 1 (FormGear), 2 (FasihForm)',
+      );
+    }
+
     final preparedEngine = await prepareEngine(
       engineType: engineType,
       onProgress: onProgress,
     );
     _currentPreparedEngine = preparedEngine;
     _currentEngineType = engineType;
+
+    // Load form configuration from assignment data
+    loadFormConfig(
+      FormConfig(
+        formId: assignment.assignmentId,
+        template: assignment.data.template,
+        validation: assignment.data.validation,
+        response: assignment.data.response,
+        media: assignment.data.media,
+        reference: assignment.data.reference,
+        remark: assignment.data.remark,
+        preset: assignment.data.preset,
+        principals: assignment.data.principals,
+      ),
+    );
 
     // Start server if configured to auto-start
     await _startServerIfNeeded();

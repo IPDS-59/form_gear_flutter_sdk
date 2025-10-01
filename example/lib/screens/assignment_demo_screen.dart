@@ -133,6 +133,7 @@ class AssignmentDemoScreen extends StatefulWidget {
 class _AssignmentDemoScreenState extends State<AssignmentDemoScreen> {
   bool _isInitialized = false;
   String _statusMessage = 'Ready to initialize global configuration';
+  String _selectedEngineId = '1'; // 1 = FormGear, 2 = FasihForm
 
   @override
   Widget build(BuildContext context) {
@@ -169,6 +170,75 @@ class _AssignmentDemoScreenState extends State<AssignmentDemoScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(_statusMessage),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Engine Selector
+            Card(
+              color: const Color(0xFF8E24AA),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Select Form Engine',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Engine used: ${_selectedEngineId == "1" ? "FormGear" : "FasihForm"}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _EngineOptionCard(
+                            engineId: '1',
+                            engineName: 'FormGear',
+                            engineIcon: Icons.web,
+                            color: const Color(0xFF1E88E5),
+                            isSelected: _selectedEngineId == '1',
+                            onTap: () {
+                              setState(() {
+                                _selectedEngineId = '1';
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _EngineOptionCard(
+                            engineId: '2',
+                            engineName: 'FasihForm',
+                            engineIcon: Icons.description,
+                            color: const Color(0xFF8E24AA),
+                            isSelected: _selectedEngineId == '2',
+                            onTap: () {
+                              setState(() {
+                                _selectedEngineId = '2';
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -356,6 +426,8 @@ class _AssignmentDemoScreenState extends State<AssignmentDemoScreen> {
     }
 
     try {
+      // Engine is automatically determined from template assets
+      // User's engine selection determines which template assets are loaded
       await FormGearSDK.instance.openFormWithAssignment(
         context: context,
         assignment: assignment,
@@ -378,6 +450,7 @@ class _AssignmentDemoScreenState extends State<AssignmentDemoScreen> {
       assignmentId: 'new_assignment_001',
       templateId: 'demo_template',
       surveyId: 'family_characteristics_2024',
+      formEngineId: _selectedEngineId, // Use selected engine
       config: const AssignmentConfig(
         lookupMode:
             FormGearLookupMode.online, // Online lookup for real-time data
@@ -427,6 +500,7 @@ class _AssignmentDemoScreenState extends State<AssignmentDemoScreen> {
       assignmentId: 'existing_assignment_002',
       templateId: 'demo_template',
       surveyId: 'family_characteristics_2024',
+      formEngineId: _selectedEngineId, // Use selected engine
       config: const AssignmentConfig(
         lookupMode: FormGearLookupMode.online,
         formMode: FormGearFormMode.open,
@@ -483,6 +557,7 @@ class _AssignmentDemoScreenState extends State<AssignmentDemoScreen> {
       assignmentId: 'review_assignment_003',
       templateId: 'demo_template',
       surveyId: 'family_characteristics_2024',
+      formEngineId: _selectedEngineId, // Use selected engine
       config: const AssignmentConfig(
         lookupMode: FormGearLookupMode.online, // Online lookup for validation
         formMode: FormGearFormMode.submitted, // Read-only submitted form
@@ -542,5 +617,76 @@ class _AssignmentDemoScreenState extends State<AssignmentDemoScreen> {
       return data.map((key, value) => MapEntry(key.toString(), value));
     }
     return <String, dynamic>{};
+  }
+}
+
+/// Engine option card for selecting FormGear or FasihForm
+class _EngineOptionCard extends StatelessWidget {
+  const _EngineOptionCard({
+    required this.engineId,
+    required this.engineName,
+    required this.engineIcon,
+    required this.color,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String engineId;
+  final String engineName;
+  final IconData engineIcon;
+  final Color color;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? color : Colors.grey.withValues(alpha: 0.3),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(engineIcon, color: isSelected ? color : Colors.grey, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              engineName,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? color : Colors.grey,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (isSelected) ...[
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Selected',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 }

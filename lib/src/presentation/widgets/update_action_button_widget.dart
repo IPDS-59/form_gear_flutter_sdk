@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:percent_indicator/percent_indicator.dart';
 
 class UpdateActionButtonWidget extends StatefulWidget {
   const UpdateActionButtonWidget({
@@ -33,10 +34,12 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
   late AnimationController _buttonController;
   late AnimationController _progressController;
   late AnimationController _completionController;
+  late AnimationController _downloadArrowController;
   late Animation<double> _buttonAnimation;
   late Animation<double> _progressAnimation;
   late Animation<double> _completionAnimation;
   late Animation<double> _checkScaleAnimation;
+  late Animation<double> _downloadArrowAnimation;
 
   int _currentTextIndex = 0;
   Timer? _textCycleTimer;
@@ -68,6 +71,11 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
 
     _completionController = AnimationController(
       duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _downloadArrowController = AnimationController(
+      duration: const Duration(seconds: 1),
       vsync: this,
     );
 
@@ -114,6 +122,17 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
             curve: const Interval(0.2, 0.8, curve: Curves.elasticOut),
           ),
         );
+
+    _downloadArrowAnimation =
+        Tween<double>(
+          begin: -4,
+          end: 4,
+        ).animate(
+          CurvedAnimation(
+            parent: _downloadArrowController,
+            curve: Curves.easeInOut,
+          ),
+        );
   }
 
   @override
@@ -125,10 +144,12 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
         _buttonController.forward();
         _progressController.forward();
         _completionController.reset();
+        _downloadArrowController.repeat(reverse: true);
         _startTextCycling();
       } else {
         _buttonController.reverse();
         _progressController.reverse();
+        _downloadArrowController.stop();
         _stopTextCycling();
       }
     }
@@ -202,6 +223,7 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
     _buttonController.dispose();
     _progressController.dispose();
     _completionController.dispose();
+    _downloadArrowController.dispose();
     super.dispose();
   }
 
@@ -212,6 +234,7 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
         _buttonController,
         _progressController,
         _completionController,
+        _downloadArrowController,
       ]),
       builder: (context, child) {
         return Column(
@@ -220,28 +243,45 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
             AnimatedContainer(
               duration: const Duration(milliseconds: 400),
               curve: Curves.easeInOut,
-              height: (widget.isLoading || widget.isCompleted) ? 8 : 0,
+              height: (widget.isLoading || widget.isCompleted) ? 20 : 0,
               margin: const EdgeInsets.only(bottom: 12),
-              child: AnimatedOpacity(
-                opacity: widget.isCompleted ? 1.0 : _progressAnimation.value,
-                duration: const Duration(milliseconds: 400),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: widget.isCompleted
-                        ? 1.0
-                        : (widget.progress != null
-                              ? widget.progress! / 100.0
-                              : null),
-                    backgroundColor: widget.isCompleted
-                        ? const Color(0xFF10B981).withValues(alpha: 0.2)
-                        : const Color(0xFF1E88E5).withValues(alpha: 0.2),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      widget.isCompleted
-                          ? const Color(0xFF10B981)
-                          : const Color(0xFF1E88E5),
-                    ),
-                    minHeight: 8,
+              child: Center(
+                child: AnimatedOpacity(
+                  opacity: widget.isCompleted ? 1.0 : _progressAnimation.value,
+                  duration: const Duration(milliseconds: 400),
+                  child: Builder(
+                    builder: (context) {
+                      final screenWidth = MediaQuery.sizeOf(context).width;
+                      final progressWidth =
+                          screenWidth - 64; // 32px padding on each side
+
+                      return LinearPercentIndicator(
+                        width: progressWidth,
+                        lineHeight: 8,
+                        percent: widget.isCompleted
+                            ? 1.0
+                            : (widget.progress != null
+                                  ? widget.progress! / 100.0
+                                  : 0.0),
+                        backgroundColor: widget.isCompleted
+                            ? const Color(0xFF10B981).withValues(alpha: 0.2)
+                            : const Color(0xFF1E88E5).withValues(alpha: 0.2),
+                        linearGradient: LinearGradient(
+                          colors: widget.isCompleted
+                              ? [
+                                  const Color(0xFF10B981),
+                                  const Color(0xFF059669),
+                                ]
+                              : [
+                                  const Color(0xFF1E88E5),
+                                  const Color(0xFF42D9FF),
+                                ],
+                        ),
+                        barRadius: const Radius.circular(4),
+                        animation: true,
+                        animateFromLastPercent: true,
+                      );
+                    },
                   ),
                 ),
               ),
@@ -340,45 +380,54 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
                               key: const ValueKey('loading'),
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const SizedBox(
+                                SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
+                                  child: Transform.translate(
+                                    offset: Offset(
+                                      0,
+                                      _downloadArrowAnimation.value,
+                                    ),
+                                    child: const Icon(
+                                      Icons.arrow_downward,
+                                      color: Colors.white,
+                                      size: 20,
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    AnimatedSwitcher(
-                                      duration: const Duration(
-                                        milliseconds: 500,
-                                      ),
-                                      child: Text(
-                                        _loadingTexts[_currentTextIndex],
-                                        key: ValueKey(_currentTextIndex),
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white,
+                                AnimatedSize(
+                                  duration: const Duration(milliseconds: 500),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      AnimatedSwitcher(
+                                        duration: const Duration(
+                                          milliseconds: 500,
+                                        ),
+                                        child: Text(
+                                          _loadingTexts[_currentTextIndex],
+                                          key: ValueKey(_currentTextIndex),
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    if (widget.progress != null)
-                                      Text(
-                                        '${widget.progress}%',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.white70,
+                                      if (widget.progress != null)
+                                        Text(
+                                          '${widget.progress}%',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.white70,
+                                          ),
                                         ),
-                                      ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ],
                             )

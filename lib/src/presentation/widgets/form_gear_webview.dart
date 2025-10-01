@@ -173,16 +173,20 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
                     child: SafeArea(
                       child: InAppWebView(
                         initialSettings: _webViewSettings,
-                        initialUrlRequest: URLRequest(url: WebUri(widget.url)),
-                        initialData: widget.htmlContent != null
-                            ? InAppWebViewInitialData(data: widget.htmlContent!)
+                        initialUrlRequest: widget.htmlContent == null
+                            ? URLRequest(url: WebUri(widget.url))
                             : null,
+                        // DON'T use initialData - loads before bridge
+                        // Instead, load HTML after bridge is ready
                         onWebViewCreated: (controller) async {
                           widget.onWebViewCreated?.call(controller);
 
                           // Initialize WebView with BLoC
                           context.read<FormGearWebViewBloc>().add(
-                            InitializeWebView(controller),
+                            InitializeWebView(
+                              controller,
+                              widget.htmlContent,
+                            ),
                           );
                         },
                         onLoadStart: (controller, url) {
@@ -258,7 +262,8 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
     );
   }
 
-  /// Handle back navigation - check if WebView can go back
+  /// Handle back navigation - show exit confirmation dialog
+  /// Multi-section navigation is handled by FormGear/FasihForm JavaScript
   Future<void> _handleBackNavigation(InAppWebViewController? controller) async {
     if (controller == null) {
       // No WebView controller, allow normal back navigation
@@ -268,24 +273,198 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
       return;
     }
 
-    try {
-      // Check if WebView can go back
-      final canGoBack = await controller.canGoBack();
+    // Always show exit confirmation dialog
+    // Multi-section forms handle their own internal navigation
+    await _showExitConfirmationDialog(controller);
+  }
 
-      if (canGoBack) {
-        // WebView has history, navigate back within WebView
-        await controller.goBack();
-        FormGearLogger.webview('WebView navigated back');
-      } else {
-        // No WebView history, allow normal back navigation
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
+  /// Show exit confirmation dialog before closing the form
+  /// Uses SDK's modern dialog design system
+  Future<void> _showExitConfirmationDialog(
+    InAppWebViewController controller,
+  ) async {
+    if (!mounted) return;
+
+    final shouldExit = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 340),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header with warning icon
+              Container(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF3C7),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.warning_amber_rounded,
+                        color: Color(0xFFF59E0B),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        'Perhatian',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1F2937),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Content
+              Container(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Apakah Anda yakin akan keluar dari halaman ini?',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xFF6B7280),
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Action buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () =>
+                                Navigator.of(dialogContext).pop(false),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(
+                                color: Colors.grey.withValues(alpha: 0.3),
+                                width: 1.5,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            child: const Text(
+                              'Tidak',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF6B7280),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFF1E88E5),
+                                  Color(0xFF1976D2),
+                                ],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFF1E88E5,
+                                  ).withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: ElevatedButton(
+                              onPressed: () =>
+                                  Navigator.of(dialogContext).pop(true),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                              ),
+                              child: const Text(
+                                'Iya',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if ((shouldExit ?? false) && mounted) {
+      // Call mobileExit() to trigger cleanup in FormGear/FasihForm
+      try {
+        await controller.evaluateJavascript(
+          source: '''
+            (function() {
+              try {
+                if (typeof window.mobileExit === 'function') {
+                  window.mobileExit();
+                } else if (typeof Android !== 'undefined' && typeof Android.mobileExit === 'function') {
+                  Android.mobileExit();
+                }
+              } catch (e) {
+                console.log('mobileExit not available: ' + e);
+              }
+            })();
+          ''',
+        );
+        FormGearLogger.webview('Called mobileExit before closing form');
+      } on Exception catch (e) {
+        FormGearLogger.webviewError('Error calling mobileExit: $e');
       }
-    } on Exception catch (e) {
-      FormGearLogger.webviewError('Error checking WebView back navigation: $e');
 
-      // On error, allow normal back navigation
+      // Close the form
       if (mounted) {
         Navigator.of(context).pop();
       }

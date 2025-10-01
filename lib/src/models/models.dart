@@ -3,6 +3,8 @@ export 'bps_user.dart';
 export 'custom_data_template.dart';
 export 'download_progress_callback.dart';
 export 'download_result.dart';
+export 'file_upload_data.dart';
+export 'file_upload_result.dart';
 export 'form_engine_entity.dart';
 export 'form_engine_response.dart';
 export 'form_engine_type.dart';

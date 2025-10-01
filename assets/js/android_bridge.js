@@ -1,3 +1,8 @@
+// Prevent double injection
+if (window.Android && window.Android._initialized) {
+  console.log('Android bridge already initialized, skipping...');
+} else {
+
 // iOS WKWebView compatibility layer
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
@@ -6,6 +11,7 @@ const bridgeData = window._formGearBridgeData || {};
 const actionMethods = window._formGearActionMethods || [];
 const handlerNames = window._formGearHandlerNames || [];
 
+// Create Android bridge with real handlers
 // Traditional Android WebView bridge object with synchronous data methods
 window.Android = new Proxy({}, {
   get: function(target, prop) {
@@ -129,8 +135,13 @@ if (isIOS) {
   });
 }
 
+// Mark as initialized to prevent double injection
+window.Android._initialized = true;
+
 // Log that bridge is ready
 console.log('Android Bridge injected with methods:', handlerNames);
 console.log('Bridge data methods:', Object.keys(bridgeData));
 console.log('Action methods:', actionMethods);
 if (isIOS) console.log('iOS WKWebView compatibility layer enabled');
+
+} // End of double-injection prevention

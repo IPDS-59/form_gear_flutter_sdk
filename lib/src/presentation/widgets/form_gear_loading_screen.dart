@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:percent_indicator/percent_indicator.dart';
 
 /// A modern loading screen widget for FormGear with logo and animated progress
 class FormGearLoadingScreen extends StatefulWidget {
@@ -142,11 +143,11 @@ class _FormGearLoadingScreenState extends State<FormGearLoadingScreen> {
             ),
             const SizedBox(height: 40),
 
-            // Modern progress bar with rounded corners and gradient
-            _ProgressBar(loadingProgress: widget.loadingProgress),
+            // Linear progress bar with gradient
+            _LinearProgressBar(loadingProgress: widget.loadingProgress),
             const SizedBox(height: 16),
 
-            // Progress percentage with modern styling
+            // Progress percentage
             _ProgressPercentage(loadingProgress: widget.loadingProgress),
           ],
         ),
@@ -293,9 +294,10 @@ class _AnimatedLogoState extends State<_AnimatedLogo>
   }
 }
 
-/// Progress bar widget with FormGear brand colors
-class _ProgressBar extends StatelessWidget {
-  const _ProgressBar({
+/// Linear progress bar widget with FormGear brand colors
+/// using percent_indicator
+class _LinearProgressBar extends StatelessWidget {
+  const _LinearProgressBar({
     required this.loadingProgress,
   });
 
@@ -303,57 +305,28 @@ class _ProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = loadingProgress > 0 ? loadingProgress / 100.0 : 0.0;
+    final progress = loadingProgress / 100.0;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final progressWidth = screenWidth - 64; // 32px padding on each side
 
-    return Container(
-      width: 240,
-      height: 8,
-      decoration: BoxDecoration(
-        color: const Color(0xFFE5E7EB), // Light gray background
-        borderRadius: BorderRadius.circular(4),
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: (screenWidth - progressWidth) / 2,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: Stack(
-          children: [
-            // Gradient progress bar
-            FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: progress,
-              child: Container(
-                height: 8,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Color(0xFF1E88E5), // FormGear primary blue
-                      Color(0xFF42D9FF), // FormGear light blue
-                    ],
-                  ),
-                  borderRadius: BorderRadius.all(Radius.circular(4)),
-                ),
-              ),
-            ),
-            // Subtle shine effect
-            if (loadingProgress > 0 && loadingProgress < 100)
-              Positioned(
-                left: (240 * progress) - 20,
-                child: Container(
-                  width: 20,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.white.withValues(alpha: 0),
-                        Colors.white.withValues(alpha: 0.3),
-                        Colors.white.withValues(alpha: 0),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ),
+      child: LinearPercentIndicator(
+        width: progressWidth,
+        lineHeight: 8,
+        percent: progress,
+        backgroundColor: const Color(0xFFE5E7EB),
+        linearGradient: const LinearGradient(
+          colors: [
+            Color(0xFF1E88E5), // FormGear primary blue
+            Color(0xFF42D9FF), // FormGear light blue
           ],
         ),
+        barRadius: const Radius.circular(4),
+        animation: true,
+        animateFromLastPercent: true,
       ),
     );
   }
