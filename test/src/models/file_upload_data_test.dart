@@ -108,7 +108,7 @@ void main() {
           file: testFile,
           fileName: 'test_photo.jpg',
           fileUri: 'file:///path/to/test/file.jpg',
-          metadata: {'key': 'value1'},
+          metadata: const {'key': 'value1'},
         );
 
         final data2 = FileUploadData(
@@ -118,7 +118,7 @@ void main() {
           file: testFile,
           fileName: 'test_photo.jpg',
           fileUri: 'file:///path/to/test/file.jpg',
-          metadata: {'key': 'value2'},
+          metadata: const {'key': 'value2'},
         );
 
         expect(data1, isNot(equals(data2)));
@@ -168,7 +168,7 @@ void main() {
           file: testFile,
           fileName: 'test_photo.jpg',
           fileUri: 'file:///path/to/test/file.jpg',
-          metadata: {'key': 'value'},
+          metadata: const {'key': 'value'},
         );
 
         final copied = original.copyWith();
@@ -233,7 +233,7 @@ void main() {
           file: File('/storage/media/photo_123.jpg'),
           fileName: 'photo_123.jpg',
           fileUri: 'file:///storage/media/photo_123.jpg',
-          metadata: {
+          metadata: const {
             'mimeType': 'image/jpeg',
             'source': 'camera',
             'timestamp': '2024-01-01T10:30:00Z',
@@ -254,7 +254,7 @@ void main() {
           file: File('/storage/documents/license.pdf'),
           fileName: 'business_license.pdf',
           fileUri: 'file:///storage/documents/license.pdf',
-          metadata: {
+          metadata: const {
             'mimeType': 'application/pdf',
             'source': 'file_picker',
             'fileSize': 2048576,
@@ -274,7 +274,7 @@ void main() {
           file: File('/storage/audio/interview_001.m4a'),
           fileName: 'interview_001.m4a',
           fileUri: 'file:///storage/audio/interview_001.m4a',
-          metadata: {
+          metadata: const {
             'mimeType': 'audio/mp4',
             'source': 'audio_recorder',
             'duration': 1800,

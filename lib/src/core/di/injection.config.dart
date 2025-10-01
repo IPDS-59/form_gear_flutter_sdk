@@ -17,18 +17,12 @@ import 'package:form_gear_engine_sdk/src/core/config/config_provider.dart'
 import 'package:form_gear_engine_sdk/src/core/config/form_gear_api_config.dart'
     as _i100;
 import 'package:form_gear_engine_sdk/src/core/di/injection.dart' as _i621;
-import 'package:form_gear_engine_sdk/src/core/download/form_gear_download_manager.dart'
-    as _i714;
-import 'package:form_gear_engine_sdk/src/core/download/template_download_manager.dart'
-    as _i535;
 import 'package:form_gear_engine_sdk/src/core/retry/retry_service.dart'
     as _i825;
 import 'package:form_gear_engine_sdk/src/core/security/encryption_service.dart'
     as _i174;
 import 'package:form_gear_engine_sdk/src/core/version/form_gear_version_manager.dart'
     as _i771;
-import 'package:form_gear_engine_sdk/src/core/version/template_version_manager.dart'
-    as _i1069;
 import 'package:form_gear_engine_sdk/src/data/datasources/form_engine_remote_data_source.dart'
     as _i242;
 import 'package:form_gear_engine_sdk/src/data/repositories/download_repository_impl.dart'
@@ -57,12 +51,8 @@ import 'package:form_gear_engine_sdk/src/domain/usecases/check_form_engine_versi
     as _i876;
 import 'package:form_gear_engine_sdk/src/domain/usecases/download_form_engine_usecase.dart'
     as _i985;
-import 'package:form_gear_engine_sdk/src/domain/usecases/download_template_usecase.dart'
-    as _i612;
 import 'package:form_gear_engine_sdk/src/domain/usecases/extract_form_engine_usecase.dart'
     as _i356;
-import 'package:form_gear_engine_sdk/src/domain/usecases/extract_template_usecase.dart'
-    as _i87;
 import 'package:form_gear_engine_sdk/src/domain/usecases/get_assignment_usecase.dart'
     as _i1048;
 import 'package:form_gear_engine_sdk/src/domain/usecases/get_local_form_engine_version_usecase.dart'
@@ -119,14 +109,13 @@ _i174.GetIt $initGetIt(
       dio: gh<_i361.Dio>(),
     ),
   );
-  gh.lazySingleton<_i714.FormGearDownloadManager>(
-    () => _i714.FormGearDownloadManager(gh<_i361.Dio>()),
-  );
-  gh.lazySingleton<_i87.ExtractTemplateUseCase>(
-    () => _i87.ExtractTemplateUseCase(gh<_i422.ZipRepository>()),
-  );
   gh.lazySingleton<_i356.ExtractFormEngineUseCase>(
     () => _i356.ExtractFormEngineUseCase(gh<_i422.ZipRepository>()),
+  );
+  gh.lazySingleton<_i458.FormEngineRepository>(
+    () => _i1069.FormEngineRepositoryImpl(
+      remoteDataSource: gh<_i242.FormEngineRemoteDataSource>(),
+    ),
   );
   gh.lazySingleton<_i471.GetLocalTemplateVersionUseCase>(
     () => _i471.GetLocalTemplateVersionUseCase(gh<_i906.VersionRepository>()),
@@ -143,12 +132,6 @@ _i174.GetIt $initGetIt(
   gh.lazySingleton<_i170.DownloadRepository>(
     () => _i323.DownloadRepositoryImpl(gh<_i361.Dio>()),
   );
-  gh.lazySingleton<_i458.FormEngineRepository>(
-    () => _i1069.FormEngineRepositoryImpl(
-      remoteDataSource: gh<_i242.FormEngineRemoteDataSource>(),
-      downloadManager: gh<_i714.FormGearDownloadManager>(),
-    ),
-  );
   gh.lazySingleton<_i876.CheckFormEngineVersionUseCase>(
     () => _i876.CheckFormEngineVersionUseCase(gh<_i458.FormEngineRepository>()),
   );
@@ -159,25 +142,12 @@ _i174.GetIt $initGetIt(
     () => _i771.FormGearVersionManager(
       gh<_i876.CheckFormEngineVersionUseCase>(),
       gh<_i186.IsFormEngineDownloadedUseCase>(),
+      gh<_i190.GetLocalFormEngineVersionUseCase>(),
       gh<_i361.Dio>(),
     ),
   );
   gh.lazySingleton<_i985.DownloadFormEngineUseCase>(
     () => _i985.DownloadFormEngineUseCase(gh<_i170.DownloadRepository>()),
-  );
-  gh.lazySingleton<_i612.DownloadTemplateUseCase>(
-    () => _i612.DownloadTemplateUseCase(gh<_i170.DownloadRepository>()),
-  );
-  gh.lazySingleton<_i535.TemplateDownloadManager>(
-    () => _i535.TemplateDownloadManager(
-      gh<_i612.DownloadTemplateUseCase>(),
-      gh<_i87.ExtractTemplateUseCase>(),
-      gh<_i980.SaveTemplateVersionUseCase>(),
-      gh<_i471.GetLocalTemplateVersionUseCase>(),
-    ),
-  );
-  gh.lazySingleton<_i1069.TemplateVersionManager>(
-    () => _i1069.TemplateVersionManager(gh<_i535.TemplateDownloadManager>()),
   );
   return getIt;
 }

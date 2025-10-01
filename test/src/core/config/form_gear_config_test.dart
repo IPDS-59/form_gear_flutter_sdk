@@ -16,9 +16,7 @@ void main() {
 
         const apiConfig = FormGearApiConfig(
           baseUrl: 'https://api.example.com',
-          templateZipEndpoint: '/api/template/zip/{templateId}',
           formEngineEndpoint: '/api/form-engine',
-          lookupEndpoint: '/api/lookup/{surveyId}',
         );
 
         const config = FormGearConfig(
@@ -622,9 +620,7 @@ void main() {
       test('should configure with API config', () {
         const apiConfig = FormGearApiConfig(
           baseUrl: 'https://api.example.com',
-          templateZipEndpoint: '/template/zip/{templateId}',
           formEngineEndpoint: '/form-engine',
-          lookupEndpoint: '/lookup/{surveyId}',
         );
 
         const config = FormGearConfig(
@@ -676,7 +672,6 @@ void main() {
 
         const apiConfig = FormGearApiConfig(
           baseUrl: 'https://fasih-api.bps.go.id',
-          templateZipEndpoint: '/api/template/zip/{templateId}',
           formEngineEndpoint: '/api/form-engine',
         );
 
@@ -705,7 +700,7 @@ void main() {
       test('should configure for FASIH web app', () {
         const apiConfig = FormGearApiConfig(
           baseUrl: 'https://fasih-web.bps.go.id',
-          templateZipEndpoint: '/api/template/zip/{templateId}',
+          formEngineEndpoint: '/api/form-engine',
         );
 
         const config = FormGearConfig(

@@ -4,9 +4,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:form_gear_engine_sdk/src/core/base/result.dart';
 import 'package:form_gear_engine_sdk/src/core/constants/directory_constants.dart';
-import 'package:form_gear_engine_sdk/src/core/di/injection.dart';
-import 'package:form_gear_engine_sdk/src/core/download/form_gear_download_manager.dart';
 import 'package:form_gear_engine_sdk/src/domain/usecases/check_form_engine_version_usecase.dart';
+import 'package:form_gear_engine_sdk/src/domain/usecases/get_local_form_engine_version_usecase.dart';
 import 'package:form_gear_engine_sdk/src/domain/usecases/is_form_engine_downloaded_usecase.dart';
 import 'package:form_gear_engine_sdk/src/models/models.dart';
 import 'package:form_gear_engine_sdk/src/presentation/screens/form_engine_update_screen.dart';
@@ -21,11 +20,13 @@ class FormGearVersionManager {
   const FormGearVersionManager(
     this._checkFormEngineVersionUseCase,
     this._isFormEngineDownloadedUseCase,
+    this._getLocalFormEngineVersionUseCase,
     this._dio,
   );
 
   final CheckFormEngineVersionUseCase _checkFormEngineVersionUseCase;
   final IsFormEngineDownloadedUseCase _isFormEngineDownloadedUseCase;
+  final GetLocalFormEngineVersionUseCase _getLocalFormEngineVersionUseCase;
   final Dio _dio;
 
   /// Checks form engine version and returns result with state information
@@ -117,8 +118,12 @@ class FormGearVersionManager {
     }
 
     // Get local version for comparison
-    final localVersion = await getIt<FormGearDownloadManager>()
-        .getLocalFormEngineVersion(formEngineIdStr);
+    final localVersionResult = await _getLocalFormEngineVersionUseCase(
+      formEngineIdStr,
+    );
+    final localVersion = localVersionResult is Success<String?>
+        ? localVersionResult.data
+        : null;
 
     // STATE 2: Missing version file (treat as missing)
     if (localVersion == null) {

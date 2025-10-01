@@ -11,15 +11,36 @@ class EncryptionUtils {
 
   /// Encrypts sensitive string data using base64 encoding with salt
   /// For basic protection of PII and form responses
-  static String encryptData(String data, {String? key}) {
+  ///
+  /// **Security Note**: Encryption key is REQUIRED. Never use encryption
+  /// without providing a secure key. For production, keys should be:
+  /// - Generated per device using platform secure storage
+  /// - Derived from user credentials + device identifiers
+  /// - Never hardcoded in source code
+  ///
+  /// Throws [ArgumentError] if no encryption key is provided.
+  static String encryptData(String data, {required String key}) {
     if (data.isEmpty) return data;
 
+    if (key.isEmpty) {
+      throw ArgumentError(
+        'Encryption key cannot be empty. '
+        'For secure encryption, provide a key from secure storage.',
+      );
+    }
+
+    if (key.length < 16) {
+      throw ArgumentError(
+        'Encryption key must be at least 16 characters. '
+        'Current length: ${key.length}',
+      );
+    }
+
     try {
-      final actualKey = key ?? _generateDefaultKey();
       final saltedData =
           '$_defaultSalt:$data:${DateTime.now().millisecondsSinceEpoch}';
       final bytes = utf8.encode(saltedData);
-      final digest = sha256.convert(utf8.encode(actualKey));
+      final digest = sha256.convert(utf8.encode(key));
 
       // Simple XOR encryption with key digest
       final encrypted = Uint8List.fromList(bytes);
@@ -30,26 +51,38 @@ class EncryptionUtils {
       }
 
       return base64.encode(encrypted);
-    } on Exception {
-      // If encryption fails, return original data with warning prefix
-      return 'UNENCRYPTED:$data';
+    } on Exception catch (e) {
+      throw Exception('Encryption failed: $e');
     }
   }
 
   /// Decrypts sensitive string data from base64 encoding
-  /// Returns original data if decryption fails
-  static String decryptData(String encryptedData, {String? key}) {
+  ///
+  /// **Security Note**: Decryption key is REQUIRED and must match the
+  /// encryption key used. Never attempt decryption without the correct key.
+  ///
+  /// Throws [ArgumentError] if no decryption key is provided.
+  /// Throws [Exception] if decryption fails.
+  static String decryptData(String encryptedData, {required String key}) {
     if (encryptedData.isEmpty) return encryptedData;
 
-    // Handle unencrypted data
-    if (encryptedData.startsWith('UNENCRYPTED:')) {
-      return encryptedData.substring(12);
+    if (key.isEmpty) {
+      throw ArgumentError(
+        'Decryption key cannot be empty. '
+        'Provide the same key used for encryption.',
+      );
+    }
+
+    if (key.length < 16) {
+      throw ArgumentError(
+        'Decryption key must be at least 16 characters. '
+        'Current length: ${key.length}',
+      );
     }
 
     try {
-      final actualKey = key ?? _generateDefaultKey();
       final encrypted = base64.decode(encryptedData);
-      final digest = sha256.convert(utf8.encode(actualKey));
+      final digest = sha256.convert(utf8.encode(key));
       final keyBytes = digest.bytes;
 
       // XOR decryption
@@ -68,9 +101,8 @@ class EncryptionUtils {
       }
 
       return saltedData;
-    } on Exception {
-      // If decryption fails, return original data
-      return encryptedData;
+    } on Exception catch (e) {
+      throw Exception('Decryption failed: $e. Check if correct key is used.');
     }
   }
 
@@ -91,9 +123,14 @@ class EncryptionUtils {
   }
 
   /// Encrypts JSON data for form responses
+  ///
+  /// **Security Note**: Encryption key is REQUIRED for all sensitive data.
+  /// The key should be securely generated and stored per device/user.
+  ///
+  /// Throws [ArgumentError] if no encryption key is provided.
   static Map<String, dynamic> encryptFormData(
     Map<String, dynamic> formData, {
-    String? encryptionKey,
+    required String encryptionKey,
     List<String> sensitiveFields = const [
       'name',
       'phone',
@@ -107,6 +144,20 @@ class EncryptionUtils {
       'narasumber',
     ],
   }) {
+    if (encryptionKey.isEmpty) {
+      throw ArgumentError(
+        'Encryption key is required for encrypting form data. '
+        'Generate a secure key using generateSecureKey().',
+      );
+    }
+
+    if (encryptionKey.length < 16) {
+      throw ArgumentError(
+        'Encryption key must be at least 16 characters. '
+        'Current length: ${encryptionKey.length}',
+      );
+    }
+
     final encrypted = Map<String, dynamic>.from(formData);
 
     for (final field in sensitiveFields) {
@@ -136,10 +187,29 @@ class EncryptionUtils {
   }
 
   /// Decrypts JSON data for form responses
+  ///
+  /// **Security Note**: Decryption key is REQUIRED and must match the key
+  /// used for encryption. Use the same key stored securely per device/user.
+  ///
+  /// Throws [ArgumentError] if no decryption key is provided.
   static Map<String, dynamic> decryptFormData(
     Map<String, dynamic> encryptedData, {
-    String? encryptionKey,
+    required String encryptionKey,
   }) {
+    if (encryptionKey.isEmpty) {
+      throw ArgumentError(
+        'Decryption key is required for decrypting form data. '
+        'Use the same key that was used for encryption.',
+      );
+    }
+
+    if (encryptionKey.length < 16) {
+      throw ArgumentError(
+        'Decryption key must be at least 16 characters. '
+        'Current length: ${encryptionKey.length}',
+      );
+    }
+
     if (encryptedData['_encryption'] == null) {
       // Data is not encrypted
       return encryptedData;
@@ -196,7 +266,7 @@ class EncryptionUtils {
   /// Internal method to encrypt nested data structures
   static Map<String, dynamic> _encryptNestedData(
     Map<String, dynamic> data,
-    String? key,
+    String key,
   ) {
     final encrypted = <String, dynamic>{};
 
@@ -219,7 +289,7 @@ class EncryptionUtils {
   /// Internal method to decrypt nested data structures
   static Map<String, dynamic> _decryptNestedData(
     Map<String, dynamic> data,
-    String? key,
+    String key,
   ) {
     final decrypted = <String, dynamic>{};
 
@@ -247,15 +317,5 @@ class EncryptionUtils {
     } on FormatException {
       return false;
     }
-  }
-
-  /// Generates default encryption key based on device/app identifiers
-  static String _generateDefaultKey() {
-    // In production, this should use device-specific identifiers
-    // For now, use a combination of constants
-    const baseKey = 'FASIH_FORM_GEAR_SDK_2024';
-    final timestamp =
-        DateTime.now().millisecondsSinceEpoch ~/ 86400000; // Daily rotation
-    return '$baseKey:$timestamp';
   }
 }
