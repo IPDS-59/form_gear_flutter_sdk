@@ -142,6 +142,7 @@ _i174.GetIt $initGetIt(
     () => _i771.FormGearVersionManager(
       gh<_i876.CheckFormEngineVersionUseCase>(),
       gh<_i186.IsFormEngineDownloadedUseCase>(),
+      gh<_i190.GetLocalFormEngineVersionUseCase>(),
       gh<_i361.Dio>(),
     ),
   );
