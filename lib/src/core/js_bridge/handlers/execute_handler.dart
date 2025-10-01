@@ -201,15 +201,29 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
         );
       }
 
-      // Request storage permission first (for Android)
-      final storageStatus = await Permission.storage.request();
-      if (storageStatus.isDenied) {
-        // Try with media access permission for newer Android versions
+      // Request storage permission based on file type
+      // For images/videos, request photos permission
+      // For other files (CSV, documents), request storage permission
+      final isMediaFile =
+          acceptType != null &&
+          (acceptType.contains('image') || acceptType.contains('video'));
+
+      if (isMediaFile) {
+        // Request photos permission for images/videos
         final mediaStatus = await Permission.photos.request();
         if (mediaStatus.isDenied) {
           return ActionInfoJs(
             success: false,
-            error: 'Storage permission denied',
+            error: 'Photos permission denied',
+          );
+        }
+      } else {
+        // Request storage permission for other files (CSV, documents, etc.)
+        final storageStatus = await Permission.storage.request();
+        if (storageStatus.isDenied) {
+          // Storage permission is optional on newer Android versions
+          FormGearLogger.webview(
+            'Storage permission denied, but continuing with file picker',
           );
         }
       }
