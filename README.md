@@ -29,7 +29,7 @@ A Flutter SDK for FormGear - A flexible, JSON-driven form generation framework f
 
 ```yaml
 dependencies:
-  form_gear_engine_sdk: ^0.1.0
+  form_gear_engine_sdk: ^0.1.1
 ```
 
 ### Platform Setup
