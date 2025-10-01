@@ -149,7 +149,7 @@ class FormGearServer {
       final lookupDir = await DirectoryConstants.getLookupDirectory(lookupId);
       final lookupFile = File('${lookupDir.path}/$version.json');
 
-      if (!await lookupFile.exists()) {
+      if (!lookupFile.existsSync()) {
         return Response.notFound(
           jsonEncode({
             'error':
