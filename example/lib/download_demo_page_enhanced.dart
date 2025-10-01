@@ -91,10 +91,17 @@ class _EnhancedDownloadDemoPageState extends State<EnhancedDownloadDemoPage> {
         json.decode(manifestContent) as Map,
       );
 
-      // Filter assets that start with our path
-      final assetFiles = manifestMap.keys
-          .where((key) => key.startsWith(status.assetPath))
-          .toList();
+      // Filter assets that start with our path and skip system files
+      final assetFiles = manifestMap.keys.where((key) {
+        if (!key.startsWith(status.assetPath)) return false;
+
+        // Skip macOS system files
+        final fileName = key.split('/').last;
+        if (fileName == '.DS_Store') return false;
+        if (fileName.startsWith('._')) return false;
+
+        return true;
+      }).toList();
 
       if (assetFiles.isEmpty) {
         throw Exception('No assets found in ${status.assetPath}');
@@ -105,26 +112,31 @@ class _EnhancedDownloadDemoPageState extends State<EnhancedDownloadDemoPage> {
       );
 
       for (var i = 0; i < assetFiles.length; i++) {
-        final assetFile = assetFiles[i];
-        final relativePath = assetFile.substring(status.assetPath.length);
-        final targetFile = File('${status.path}$relativePath');
+        try {
+          final assetFile = assetFiles[i];
+          final relativePath = assetFile.substring(status.assetPath.length);
+          final targetFile = File('${status.path}$relativePath');
 
-        // Create parent directory
-        await targetFile.parent.create(recursive: true);
+          // Create parent directory
+          await targetFile.parent.create(recursive: true);
 
-        // Copy file from assets
-        final data = await rootBundle.load(assetFile);
-        final bytes = data.buffer.asUint8List();
-        await targetFile.writeAsBytes(bytes);
+          // Copy file from assets
+          final data = await rootBundle.load(assetFile);
+          final bytes = data.buffer.asUint8List();
+          await targetFile.writeAsBytes(bytes);
 
-        // Update progress
-        final progress = ((i + 1) / assetFiles.length * 100).round();
-        setState(() {
-          _assetStatus[name] = status.copyWith(progress: progress);
-        });
+          // Update progress
+          final progress = ((i + 1) / assetFiles.length * 100).round();
+          setState(() {
+            _assetStatus[name] = status.copyWith(progress: progress);
+          });
 
-        // Small delay to show progress
-        await Future.delayed(const Duration(milliseconds: 50));
+          // Small delay to show progress
+          await Future.delayed(const Duration(milliseconds: 50));
+        } catch (e) {
+          debugPrint('Failed to copy file: $e');
+          // Continue with other files
+        }
       }
 
       setState(() {

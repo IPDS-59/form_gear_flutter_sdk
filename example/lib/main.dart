@@ -113,10 +113,17 @@ Future<void> _copyAssetDirectory(String assetPath, String targetPath) async {
       json.decode(manifestContent) as Map,
     );
 
-    // Filter assets that start with our path
-    final assetFiles = manifestMap.keys
-        .where((key) => key.startsWith(assetPath))
-        .toList();
+    // Filter assets that start with our path and skip system files
+    final assetFiles = manifestMap.keys.where((key) {
+      if (!key.startsWith(assetPath)) return false;
+
+      // Skip macOS system files
+      final fileName = key.split('/').last;
+      if (fileName == '.DS_Store') return false;
+      if (fileName.startsWith('._')) return false;
+
+      return true;
+    }).toList();
 
     if (assetFiles.isEmpty) {
       debugPrint('No assets found in $assetPath');
@@ -126,19 +133,24 @@ Future<void> _copyAssetDirectory(String assetPath, String targetPath) async {
     debugPrint('Copying ${assetFiles.length} files from $assetPath...');
 
     for (final assetFile in assetFiles) {
-      // Calculate relative path and target file path
-      final relativePath = assetFile.substring(assetPath.length);
-      final targetFile = File('$targetPath$relativePath');
+      try {
+        // Calculate relative path and target file path
+        final relativePath = assetFile.substring(assetPath.length);
+        final targetFile = File('$targetPath$relativePath');
 
-      // Create parent directory
-      await targetFile.parent.create(recursive: true);
+        // Create parent directory
+        await targetFile.parent.create(recursive: true);
 
-      // Copy file from assets
-      final data = await rootBundle.load(assetFile);
-      final bytes = data.buffer.asUint8List();
-      await targetFile.writeAsBytes(bytes);
+        // Copy file from assets
+        final data = await rootBundle.load(assetFile);
+        final bytes = data.buffer.asUint8List();
+        await targetFile.writeAsBytes(bytes);
 
-      debugPrint('  ✓ Copied: ${targetFile.path}');
+        debugPrint('  ✓ Copied: ${targetFile.path}');
+      } catch (e) {
+        debugPrint('  ✗ Failed to copy $assetFile: $e');
+        // Continue with other files instead of failing completely
+      }
     }
 
     debugPrint('✓ Completed copying $assetPath');
