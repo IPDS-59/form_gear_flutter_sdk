@@ -96,13 +96,30 @@ flutter:
   uses-material-design: true
 
   # Assets for FormGear
+  # Explicitly list all asset files to ensure they're included in release builds
   assets:
-    - assets/formengine/
-    - assets/formengine/1/
-    - assets/formengine/2/
-    - assets/formgear/
-    - assets/Template/
-    - assets/Template/demo/
+    # Form engine assets - Engine 1 (FormGear)
+    - assets/formengine/1/index.html
+    - assets/formengine/1/form-gear.es.js
+    - assets/formengine/1/form-gear.umd.js
+    - assets/formengine/1/version.json
+    # Form engine assets - Engine 2 (FasihForm)
+    - assets/formengine/2/index.html
+    - assets/formengine/2/fasih-form.es.js
+    - assets/formengine/2/fasih-form.umd.js
+    - assets/formengine/2/version.json
+    # FormGear default data files
+    - assets/formgear/reference.json
+    - assets/formgear/media.json
+    - assets/formgear/response.json
+    # Demo template files
+    - assets/Template/demo/demo_template.json
+    - assets/Template/demo/demo_validation.json
+    - assets/Template/demo/demo_reference.json
+    - assets/Template/demo/demo_response.json
+    - assets/Template/demo/demo_media.json
+    - assets/Template/demo/demo_preset.json
+    - assets/Template/demo/demo_remark.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
