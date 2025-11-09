@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/config/form_config.dart';
-import 'package:form_gear_engine_sdk/src/core/constants/directory_constants.dart';
 import 'package:form_gear_engine_sdk/src/core/di/injection.dart';
 import 'package:form_gear_engine_sdk/src/core/engine/engine_asset_loader.dart';
 import 'package:form_gear_engine_sdk/src/core/engine/handler_factory.dart';
@@ -66,9 +65,6 @@ class FormGearSDK {
     // Convert to legacy config for compatibility
     _config = globalConfig.toLegacyConfig();
 
-    // Initialize BPS directory cache for sync operations
-    await DirectoryConstants.initialize();
-
     // Always call configureDependencies - it will handle updates
     // The DI container now checks if ConfigProvider is already registered
     await configureDependencies(
@@ -100,9 +96,6 @@ class FormGearSDK {
   }) async {
     // Allow re-initialization to update configuration
     _config = config;
-
-    // Initialize BPS directory cache for sync operations
-    await DirectoryConstants.initialize();
 
     // Always call configureDependencies - it will handle updates
     // The DI container now checks if ConfigProvider is already registered

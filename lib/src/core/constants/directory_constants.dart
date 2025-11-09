@@ -24,13 +24,7 @@ class DirectoryConstants {
   /// Gets the base BPS directory following FASIH's pattern
   /// On Android: {external_files_dir}/BPS/
   /// On iOS: {documents_dir}/BPS/
-  /// Results are cached for sync access
   static Future<Directory> getBpsDirectory() async {
-    // Return cached directory if available
-    if (_cachedBpsDirectory != null && _cachedBpsDirectory!.existsSync()) {
-      return _cachedBpsDirectory!;
-    }
-
     Directory baseDir;
 
     if (Platform.isAndroid) {
@@ -58,9 +52,6 @@ class DirectoryConstants {
     if (!baseDir.existsSync()) {
       baseDir.createSync(recursive: true);
     }
-
-    // Cache the directory for sync access
-    _cachedBpsDirectory = baseDir;
 
     return baseDir;
   }
@@ -95,34 +86,13 @@ class DirectoryConstants {
     return templateDir;
   }
 
-  // Cache for BPS directory to avoid repeated async calls
-  static Directory? _cachedBpsDirectory;
-
-  /// Initializes the BPS directory cache
-  /// Should be called during SDK initialization to ensure sync methods work
-  static Future<void> initialize() async {
-    await getBpsDirectory();
-  }
-
-  /// Clears the cached BPS directory
-  /// Useful for testing or when directory structure changes
-  static void clearCache() {
-    _cachedBpsDirectory = null;
-  }
-
   /// Gets the template directory path synchronously (FASIH-compatible)
   /// Returns: {bps_dir}/Template/{templateId}/
-  /// Note: This requires getBpsDirectory() to have been called first
-  /// Throws StateError if BPS directory hasn't been initialized
+  /// Note: This assumes BPS directory already exists
   static Directory getTemplateDirectorySync(String templateId) {
-    if (_cachedBpsDirectory == null) {
-      throw StateError(
-        'BPS directory not initialized. Call getBpsDirectory() first.',
-      );
-    }
-
+    final bpsDir = _getBpsDirectorySync();
     final templateDir = Directory(
-      '${_cachedBpsDirectory!.path}/$templatesDirectory/$templateId',
+      '${bpsDir.path}/$templatesDirectory/$templateId',
     );
 
     if (!templateDir.existsSync()) {
@@ -130,6 +100,39 @@ class DirectoryConstants {
     }
 
     return templateDir;
+  }
+
+  /// Gets the base BPS directory synchronously
+  /// Note: This assumes the directory has been created via async method first
+  static Directory _getBpsDirectorySync() {
+    Directory baseDir;
+
+    if (Platform.isAndroid) {
+      // Use external storage directory on Android to match FASIH
+      // This is a simplified sync version - assumes path is known
+      final documentsPath =
+          Platform.environment['EXTERNAL_STORAGE'] ?? '/storage/emulated/0';
+      baseDir = Directory(
+        '$documentsPath/Android/data/com.example.app/files/$bpsDirectoryName',
+      );
+
+      // Fallback to a more standard path if needed
+      if (!baseDir.existsSync()) {
+        baseDir = Directory(
+          '/data/data/com.example.app/files/$bpsDirectoryName',
+        );
+      }
+    } else {
+      // iOS and other platforms - use a standard path
+      final home = Platform.environment['HOME'] ?? '';
+      baseDir = Directory('$home/Documents/$bpsDirectoryName');
+    }
+
+    if (!baseDir.existsSync()) {
+      baseDir.createSync(recursive: true);
+    }
+
+    return baseDir;
   }
 
   /// Gets the lookup directory path
