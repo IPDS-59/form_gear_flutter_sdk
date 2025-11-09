@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:form_gear_engine_sdk/src/core/constants/directory_constants.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_static/shelf_static.dart';
@@ -24,8 +23,8 @@ class FormGearServer {
   Future<String?> start() async {
     try {
       // Get the BPS data directory for static file serving
-      final appDocDir = await getApplicationDocumentsDirectory();
-      final dataDir = Directory('${appDocDir.path}/BPS');
+      // Use DirectoryConstants to ensure directory exists and is cached
+      final dataDir = await DirectoryConstants.getBpsDirectory();
 
       // Create static file handler for FormGear/BPS assets
       final staticHandler = createStaticHandler(
