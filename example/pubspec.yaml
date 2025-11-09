@@ -102,11 +102,13 @@ flutter:
     - assets/formengine/1/index.html
     - assets/formengine/1/form-gear.es.js
     - assets/formengine/1/form-gear.umd.js
+    - assets/formengine/1/style.css
     - assets/formengine/1/version.json
     # Form engine assets - Engine 2 (FasihForm)
     - assets/formengine/2/index.html
     - assets/formengine/2/fasih-form.es.js
     - assets/formengine/2/fasih-form.umd.js
+    - assets/formengine/2/style.css
     - assets/formengine/2/version.json
     # FormGear default data files
     - assets/formgear/reference.json
