@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.2.0] - 2025-11-09
+
+### ✨ Features
+
+
+### 🐛 Bug Fixes
+- fix(assets): add missing CSS files to example app asset declarations (777855d)
+- fix(server): use DirectoryConstants instead of manual path construction (de2fd2f)
+- fix(directories): remove hardcoded paths causing release build failures (916ae5f)
+- fix(assets): explicitly declare assets in example app for release builds (441dce7)
+
+### 📱 Platform Updates
+
+
+### 📚 Documentation
+
+
+### 🔧 Maintenance
+- chore(dependencies): upgrade dependencies (f3d7aed)
+- chore(git): add .kotlin to gitignore (225855a)
+- chore(pub): run dart pub upgrade (b00c607)
+- chore: bump version to v0.2.0 for next development cycle (750dfd8)
+
+### 📦 Dependencies
+- chore(pub): run dart pub upgrade (b00c607)
+- Flutter SDK: 3.35.5+
+- Dart SDK: Compatible with Flutter 3.35.5
+
+### 🎯 Key Highlights
+- **HTTP Interceptor Support**: Added comprehensive Dio interceptor support for request/response modification
+
+### 📦 Dependencies
+- Flutter SDK: 3.35.5+
+- Dart SDK: Compatible with Flutter 3.35.5
+
+
+
 ## [0.1.1] - 2025-10-01
 
 ### ✨ Features
