@@ -309,20 +309,29 @@ class EngineAssetLoader {
       try {
         const jqueryAssetPath =
             'packages/form_gear_engine_sdk/assets/vendor/jquery-3.5.1.js';
+        FormGearLogger.sdk(
+          'Attempting to load jQuery from: $jqueryAssetPath',
+        );
         final jqueryContent = await rootBundle.loadString(jqueryAssetPath);
         processedHtml = processedHtml.replaceAll(
           '/*JQUERY_CONTENT*/',
           jqueryContent,
         );
         FormGearLogger.sdk(
-          '✅ jQuery content injected (${jqueryContent.length} chars)',
+          'jQuery content injected successfully '
+          '(${jqueryContent.length} chars)',
         );
       } on Exception catch (e) {
-        FormGearLogger.sdkError('❌ Failed to load jQuery: $e');
-        // Fallback: remove the broken script tag
+        FormGearLogger.sdkError(
+          'Failed to load jQuery from bundle assets. '
+          'This may cause form rendering issues if jQuery is required. '
+          'Error: $e',
+        );
+        // Fallback: remove the broken script tag to prevent JS errors
         processedHtml = processedHtml.replaceAll(
           '<script>/*JQUERY_CONTENT*/</script>',
-          '<!-- jQuery injection failed -->',
+          '<!-- jQuery injection failed - '
+              'forms may have limited functionality -->',
         );
       }
     }
