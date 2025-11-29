@@ -46,16 +46,16 @@ dependencies:
   permission_handler: ^12.0.1
 
   # Image and camera
-  image_picker: ^1.2.0
+  image_picker: ^1.2.1
 
   # Location services
   geolocator: ^14.0.2
 
   # File picker
-  file_picker: ^10.3.3
+  file_picker: ^10.3.7
 
   # SVG support
-  flutter_svg: ^2.2.2
+  flutter_svg: ^2.2.3
 
   # Audio recording
   record: ^6.1.2
@@ -64,8 +64,8 @@ dependencies:
   path_provider: ^2.1.5
 
   # Skeleton loading animations
-  skeletonizer: ^2.1.0+1
-  envied: ^1.3.1
+  skeletonizer: ^2.1.1
+  envied: ^1.3.2
 
   # HTTP Inspector (Alice) for debugging network requests
   alice: ^1.0.0
@@ -82,8 +82,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
-  envied_generator: ^1.3.1
-  build_runner: ^2.10.1
+  envied_generator: ^1.3.2
+  build_runner: ^2.10.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
