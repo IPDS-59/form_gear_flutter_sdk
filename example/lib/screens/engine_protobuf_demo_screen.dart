@@ -423,7 +423,7 @@ class _EngineProtobufDemoScreenState extends State<EngineProtobufDemoScreen> {
   Future<AssignmentContext> _prepareAssignmentData() async {
     final stopwatch = Stopwatch()..start();
 
-    // Load JSON files
+    // Load ALL required JSON files
     final templateJson = await rootBundle.loadString(
       'assets/Template/demo/demo_template.json',
     );
@@ -436,11 +436,23 @@ class _EngineProtobufDemoScreenState extends State<EngineProtobufDemoScreen> {
     final referenceJson = await rootBundle.loadString(
       'assets/Template/demo/demo_reference.json',
     );
+    final validationJson = await rootBundle.loadString(
+      'assets/Template/demo/demo_validation.json',
+    );
+    final presetJson = await rootBundle.loadString(
+      'assets/Template/demo/demo_preset.json',
+    );
+    final remarkJson = await rootBundle.loadString(
+      'assets/Template/demo/demo_remark.json',
+    );
 
     Map<String, dynamic> templateData;
     Map<String, dynamic> responseData;
     Map<String, dynamic> mediaData;
     Map<String, dynamic> referenceData;
+    Map<String, dynamic> validationData;
+    Map<String, dynamic> presetData;
+    Map<String, dynamic> remarkData;
 
     if (_useProtobuf) {
       // Protobuf mode: Convert JSON -> Protobuf -> JSON
@@ -496,12 +508,18 @@ class _EngineProtobufDemoScreenState extends State<EngineProtobufDemoScreen> {
       responseData = responseMap;
       mediaData = mediaMap;
       referenceData = jsonDecode(referenceJson) as Map<String, dynamic>;
+      validationData = jsonDecode(validationJson) as Map<String, dynamic>;
+      presetData = jsonDecode(presetJson) as Map<String, dynamic>;
+      remarkData = jsonDecode(remarkJson) as Map<String, dynamic>;
     } else {
       // JSON mode: Direct parsing
       templateData = jsonDecode(templateJson) as Map<String, dynamic>;
       responseData = jsonDecode(responseJson) as Map<String, dynamic>;
       mediaData = jsonDecode(mediaJson) as Map<String, dynamic>;
       referenceData = jsonDecode(referenceJson) as Map<String, dynamic>;
+      validationData = jsonDecode(validationJson) as Map<String, dynamic>;
+      presetData = jsonDecode(presetJson) as Map<String, dynamic>;
+      remarkData = jsonDecode(remarkJson) as Map<String, dynamic>;
 
       stopwatch.stop();
 
@@ -510,7 +528,10 @@ class _EngineProtobufDemoScreenState extends State<EngineProtobufDemoScreen> {
             templateJson.length +
             responseJson.length +
             mediaJson.length +
-            referenceJson.length;
+            referenceJson.length +
+            validationJson.length +
+            presetJson.length +
+            remarkJson.length;
         _jsonProcessingTime = stopwatch.elapsedMilliseconds;
         _dataSizes['template'] = templateJson.length;
         _dataSizes['response'] = responseJson.length;
@@ -555,12 +576,12 @@ class _EngineProtobufDemoScreenState extends State<EngineProtobufDemoScreen> {
       ),
       data: AssignmentData(
         template: templateData,
-        validation: {},
+        validation: validationData,
         reference: referenceData,
         response: responseData,
         media: mediaData,
-        preset: {},
-        remark: {},
+        preset: presetData,
+        remark: remarkData,
         principals: [],
         userInfo: {'name': 'Demo User', 'role': 'ENUMERATOR'},
       ),
