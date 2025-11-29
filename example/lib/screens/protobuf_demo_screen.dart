@@ -6,6 +6,18 @@ import 'package:form_gear_engine_sdk/src/proto/converters/media_converter.dart';
 import 'package:form_gear_engine_sdk/src/proto/converters/response_converter.dart';
 import 'package:form_gear_engine_sdk/src/proto/converters/template_converter.dart';
 
+/// Format bytes to human-readable size (KB, MB, GB)
+String formatBytes(int bytes) {
+  if (bytes < 1024) return '$bytes B';
+  if (bytes < 1024 * 1024) {
+    return '${(bytes / 1024).toStringAsFixed(2)} KB';
+  }
+  if (bytes < 1024 * 1024 * 1024) {
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(2)} MB';
+  }
+  return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
+}
+
 class ProtobufDemoScreen extends StatefulWidget {
   const ProtobufDemoScreen({super.key});
 
@@ -206,8 +218,8 @@ class _ProtobufDemoScreenState extends State<ProtobufDemoScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildStat('Total Protobuf Size', '$totalProtobuf bytes'),
-                  _buildStat('Total JSON Size', '$totalJson bytes'),
+                  _buildStat('Total Protobuf Size', formatBytes(totalProtobuf)),
+                  _buildStat('Total JSON Size', formatBytes(totalJson)),
                   _buildStat(
                     'Size Reduction',
                     '$reduction%',
@@ -290,6 +302,7 @@ class _ProtobufDemoScreenState extends State<ProtobufDemoScreen> {
   Widget _buildResultCard(DemoResult result) {
     final reduction = ((1 - result.protobufSize / result.jsonSize) * 100)
         .toStringAsFixed(1);
+    final saved = result.jsonSize - result.protobufSize;
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -313,12 +326,37 @@ class _ProtobufDemoScreenState extends State<ProtobufDemoScreen> {
               children: [
                 _buildMetric(
                   'Protobuf',
-                  '${result.protobufSize}B',
+                  formatBytes(result.protobufSize),
                   Colors.green,
                 ),
-                _buildMetric('JSON', '${result.jsonSize}B', Colors.orange),
-                _buildMetric('Saved', '$reduction%', Colors.blue),
+                _buildMetric(
+                  'JSON',
+                  formatBytes(result.jsonSize),
+                  Colors.orange,
+                ),
+                _buildMetric('Saved', formatBytes(saved), Colors.blue),
               ],
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$reduction% smaller',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green.shade700,
+                  ),
+                ),
+              ),
             ),
           ],
         ),

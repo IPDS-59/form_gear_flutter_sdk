@@ -6,6 +6,7 @@ import 'clean_architecture_demo_screen.dart';
 import 'form_data_listener_demo_screen.dart';
 import 'form_engine_selection_screen.dart';
 import 'loading_screen_demo.dart';
+import 'protobuf_bridge_demo_screen.dart';
 import 'protobuf_demo_screen.dart';
 import 'simple_typed_bridge_test_screen.dart';
 import 'version_update_demo_screen.dart';
@@ -170,6 +171,19 @@ class HomeScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const ProtobufDemoScreen(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _DemoCard(
+              title: 'Protobuf Bridge Demo',
+              subtitle: 'WebView protobuf vs JSON live comparison',
+              icon: Icons.flash_on,
+              gradientColors: const [Color(0xFF10B981), Color(0xFF059669)],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProtobufBridgeDemoScreen(),
                 ),
               ),
             ),
