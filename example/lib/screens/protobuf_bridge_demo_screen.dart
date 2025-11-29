@@ -152,8 +152,26 @@ class _ProtobufBridgeDemoScreenState extends State<ProtobufBridgeDemoScreen> {
 
     final protobufSize = template.writeToBuffer().length;
     _addMessage(
+      'Loaded: ${template.title} (${template.components.length} sections)',
+      MessageType.system,
+    );
+    _addMessage(
       'Sending protobuf: ${(protobufSize / 1024).toStringAsFixed(2)} KB',
       MessageType.protobuf,
+    );
+
+    // Send template metadata first for display
+    await _controller!.evaluateJavascript(
+      source:
+          '''
+      window.templateMetadata = {
+        title: "${template.title}",
+        description: "${template.description}",
+        version: "${template.version}",
+        sections: ${template.components.length},
+        totalComponents: ${template.components.fold(0, (sum, section) => sum + section.components.length)}
+      };
+    ''',
     );
 
     await _protobufBridge!.sendTemplate(template);
@@ -170,9 +188,34 @@ class _ProtobufBridgeDemoScreenState extends State<ProtobufBridgeDemoScreen> {
     );
     final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
 
+    final componentCount =
+        (jsonMap['components'] as List?)?.fold(
+          0,
+          (sum, section) => sum + (section as List).length,
+        ) ??
+        0;
+
+    _addMessage(
+      'Loaded: ${jsonMap['title']} ($componentCount components)',
+      MessageType.system,
+    );
     _addMessage(
       'Sending JSON: ${(jsonString.length / 1024).toStringAsFixed(2)} KB',
       MessageType.json,
+    );
+
+    // Send template metadata first for display
+    await _controller!.evaluateJavascript(
+      source:
+          '''
+      window.templateMetadata = {
+        title: "${jsonMap['title']}",
+        description: "${jsonMap['description']}",
+        version: "${jsonMap['version']}",
+        sections: ${(jsonMap['components'] as List?)?.length ?? 0},
+        totalComponents: $componentCount
+      };
+    ''',
     );
 
     await _protobufBridge!.sendTemplateAsJson(jsonMap);
@@ -240,6 +283,27 @@ class _ProtobufBridgeDemoScreenState extends State<ProtobufBridgeDemoScreen> {
     .badge-json {
       background: #f59e0b;
     }
+    .template-info {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .template-info.visible {
+      display: block;
+    }
+    .template-title {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .template-detail {
+      font-size: 13px;
+      opacity: 0.9;
+      margin: 4px 0;
+    }
     #log {
       background: rgba(0, 0, 0, 0.3);
       border-radius: 8px;
@@ -274,6 +338,18 @@ class _ProtobufBridgeDemoScreenState extends State<ProtobufBridgeDemoScreen> {
       </div>
     </div>
 
+    <div id="templateInfo" class="template-info">
+      <div class="template-title" id="templateTitle">-</div>
+      <div class="template-detail" id="templateDescription">-</div>
+      <div class="template-detail">
+        📋 <span id="templateComponents">0</span> components in
+        <span id="templateSections">0</span> sections
+      </div>
+      <div class="template-detail">
+        🏷️ Version: <span id="templateVersion">-</span>
+      </div>
+    </div>
+
     <div id="log"></div>
   </div>
 
@@ -290,6 +366,24 @@ class _ProtobufBridgeDemoScreenState extends State<ProtobufBridgeDemoScreen> {
       console.log(message);
     }
 
+    function updateTemplateInfo() {
+      if (window.templateMetadata) {
+        const info = document.getElementById('templateInfo');
+        info.classList.add('visible');
+
+        document.getElementById('templateTitle').textContent =
+          window.templateMetadata.title;
+        document.getElementById('templateDescription').textContent =
+          window.templateMetadata.description;
+        document.getElementById('templateComponents').textContent =
+          window.templateMetadata.totalComponents;
+        document.getElementById('templateSections').textContent =
+          window.templateMetadata.sections;
+        document.getElementById('templateVersion').textContent =
+          window.templateMetadata.version;
+      }
+    }
+
     // Handle Protobuf data
     window.addEventListener('formgear:template:protobuf', (event) => {
       messageCount++;
@@ -301,7 +395,12 @@ class _ProtobufBridgeDemoScreenState extends State<ProtobufBridgeDemoScreen> {
         (size / 1024).toFixed(2) + ' KB';
       document.getElementById('totalMessages').textContent = messageCount;
 
+      updateTemplateInfo();
       addLog('✓ Received protobuf: ' + size + ' bytes', 'protobuf');
+
+      if (window.templateMetadata) {
+        addLog('  → ' + window.templateMetadata.totalComponents + ' components loaded');
+      }
     });
 
     // Handle JSON data
@@ -315,7 +414,12 @@ class _ProtobufBridgeDemoScreenState extends State<ProtobufBridgeDemoScreen> {
         (size / 1024).toFixed(2) + ' KB';
       document.getElementById('totalMessages').textContent = messageCount;
 
+      updateTemplateInfo();
       addLog('✓ Received JSON: ' + size + ' bytes', 'json');
+
+      if (window.templateMetadata) {
+        addLog('  → ' + window.templateMetadata.totalComponents + ' components loaded');
+      }
     });
 
     addLog('WebView initialized - waiting for data...');
