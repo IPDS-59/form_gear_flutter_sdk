@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package formgear.template;
+
+// Size constraint for CSV and other inputs
+message SizeConstraint {
+  int32 min = 1;
+  int32 max = 2;
+}

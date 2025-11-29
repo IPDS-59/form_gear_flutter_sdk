@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package formgear.media;
+
+import "media/media_type.proto";
+import "media/location.proto";
+
+// Media item
+message MediaItem {
+  string media_id = 1;
+  MediaType type = 2;
+  string file_path = 3;
+  int64 file_size = 4;
+  int64 timestamp = 5;
+
+  // Type-specific data
+  oneof data {
+    bytes thumbnail = 10;  // For images
+    Location gps_data = 11;  // For GPS
+    int64 duration = 12;  // For audio/video
+  }
+
+  // Metadata
+  map<string, string> metadata = 20;
+}

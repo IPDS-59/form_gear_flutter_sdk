@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package formgear.template;
+
+import "template/component_option.proto";
+import "template/size_constraint.proto";
+
+// Individual form component
+message Component {
+  string label = 1;
+  string data_key = 2;
+  string description = 3;
+  int32 type = 4;  // Component type (1=section, 3=html, 16=checkbox, etc.)
+  bool required = 5;
+
+  // Nested components for sections
+  repeated ComponentSection components = 6;
+
+  // Conditional rendering
+  string enable_condition = 7;
+  repeated string component_enable = 8;
+
+  // Input-specific properties
+  int32 rows = 10;  // For textarea
+  int32 cols = 11;  // For rating
+  int32 decimal_length = 12;  // For number inputs
+
+  // Options for select/radio/checkbox
+  repeated ComponentOption options = 13;
+
+  // Size constraints for CSV input
+  repeated SizeConstraint size_input = 14;
+}
+
+// Forward declaration for circular dependency
+message ComponentSection {
+  repeated Component components = 1;
+}

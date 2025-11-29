@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package formgear.validation;
+
+import "validation/validation_type.proto";
+import "validation/validation_rules.proto";
+
+// Validation rule
+message ValidationRule {
+  string rule_id = 1;
+  ValidationType type = 2;
+  string error_message = 3;
+
+  // Type-specific validation data
+  oneof condition {
+    RangeValidation range = 10;
+    RegexValidation regex = 11;
+    DependencyValidation dependency = 12;
+    LengthValidation length = 13;
+    CustomValidation custom = 14;
+  }
+}

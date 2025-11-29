@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package formgear.response;
+
+import "response/field_response.proto";
+
+// Complete form response
+message FormResponse {
+  string template_id = 1;
+  string assignment_id = 2;
+  int64 timestamp = 3;
+  repeated FieldResponse responses = 4;
+
+  // Response metadata
+  string user_id = 5;
+  int64 start_time = 6;
+  int64 end_time = 7;
+  bool is_completed = 8;
+}

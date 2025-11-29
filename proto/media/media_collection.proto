@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package formgear.media;
+
+import "media/media_item.proto";
+
+// Media collection for a form
+message MediaCollection {
+  string assignment_id = 1;
+  repeated MediaItem items = 2;
+}

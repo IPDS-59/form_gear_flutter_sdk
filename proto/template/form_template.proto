@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package formgear.template;
+
+import "template/component.proto";
+
+// Main form template structure
+message FormTemplate {
+  string description = 1;
+  string data_key = 2;
+  string title = 3;
+  string acronym = 4;
+  string version = 5;
+  repeated ComponentSection components = 6;
+}

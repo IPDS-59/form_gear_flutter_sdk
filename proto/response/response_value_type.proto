@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package formgear.response;
+
+// Response value types
+enum ResponseValueType {
+  STRING = 0;
+  NUMBER = 1;
+  BOOLEAN = 2;
+  ARRAY = 3;
+  OBJECT = 4;
+}

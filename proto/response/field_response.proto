@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package formgear.response;
+
+import "google/protobuf/any.proto";
+import "response/response_value_type.proto";
+
+// Array value wrapper
+message ArrayValue {
+  repeated google.protobuf.Any items = 1;
+}
+
+// Object value wrapper
+message ObjectValue {
+  map<string, google.protobuf.Any> fields = 1;
+}
+
+// Individual field response
+message FieldResponse {
+  string data_key = 1;
+  ResponseValueType type = 2;
+
+  // Value storage (one of these will be set)
+  oneof value {
+    string string_value = 3;
+    double number_value = 4;
+    bool boolean_value = 5;
+    ArrayValue array_value = 6;
+    ObjectValue object_value = 7;
+  }
+}

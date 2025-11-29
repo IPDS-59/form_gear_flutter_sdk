@@ -9,6 +9,9 @@ analyzer:
     - "**/**.gm.dart"
     - "**/**.freezed.dart"
     - "**/**.g.dart"
+    - "**/**.pb.dart"
+    - "**/**.pbenum.dart"
+    - "**/**.pbjson.dart"
   errors:
     specify_nonobvious_property_types: ignore
     avoid_bool_literals_in_conditional_expressions: ignore

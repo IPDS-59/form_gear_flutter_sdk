@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package formgear.engine;
+
+// Engine type enumeration
+enum FormEngineType {
+  FORM_GEAR = 0;
+  FASIH_FORM = 1;
+}

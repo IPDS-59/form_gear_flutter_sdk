@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package formgear.validation;
+
+import "validation/validation_rule.proto";
+
+// Validation rules for a specific field
+message FieldValidation {
+  string field_data_key = 1;
+  repeated ValidationRule rules = 2;
+}
+
+// Validation collection for a template
+message ValidationCollection {
+  string template_id = 1;
+  map<string, FieldValidation> field_validations = 2;
+}

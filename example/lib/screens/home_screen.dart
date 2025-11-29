@@ -6,6 +6,7 @@ import 'clean_architecture_demo_screen.dart';
 import 'form_data_listener_demo_screen.dart';
 import 'form_engine_selection_screen.dart';
 import 'loading_screen_demo.dart';
+import 'protobuf_demo_screen.dart';
 import 'simple_typed_bridge_test_screen.dart';
 import 'version_update_demo_screen.dart';
 import '../download_demo_page_enhanced.dart';
@@ -160,6 +161,19 @@ class HomeScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
+            _DemoCard(
+              title: 'Protobuf Performance',
+              subtitle: 'Binary serialization vs JSON comparison',
+              icon: Icons.speed,
+              gradientColors: const [Color(0xFFFF5722), Color(0xFFE64A19)],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProtobufDemoScreen(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
             _DemoCard(
               title: 'Download Demo',
               subtitle: 'Asset download and management',

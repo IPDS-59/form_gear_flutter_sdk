@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package formgear.validation;
+
+// Range validation
+message RangeValidation {
+  double min = 1;
+  double max = 2;
+  bool min_inclusive = 3;
+  bool max_inclusive = 4;
+}
+
+// Pattern (regex) validation
+message RegexValidation {
+  string pattern = 1;
+  string flags = 2;
+}
+
+// Cross-field dependency validation
+message DependencyValidation {
+  string depends_on_field = 1;
+  string comparison_operator = 2;  // ==, !=, >, <, >=, <=
+  string expected_value = 3;
+}
+
+// Length validation
+message LengthValidation {
+  int32 min = 1;
+  int32 max = 2;
+}
+
+// Custom validation rule
+message CustomValidation {
+  string expression = 1;  // JavaScript expression
+  string error_message = 2;
+}

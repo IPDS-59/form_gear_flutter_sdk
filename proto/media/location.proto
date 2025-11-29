@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package formgear.media;
+
+// GPS location data
+message Location {
+  double latitude = 1;
+  double longitude = 2;
+  double accuracy = 3;
+  double altitude = 4;
+  int64 timestamp = 5;
+}

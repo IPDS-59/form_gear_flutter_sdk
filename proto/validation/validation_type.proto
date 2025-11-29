@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package formgear.validation;
+
+// Validation type enumeration
+enum ValidationType {
+  REQUIRED = 0;
+  RANGE = 1;
+  PATTERN = 2;
+  CROSS_FIELD = 3;
+  MIN_LENGTH = 4;
+  MAX_LENGTH = 5;
+  EMAIL = 6;
+  PHONE = 7;
+  CUSTOM = 99;
+}

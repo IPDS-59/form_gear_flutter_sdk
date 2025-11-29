@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package formgear.template;
+
+// Option for select, radio, checkbox components
+message ComponentOption {
+  string label = 1;
+  string value = 2;
+}

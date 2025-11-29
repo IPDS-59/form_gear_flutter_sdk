@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package formgear.engine;
+
+import "engine/engine_type.proto";
+import "engine/engine_version.proto";
+
+// Engine assets bundle
+message EngineAssets {
+  FormEngineType engine_type = 1;
+  string html_template = 2;
+  string js_content = 3;
+  string css_content = 4;
+  EngineVersion version = 5;
+
+  // Feature flags for engine capabilities
+  map<string, bool> feature_flags = 6;
+}
