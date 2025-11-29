@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/media_demo_screen.dart';
 import 'assignment_demo_screen.dart';
 import 'clean_architecture_demo_screen.dart';
+import 'engine_protobuf_demo_screen.dart';
 import 'form_data_listener_demo_screen.dart';
 import 'form_engine_selection_screen.dart';
 import 'loading_screen_demo.dart';
@@ -184,6 +185,19 @@ class HomeScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const ProtobufBridgeDemoScreen(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _DemoCard(
+              title: 'Engine + Protobuf Demo',
+              subtitle: 'Load FormGear engine with protobuf data',
+              icon: Icons.rocket,
+              gradientColors: const [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const EngineProtobufDemoScreen(),
                 ),
               ),
             ),
