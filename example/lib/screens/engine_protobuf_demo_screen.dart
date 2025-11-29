@@ -6,6 +6,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:form_gear_engine_sdk/src/proto/converters/media_converter.dart';
 import 'package:form_gear_engine_sdk/src/proto/converters/response_converter.dart';
 import 'package:form_gear_engine_sdk/src/proto/converters/template_converter.dart';
+import 'package:form_gear_engine_sdk/src/utils/form_gear_engine_loader.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 
 /// Demo: Load REAL FormGear Engine with Protobuf Data
@@ -118,22 +119,32 @@ class _EngineProtobufDemoScreenState extends State<EngineProtobufDemoScreen> {
             flex: 2,
             child: Stack(
               children: [
-                InAppWebView(
-                  initialUrlRequest: URLRequest(
-                    url: WebUri(
-                      'file:///android_asset/flutter_assets/assets/formengine/1/index.html',
-                    ),
+                FutureBuilder<InAppWebViewInitialData>(
+                  future: FormGearEngineLoader.loadEngine(
+                    enginePath: 'assets/formengine/1',
                   ),
-                  onWebViewCreated: (controller) {
-                    _controller = controller;
-                    _setupJavaScriptHandlers(controller);
-                  },
-                  onLoadStop: (controller, url) async {
-                    _addLog('FormGear engine loaded', LogType.system);
-                    setState(() => _isLoading = false);
-                  },
-                  onConsoleMessage: (controller, message) {
-                    FormGearLogger.sdk('Engine: ${message.message}');
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    return InAppWebView(
+                      initialData: snapshot.data,
+                      onWebViewCreated: (controller) {
+                        _controller = controller;
+                        _setupJavaScriptHandlers(controller);
+                      },
+                      onLoadStop: (controller, url) async {
+                        await FormGearEngineLoader.injectAndroidBridge(
+                          controller,
+                        );
+                        _addLog('FormGear engine loaded', LogType.system);
+                        setState(() => _isLoading = false);
+                      },
+                      onConsoleMessage: (controller, message) {
+                        FormGearLogger.sdk('Engine: ${message.message}');
+                      },
+                    );
                   },
                 ),
                 if (_isLoading)

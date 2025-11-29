@@ -2,6 +2,8 @@
 // FormGearSDK.instance
 // Result Pattern for Error Handling
 export 'src/core/base/result.dart';
+// Protobuf Bridge for WebView Communication
+export 'src/core/bridge/protobuf_bridge_channel.dart';
 // Core Configuration Models
 export 'src/core/config/form_gear_api_config.dart';
 export 'src/core/config/form_gear_client_mode.dart';
@@ -32,3 +34,9 @@ export 'src/models/form_gear_global_config.dart';
 // Version Check Models
 export 'src/models/version_check_result.dart';
 export 'src/models/version_state.dart';
+// Protobuf Converters
+export 'src/proto/converters/media_converter.dart';
+export 'src/proto/converters/response_converter.dart';
+export 'src/proto/converters/template_converter.dart';
+// Utilities
+export 'src/utils/form_gear_engine_loader.dart';
