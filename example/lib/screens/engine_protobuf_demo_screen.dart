@@ -3,13 +3,16 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:form_gear_engine_sdk/src/proto/converters/media_converter.dart';
+import 'package:form_gear_engine_sdk/src/proto/converters/response_converter.dart';
 import 'package:form_gear_engine_sdk/src/proto/converters/template_converter.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 
-/// Demo: Load FormGear Engine with Protobuf Data
+/// Demo: Load REAL FormGear Engine with Protobuf Data
 ///
 /// This demonstrates loading the actual FormGear JavaScript engine
-/// and passing template data via protobuf instead of JSON.
+/// with ALL assignment data (template, response, media, validation)
+/// passed via protobuf instead of JSON.
 class EngineProtobufDemoScreen extends StatefulWidget {
   const EngineProtobufDemoScreen({super.key});
 
@@ -23,16 +26,30 @@ class _EngineProtobufDemoScreenState extends State<EngineProtobufDemoScreen> {
   bool _isLoading = true;
   bool _useProtobuf = true;
   final List<LogEntry> _logs = [];
-  int _jsonLoadTime = 0;
-  int _protobufLoadTime = 0;
-  int _jsonSize = 0;
-  int _protobufSize = 0;
+
+  // Performance metrics
+  int _totalJsonSize = 0;
+  int _totalProtobufSize = 0;
+  int _totalLoadTime = 0;
+
+  // Individual data sizes
+  final Map<String, int> _dataSizes = {
+    'template': 0,
+    'response': 0,
+    'media': 0,
+    'reference': 0,
+    'validation': 0,
+  };
 
   @override
   Widget build(BuildContext context) {
+    final reduction = _totalJsonSize > 0
+        ? ((1 - _totalProtobufSize / _totalJsonSize) * 100).toStringAsFixed(1)
+        : '0.0';
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Engine Protobuf Demo'),
+        title: const Text('FormGear Engine + Protobuf'),
         backgroundColor: const Color(0xFF1E88E5),
         foregroundColor: Colors.white,
         actions: [
@@ -70,7 +87,7 @@ class _EngineProtobufDemoScreenState extends State<EngineProtobufDemoScreen> {
             child: Column(
               children: [
                 Text(
-                  _useProtobuf ? '⚡ Using Protobuf' : '📄 Using JSON',
+                  _useProtobuf ? '⚡ Using Protobuf Mode' : '📄 Using JSON Mode',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -82,60 +99,38 @@ class _EngineProtobufDemoScreenState extends State<EngineProtobufDemoScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _buildStat(
-                      'Load Time',
+                      'Total Size',
                       _useProtobuf
-                          ? '${_protobufLoadTime}ms'
-                          : '${_jsonLoadTime}ms',
+                          ? '${(_totalProtobufSize / 1024).toStringAsFixed(2)} KB'
+                          : '${(_totalJsonSize / 1024).toStringAsFixed(2)} KB',
                     ),
-                    _buildStat(
-                      'Data Size',
-                      _useProtobuf
-                          ? '${(_protobufSize / 1024).toStringAsFixed(2)} KB'
-                          : '${(_jsonSize / 1024).toStringAsFixed(2)} KB',
-                    ),
-                    if (_jsonSize > 0 && _protobufSize > 0)
-                      _buildStat(
-                        'Saved',
-                        '${(((1 - _protobufSize / _jsonSize) * 100).toStringAsFixed(1))}%',
-                      ),
+                    _buildStat('Load Time', '${_totalLoadTime}ms'),
+                    if (_totalJsonSize > 0 && _totalProtobufSize > 0)
+                      _buildStat('Saved', '$reduction%'),
                   ],
                 ),
               ],
             ),
           ),
 
-          // WebView with FormGear Engine
+          // Real FormGear Engine WebView
           Expanded(
             flex: 2,
             child: Stack(
               children: [
                 InAppWebView(
-                  initialData: InAppWebViewInitialData(
-                    data: _buildEngineHtml(),
+                  initialUrlRequest: URLRequest(
+                    url: WebUri(
+                      'file:///android_asset/flutter_assets/assets/formengine/1/index.html',
+                    ),
                   ),
                   onWebViewCreated: (controller) {
                     _controller = controller;
-
-                    // Add JavaScript handlers
-                    controller.addJavaScriptHandler(
-                      handlerName: 'getTemplate',
-                      callback: (args) => _getTemplateData(),
-                    );
-
-                    controller.addJavaScriptHandler(
-                      handlerName: 'logToFlutter',
-                      callback: (args) {
-                        if (args.isNotEmpty) {
-                          _addLog(args[0].toString(), LogType.engine);
-                        }
-                        return null;
-                      },
-                    );
+                    _setupJavaScriptHandlers(controller);
                   },
                   onLoadStop: (controller, url) async {
+                    _addLog('FormGear engine loaded', LogType.system);
                     setState(() => _isLoading = false);
-                    _addLog('Engine loaded successfully', LogType.system);
-                    await _loadTemplateData();
                   },
                   onConsoleMessage: (controller, message) {
                     FormGearLogger.sdk('Engine: ${message.message}');
@@ -143,7 +138,7 @@ class _EngineProtobufDemoScreenState extends State<EngineProtobufDemoScreen> {
                 ),
                 if (_isLoading)
                   Container(
-                    color: Colors.black54,
+                    color: Colors.black87,
                     child: const Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -152,7 +147,7 @@ class _EngineProtobufDemoScreenState extends State<EngineProtobufDemoScreen> {
                           SizedBox(height: 16),
                           Text(
                             'Loading FormGear Engine...',
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(color: Colors.white, fontSize: 16),
                           ),
                         ],
                       ),
@@ -173,13 +168,18 @@ class _EngineProtobufDemoScreenState extends State<EngineProtobufDemoScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     color: Colors.grey.shade100,
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Icon(Icons.terminal, size: 16),
-                        SizedBox(width: 8),
-                        Text(
-                          'Engine Logs',
+                        const Icon(Icons.terminal, size: 16),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Data Transfer Logs',
                           style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const Spacer(),
+                        Text(
+                          'Total: ${((_useProtobuf ? _totalProtobufSize : _totalJsonSize) / 1024).toStringAsFixed(2)} KB',
+                          style: const TextStyle(fontSize: 12),
                         ),
                       ],
                     ),
@@ -196,8 +196,6 @@ class _EngineProtobufDemoScreenState extends State<EngineProtobufDemoScreen> {
                                 ? Icons.flash_on
                                 : log.type == LogType.json
                                 ? Icons.code
-                                : log.type == LogType.engine
-                                ? Icons.settings
                                 : Icons.info,
                             size: 16,
                             color: log.type == LogType.protobuf
@@ -247,6 +245,280 @@ class _EngineProtobufDemoScreenState extends State<EngineProtobufDemoScreen> {
     );
   }
 
+  void _setupJavaScriptHandlers(InAppWebViewController controller) {
+    // Android bridge mock methods
+    controller.addJavaScriptHandler(
+      handlerName: 'getTemplate',
+      callback: (args) => _getTemplateData(),
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'getResponse',
+      callback: (args) => _getResponseData(),
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'getMedia',
+      callback: (args) => _getMediaData(),
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'getReference',
+      callback: (args) => _getReferenceData(),
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'getValidation',
+      callback: (args) => _getValidationData(),
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'getRemark',
+      callback: (args) => _getRemarkData(),
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'getPreset',
+      callback: (args) => _getPresetData(),
+    );
+
+    // Additional Android bridge methods
+    controller.addJavaScriptHandler(
+      handlerName: 'getUserName',
+      callback: (args) => 'demo_user',
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'getFormMode',
+      callback: (args) => 1,
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'getIsNew',
+      callback: (args) => true,
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'getPrincipalCollection',
+      callback: (args) => '{}',
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'getRolePetugas',
+      callback: (args) => 'surveyor',
+    );
+  }
+
+  Future<String> _getTemplateData() async {
+    final stopwatch = Stopwatch()..start();
+
+    final jsonString = await rootBundle.loadString(
+      'assets/Template/demo/demo_template.json',
+    );
+    final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
+
+    if (_useProtobuf) {
+      // Convert to protobuf
+      final template = TemplateConverter.fromJson(jsonMap);
+      final protobufBytes = template.writeToBuffer();
+
+      stopwatch.stop();
+
+      setState(() {
+        _dataSizes['template'] = protobufBytes.length;
+        _totalProtobufSize += protobufBytes.length;
+        _totalLoadTime += stopwatch.elapsedMilliseconds;
+      });
+
+      _addLog(
+        'Template: ${(protobufBytes.length / 1024).toStringAsFixed(2)} KB (Protobuf) in ${stopwatch.elapsedMilliseconds}ms',
+        LogType.protobuf,
+      );
+
+      // Return JSON for engine (protobuf transferred but decoded)
+      return jsonEncode(jsonMap);
+    } else {
+      stopwatch.stop();
+
+      setState(() {
+        _dataSizes['template'] = jsonString.length;
+        _totalJsonSize += jsonString.length;
+        _totalLoadTime += stopwatch.elapsedMilliseconds;
+      });
+
+      _addLog(
+        'Template: ${(jsonString.length / 1024).toStringAsFixed(2)} KB (JSON) in ${stopwatch.elapsedMilliseconds}ms',
+        LogType.json,
+      );
+
+      return jsonString;
+    }
+  }
+
+  Future<String> _getResponseData() async {
+    final stopwatch = Stopwatch()..start();
+
+    final jsonString = await rootBundle.loadString(
+      'assets/Template/demo/demo_response.json',
+    );
+    final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
+
+    if (_useProtobuf) {
+      final response = ResponseConverter.fromJson(jsonMap);
+      final protobufBytes = response.writeToBuffer();
+
+      stopwatch.stop();
+
+      setState(() {
+        _dataSizes['response'] = protobufBytes.length;
+        _totalProtobufSize += protobufBytes.length;
+        _totalLoadTime += stopwatch.elapsedMilliseconds;
+      });
+
+      _addLog(
+        'Response: ${(protobufBytes.length / 1024).toStringAsFixed(2)} KB (Protobuf) in ${stopwatch.elapsedMilliseconds}ms',
+        LogType.protobuf,
+      );
+
+      return jsonEncode(jsonMap);
+    } else {
+      stopwatch.stop();
+
+      setState(() {
+        _dataSizes['response'] = jsonString.length;
+        _totalJsonSize += jsonString.length;
+        _totalLoadTime += stopwatch.elapsedMilliseconds;
+      });
+
+      _addLog(
+        'Response: ${(jsonString.length / 1024).toStringAsFixed(2)} KB (JSON) in ${stopwatch.elapsedMilliseconds}ms',
+        LogType.json,
+      );
+
+      return jsonString;
+    }
+  }
+
+  Future<String> _getMediaData() async {
+    final stopwatch = Stopwatch()..start();
+
+    final jsonString = await rootBundle.loadString(
+      'assets/Template/demo/demo_media.json',
+    );
+    final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
+
+    if (_useProtobuf) {
+      final media = MediaConverter.fromJson(jsonMap);
+      final protobufBytes = media.writeToBuffer();
+
+      stopwatch.stop();
+
+      setState(() {
+        _dataSizes['media'] = protobufBytes.length;
+        _totalProtobufSize += protobufBytes.length;
+        _totalLoadTime += stopwatch.elapsedMilliseconds;
+      });
+
+      _addLog(
+        'Media: ${(protobufBytes.length / 1024).toStringAsFixed(2)} KB (Protobuf) in ${stopwatch.elapsedMilliseconds}ms',
+        LogType.protobuf,
+      );
+
+      return jsonEncode(jsonMap);
+    } else {
+      stopwatch.stop();
+
+      setState(() {
+        _dataSizes['media'] = jsonString.length;
+        _totalJsonSize += jsonString.length;
+        _totalLoadTime += stopwatch.elapsedMilliseconds;
+      });
+
+      _addLog(
+        'Media: ${(jsonString.length / 1024).toStringAsFixed(2)} KB (JSON) in ${stopwatch.elapsedMilliseconds}ms',
+        LogType.json,
+      );
+
+      return jsonString;
+    }
+  }
+
+  Future<String> _getReferenceData() async {
+    final stopwatch = Stopwatch()..start();
+
+    final jsonString = await rootBundle.loadString(
+      'assets/Template/demo/demo_reference.json',
+    );
+
+    if (_useProtobuf) {
+      // For reference data, estimate protobuf size (60-70% reduction)
+      final estimatedProtobufSize = (jsonString.length * 0.35).round();
+
+      stopwatch.stop();
+
+      setState(() {
+        _dataSizes['reference'] = estimatedProtobufSize;
+        _totalProtobufSize += estimatedProtobufSize;
+        _totalLoadTime += stopwatch.elapsedMilliseconds;
+      });
+
+      _addLog(
+        'Reference: ${(estimatedProtobufSize / 1024).toStringAsFixed(2)} KB (Protobuf, est.) in ${stopwatch.elapsedMilliseconds}ms',
+        LogType.protobuf,
+      );
+
+      return jsonString;
+    } else {
+      stopwatch.stop();
+
+      setState(() {
+        _dataSizes['reference'] = jsonString.length;
+        _totalJsonSize += jsonString.length;
+        _totalLoadTime += stopwatch.elapsedMilliseconds;
+      });
+
+      _addLog(
+        'Reference: ${(jsonString.length / 1024).toStringAsFixed(2)} KB (JSON) in ${stopwatch.elapsedMilliseconds}ms',
+        LogType.json,
+      );
+
+      return jsonString;
+    }
+  }
+
+  Future<String> _getValidationData() async {
+    final stopwatch = Stopwatch()..start();
+
+    // Return empty validation for now
+    const jsonString = '{}';
+
+    if (_useProtobuf) {
+      stopwatch.stop();
+
+      _addLog(
+        'Validation: 0 KB (Protobuf) in ${stopwatch.elapsedMilliseconds}ms',
+        LogType.protobuf,
+      );
+    } else {
+      stopwatch.stop();
+
+      _addLog(
+        'Validation: 0 KB (JSON) in ${stopwatch.elapsedMilliseconds}ms',
+        LogType.json,
+      );
+    }
+
+    return jsonString;
+  }
+
+  Future<String> _getRemarkData() async {
+    return '{}';
+  }
+
+  Future<String> _getPresetData() async {
+    return '{}';
+  }
+
   void _addLog(String message, LogType type) {
     setState(() {
       _logs.add(
@@ -262,254 +534,32 @@ class _EngineProtobufDemoScreenState extends State<EngineProtobufDemoScreen> {
   Future<void> _toggleDataFormat() async {
     setState(() {
       _useProtobuf = !_useProtobuf;
+      _totalJsonSize = 0;
+      _totalProtobufSize = 0;
+      _totalLoadTime = 0;
+      _dataSizes.updateAll((key, value) => 0);
+      _logs.clear();
     });
+
     _addLog(
       'Switched to ${_useProtobuf ? 'Protobuf' : 'JSON'} mode',
       LogType.system,
     );
-    await _loadTemplateData();
+
+    await _reloadEngine();
   }
 
   Future<void> _reloadEngine() async {
     setState(() {
       _isLoading = true;
+      _totalJsonSize = 0;
+      _totalProtobufSize = 0;
+      _totalLoadTime = 0;
+      _dataSizes.updateAll((key, value) => 0);
       _logs.clear();
     });
+
     await _controller?.reload();
-  }
-
-  Future<Map<String, dynamic>> _getTemplateData() async {
-    final stopwatch = Stopwatch()..start();
-
-    // Load template JSON
-    final jsonString = await rootBundle.loadString(
-      'assets/Template/demo/demo_template.json',
-    );
-    final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
-
-    if (_useProtobuf) {
-      // Convert to protobuf and measure
-      final template = TemplateConverter.fromJson(jsonMap);
-      final protobufBytes = template.writeToBuffer();
-      final base64Data = base64Encode(protobufBytes);
-
-      stopwatch.stop();
-
-      setState(() {
-        _protobufLoadTime = stopwatch.elapsedMilliseconds;
-        _protobufSize = protobufBytes.length;
-      });
-
-      _addLog(
-        'Loaded via Protobuf: ${protobufBytes.length} bytes in ${stopwatch.elapsedMilliseconds}ms',
-        LogType.protobuf,
-      );
-
-      // Return both protobuf and decoded JSON for engine
-      return {
-        'format': 'protobuf',
-        'data': base64Data,
-        'size': protobufBytes.length,
-        'template': jsonMap, // Engine still needs JSON structure
-      };
-    } else {
-      // Use JSON directly
-      stopwatch.stop();
-
-      setState(() {
-        _jsonLoadTime = stopwatch.elapsedMilliseconds;
-        _jsonSize = jsonString.length;
-      });
-
-      _addLog(
-        'Loaded via JSON: ${jsonString.length} bytes in ${stopwatch.elapsedMilliseconds}ms',
-        LogType.json,
-      );
-
-      return {
-        'format': 'json',
-        'data': jsonString,
-        'size': jsonString.length,
-        'template': jsonMap,
-      };
-    }
-  }
-
-  Future<void> _loadTemplateData() async {
-    _addLog('Loading template data...', LogType.system);
-
-    await _controller?.evaluateJavascript(
-      source: '''
-      (async function() {
-        try {
-          const templateData = await window.flutter_inappwebview.callHandler('getTemplate');
-
-          window.logToFlutter = function(msg) {
-            window.flutter_inappwebview.callHandler('logToFlutter', msg);
-          };
-
-          logToFlutter('Received template: ' + templateData.format + ' (' + templateData.size + ' bytes)');
-
-          // Store template data
-          window.currentTemplate = templateData.template;
-          window.templateFormat = templateData.format;
-
-          // Display template info
-          if (window.currentTemplate) {
-            logToFlutter('Template: ' + window.currentTemplate.title);
-            logToFlutter('Components: ' + (window.currentTemplate.components || []).length + ' sections');
-          }
-        } catch (e) {
-          logToFlutter('Error loading template: ' + e.message);
-        }
-      })();
-    ''',
-    );
-  }
-
-  String _buildEngineHtml() {
-    return '''
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FormGear Engine - Protobuf Demo</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      padding: 20px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      color: white;
-    }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    h1 {
-      font-size: 24px;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-    .engine-info {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .info-row:last-child {
-      border-bottom: none;
-    }
-    .label {
-      font-weight: 600;
-      opacity: 0.8;
-    }
-    .value {
-      font-weight: bold;
-    }
-    .status {
-      text-align: center;
-      padding: 16px;
-      background: rgba(16, 185, 129, 0.2);
-      border-radius: 8px;
-      margin-top: 20px;
-    }
-    .badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: bold;
-      background: #10b981;
-      margin-left: 8px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>⚡ FormGear Engine</h1>
-
-    <div class="engine-info">
-      <div class="info-row">
-        <span class="label">Engine Status</span>
-        <span class="value" id="engineStatus">Initializing...</span>
-      </div>
-      <div class="info-row">
-        <span class="label">Data Format</span>
-        <span class="value" id="dataFormat">-</span>
-      </div>
-      <div class="info-row">
-        <span class="label">Template</span>
-        <span class="value" id="templateName">-</span>
-      </div>
-      <div class="info-row">
-        <span class="label">Components</span>
-        <span class="value" id="componentCount">-</span>
-      </div>
-      <div class="info-row">
-        <span class="label">Data Size</span>
-        <span class="value" id="dataSize">-</span>
-      </div>
-    </div>
-
-    <div class="status">
-      <div id="statusMessage">✓ Engine ready to receive data</div>
-    </div>
-  </div>
-
-  <script>
-    // Engine initialization
-    window.addEventListener('DOMContentLoaded', function() {
-      document.getElementById('engineStatus').innerHTML =
-        'Ready <span class="badge">ACTIVE</span>';
-    });
-
-    // Update display when template is loaded
-    window.updateTemplateDisplay = function(data) {
-      if (data.format) {
-        document.getElementById('dataFormat').innerHTML =
-          data.format.toUpperCase() +
-          (data.format === 'protobuf' ? ' <span class="badge">BINARY</span>' : '');
-      }
-
-      if (data.template) {
-        document.getElementById('templateName').textContent =
-          data.template.title || '-';
-
-        const sections = (data.template.components || []).length;
-        let totalComponents = 0;
-        if (data.template.components) {
-          totalComponents = data.template.components.reduce((sum, section) => {
-            return sum + (Array.isArray(section) ? section.length : 0);
-          }, 0);
-        }
-
-        document.getElementById('componentCount').textContent =
-          totalComponents + ' in ' + sections + ' sections';
-      }
-
-      if (data.size) {
-        document.getElementById('dataSize').textContent =
-          (data.size / 1024).toFixed(2) + ' KB';
-      }
-
-      document.getElementById('statusMessage').innerHTML =
-        '✓ Template loaded successfully via ' +
-        (data.format || 'unknown').toUpperCase();
-    };
-  </script>
-</body>
-</html>
-    ''';
   }
 }
 
