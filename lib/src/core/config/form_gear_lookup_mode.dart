@@ -7,7 +7,8 @@ enum FormGearLookupMode {
   offline(2),
 
   /// Local lookup from bundled assets (for testing)
-  local(3);
+  local(3)
+  ;
 
   const FormGearLookupMode(this.value);
   final int value;

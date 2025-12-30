@@ -4,7 +4,8 @@ enum FormEngineType {
   formGear(1, 'FormGear'),
 
   /// FasihForm engine (ID: 2)
-  fasihForm(2, 'FasihForm');
+  fasihForm(2, 'FasihForm')
+  ;
 
   const FormEngineType(this.id, this.displayName);
 

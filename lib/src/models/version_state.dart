@@ -13,7 +13,8 @@ enum VersionState {
 
   /// Form engine is up to date
   @JsonValue('current')
-  current('Form engine on your device is the latest version');
+  current('Form engine on your device is the latest version')
+  ;
 
   const VersionState(this.description);
 
