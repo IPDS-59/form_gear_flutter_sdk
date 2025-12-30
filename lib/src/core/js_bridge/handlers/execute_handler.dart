@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
-import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
 import 'package:form_gear_engine_sdk/src/core/security/path_validator.dart';
+import 'package:form_gear_engine_sdk/src/utils/fasih_form_notifier.dart';
 import 'package:form_gear_engine_sdk/src/utils/fasih_media_helper.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 import 'package:form_gear_engine_sdk/src/utils/location_service_helper.dart';
@@ -262,7 +262,7 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
           );
 
           // Notify FasihForm of file selection via JavaScript callback
-          await _notifyFasihFormOfFileSelection(
+          await FasihFormNotifier.notifyFileSelection(
             dataKey: dataKey,
             filePath: savedFilePath,
             fileName: fileName,
@@ -347,7 +347,7 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
         );
 
         // Notify FasihForm of file selection via JavaScript callback
-        await _notifyFasihFormOfFileSelection(
+        await FasihFormNotifier.notifyFileSelection(
           dataKey: dataKey,
           filePath: savedFilePath,
           fileName: fileName,
@@ -366,41 +366,6 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
       return ActionInfoJs(
         success: false,
         error: 'Execute file picker error: $e',
-      );
-    }
-  }
-
-  /// Notifies FasihForm JavaScript of file selection
-  /// Calls: fasihForm.event.emit('file-selected', dataKey, '[{ "filename": "...", "uri": "file://..." }]')
-  Future<void> _notifyFasihFormOfFileSelection({
-    required String dataKey,
-    required String filePath,
-    required String fileName,
-  }) async {
-    try {
-      final jsExecutor = JSExecutorService();
-      if (!jsExecutor.isRegistered) {
-        FormGearLogger.webview(
-          'No JavaScript executor available, skipping file notification',
-        );
-        return;
-      }
-
-      // FasihForm expects: fasihForm.event.emit('file-selected', dataKey, '[{ "filename": "name", "uri": "file://path" }]')
-      final jsCommand =
-          '''
-javascript:fasihForm.event.emit(
-  "file-selected",
-  "$dataKey",
-  '[{ "filename": "$fileName", "uri": "file://$filePath" }]'
-)
-''';
-
-      FormGearLogger.webview('Executing file-selected JS callback: $jsCommand');
-      await jsExecutor.executeJavaScript(jsCommand);
-    } on Exception catch (e) {
-      FormGearLogger.webviewError(
-        'Failed to notify FasihForm of file selection: $e',
       );
     }
   }
@@ -438,7 +403,7 @@ javascript:fasihForm.event.emit(
       FormGearLogger.webview('FasihForm location executed: $locationData');
 
       // Notify FasihForm of location acquisition via JavaScript callback
-      await _notifyFasihFormOfLocation(
+      await FasihFormNotifier.notifyLocation(
         dataKey: dataKey,
         latitude: position.latitude,
         longitude: position.longitude,
@@ -449,44 +414,6 @@ javascript:fasihForm.event.emit(
     } on Exception catch (e) {
       FormGearLogger.webviewError('Execute location error: $e');
       return ActionInfoJs(success: false, error: 'Execute location error: $e');
-    }
-  }
-
-  /// Notifies FasihForm JavaScript of location acquisition
-  /// Calls: fasihForm.event.emit('geolocation-acquired', dataKey, jsonString)
-  Future<void> _notifyFasihFormOfLocation({
-    required String dataKey,
-    required double latitude,
-    required double longitude,
-    required double accuracy,
-  }) async {
-    try {
-      final jsExecutor = JSExecutorService();
-      if (!jsExecutor.isRegistered) {
-        FormGearLogger.webview(
-          'No JavaScript executor available, skipping location notification',
-        );
-        return;
-      }
-
-      // FasihForm expects:
-      // fasihForm.event.emit('geolocation-acquired', dataKey,
-      //   '{"latitude": lat, "longitude": lng, "accuracy": acc}')
-      final jsCommand =
-          '''
-javascript:fasihForm.event.emit(
-  "geolocation-acquired",
-  "$dataKey",
-  '{"latitude": $latitude, "longitude": $longitude, "accuracy": $accuracy}'
-)
-''';
-
-      FormGearLogger.webview('Executing geolocation JS callback: $jsCommand');
-      await jsExecutor.executeJavaScript(jsCommand);
-    } on Exception catch (e) {
-      FormGearLogger.webviewError(
-        'Failed to notify FasihForm of location: $e',
-      );
     }
   }
 }
