@@ -136,7 +136,10 @@ class FileActionHandler with ActionHandlerContract {
       }
     } on Exception catch (e) {
       FormGearLogger.webviewError('File upload error: $e');
-      return ActionInfoJs(success: false, error: 'File upload error: $e');
+      return ActionInfoJs(
+        success: false,
+        error: ErrorSanitizer.sanitizeWithContext('File upload', e.toString()),
+      );
     }
   }
 
@@ -204,7 +207,7 @@ class FileActionHandler with ActionHandlerContract {
       FormGearLogger.webviewError('File upload error: $e');
       return ActionInfoJs(
         success: false,
-        error: 'File upload error: $e',
+        error: ErrorSanitizer.sanitizeWithContext('File upload', e.toString()),
       );
     }
   }
@@ -288,7 +291,10 @@ class FileActionHandler with ActionHandlerContract {
       }
     } on Exception catch (e) {
       FormGearLogger.webviewError('File picker error: $e');
-      return ActionInfoJs(success: false, error: 'File picker error: $e');
+      return ActionInfoJs(
+        success: false,
+        error: ErrorSanitizer.sanitizeWithContext('File picker', e.toString()),
+      );
     }
   }
 
@@ -312,7 +318,10 @@ class FileActionHandler with ActionHandlerContract {
       );
     } on Exception catch (e) {
       FormGearLogger.webviewError('File reload error: $e');
-      return ActionInfoJs(success: false, error: 'File reload error: $e');
+      return ActionInfoJs(
+        success: false,
+        error: ErrorSanitizer.sanitizeWithContext('File reload', e.toString()),
+      );
     }
   }
 }

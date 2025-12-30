@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/action_handler_contract.dart';
+import 'package:form_gear_engine_sdk/src/core/services/navigator_context_provider.dart';
 import 'package:form_gear_engine_sdk/src/presentation/bloc/barcode_scanner_bloc.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/barcode_scanner_screen.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
@@ -66,19 +67,14 @@ class BarcodeActionHandler with ActionHandlerContract {
       }
     } on Exception catch (e) {
       FormGearLogger.webviewError('Barcode scan error: $e');
-      return ActionInfoJs(success: false, error: 'Barcode scan error: $e');
+      return ActionInfoJs(
+        success: false,
+        error: ErrorSanitizer.sanitizeWithContext('Barcode scan', e.toString()),
+      );
     }
   }
 
-  /// Get the current BuildContext from the navigator
-  BuildContext? _getCurrentContext() {
-    try {
-      return WidgetsBinding.instance.rootElement?.mounted ?? false
-          ? WidgetsBinding.instance.rootElement
-          : null;
-    } on Exception catch (e) {
-      FormGearLogger.webviewError('Error getting context: $e');
-      return null;
-    }
-  }
+  /// Get the current BuildContext from the NavigatorContextProvider
+  BuildContext? _getCurrentContext() =>
+      NavigatorContextProvider.instance.context;
 }

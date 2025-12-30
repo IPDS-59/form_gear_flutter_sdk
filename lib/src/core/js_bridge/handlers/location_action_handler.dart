@@ -75,7 +75,10 @@ class LocationActionHandler with ActionHandlerContract {
       return ActionInfoJs(success: true, result: jsonEncode(result));
     } on Exception catch (e) {
       FormGearLogger.webviewError('Camera with GPS error: $e');
-      return ActionInfoJs(success: false, error: 'Camera with GPS error: $e');
+      return ActionInfoJs(
+        success: false,
+        error: ErrorSanitizer.sanitizeWithContext('GPS', e.toString()),
+      );
     }
   }
 
@@ -108,7 +111,10 @@ class LocationActionHandler with ActionHandlerContract {
       return ActionInfoJs(success: true, result: locationData);
     } on Exception catch (e) {
       FormGearLogger.webviewError('Location error: $e');
-      return ActionInfoJs(success: false, error: 'Location error: $e');
+      return ActionInfoJs(
+        success: false,
+        error: ErrorSanitizer.sanitizeWithContext('Location', e.toString()),
+      );
     }
   }
 
@@ -173,7 +179,10 @@ class LocationActionHandler with ActionHandlerContract {
       return ActionInfoJs(success: true, result: mapsUrl);
     } on Exception catch (e) {
       FormGearLogger.webviewError('Open maps error: $e');
-      return ActionInfoJs(success: false, error: 'Open maps error: $e');
+      return ActionInfoJs(
+        success: false,
+        error: ErrorSanitizer.sanitizeWithContext('Maps', e.toString()),
+      );
     }
   }
 }
