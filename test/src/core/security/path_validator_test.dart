@@ -417,17 +417,19 @@ void main() {
         expect(result.error, contains('traversal'));
       });
 
-      test('should block double URL-encoded path traversal (%252e%252e%252f)',
-          () {
-        // %25 = '%', so %252e = '%2e' which decodes to '.'
-        // This tests double-encoding bypass attempts
-        const path = '/data/BPS/Template/%252e%252e%252f%252e%252e%252fetc';
+      test(
+        'should block double URL-encoded path traversal (%252e%252e%252f)',
+        () {
+          // %25 = '%', so %252e = '%2e' which decodes to '.'
+          // This tests double-encoding bypass attempts
+          const path = '/data/BPS/Template/%252e%252e%252f%252e%252e%252fetc';
 
-        final result = PathValidator.validate(path);
+          final result = PathValidator.validate(path);
 
-        expect(result.isValid, isFalse);
-        expect(result.error, contains('traversal'));
-      });
+          expect(result.isValid, isFalse);
+          expect(result.error, contains('traversal'));
+        },
+      );
 
       test('should block mixed encoding path traversal (..%2f)', () {
         const path = '/data/BPS/Template/..%2f..%2f..%2fetc/passwd';
