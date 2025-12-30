@@ -28,7 +28,7 @@ void main() async {
   // Copy bundled assets to local storage on first launch
   await _initializeAssets();
 
-  // Initialize FormGear SDK (legacy mode for backward compatibility)
+  // Initialize FormGear SDK with global configuration
   await initializeFormGearSDK();
 
   runApp(const MyApp());
@@ -169,24 +169,20 @@ Future<void> initializeFormGearSDK() async {
     isProduction: Env.isProduction,
   );
 
-  final config = FormGearConfig(
-    clientMode: FormGearClientMode.capi,
-    lookupKey: 'key%5B%5D',
-    lookupValue: 'value%5B%5D',
-    lookupMode: FormGearLookupMode.offline,
+  final globalConfig = FormGearGlobalConfig(
+    apiConfig: apiConfig,
+    bpsUser: const BpsUser(),
     username: 'example_user',
-    formMode: FormGearFormMode.open,
-    initialMode: FormGearInitialMode.initial,
-    htmlLogPrefix: '🌐 HTML:',
-    sdkLogPrefix: '📱 SDK:',
     serverPort: 3310,
     autoStartServer: true,
     enableLogging: true,
-    bpsUser: const BpsUser(),
-    apiConfig: apiConfig,
+    enableDebugMode: !Env.isProduction,
   );
 
-  await FormGearSDK.instance.initialize(config, dioInterceptors: [dioAdapter]);
+  await FormGearSDK.instance.initializeGlobal(
+    globalConfig,
+    dioInterceptors: [dioAdapter],
+  );
 }
 
 class MyApp extends StatelessWidget {

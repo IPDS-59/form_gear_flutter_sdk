@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
-import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
-import 'package:form_gear_engine_sdk/src/core/js_bridge/models/response_models.dart';
+import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/security/path_validator.dart';
+import 'package:form_gear_engine_sdk/src/utils/fasih_form_notifier.dart';
+import 'package:form_gear_engine_sdk/src/utils/fasih_media_helper.dart';
+import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 import 'package:form_gear_engine_sdk/src/utils/location_service_helper.dart';
-import 'package:form_gear_engine_sdk/src/utils/utils.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -212,6 +212,11 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
         );
       }
 
+      // Get assignment ID for saving to media directory
+      final assignmentId =
+          FormGearSDK.instance.currentAssignment?.assignmentId ??
+          'current_assignment';
+
       // Use ImagePicker for images to avoid double picker issue on Android 13+
       if (acceptType != null && acceptType.contains('image')) {
         // Use ImagePicker for images (direct gallery access)
@@ -223,20 +228,47 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
         final image = await picker.pickImage(source: ImageSource.gallery);
 
         if (image != null) {
-          final filePath = image.path;
-          final fileName = image.name;
+          // Generate FASIH-compatible filename and save to media directory
+          final extension = image.path.split('.').last.toLowerCase();
+          final fileName = FasihMediaHelper.generateFileName(
+            dataKey: dataKey,
+            mediaType: 'photo',
+            extension: extension.isNotEmpty ? extension : 'jpg',
+          );
+
+          // Save to media directory
+          final success = await FasihMediaHelper.saveMediaFile(
+            assignmentId: assignmentId,
+            sourceFile: File(image.path),
+            fileName: fileName,
+            mediaType: 'photo',
+          );
+
+          if (!success) {
+            return ActionInfoJs(
+              success: false,
+              error: 'Failed to save image file',
+            );
+          }
+
+          // Get the full path in media directory for the URI
+          final savedFilePath = await FasihMediaHelper.getMediaFilePath(
+            assignmentId,
+            fileName,
+          );
+
           FormGearLogger.webview(
-            'FasihForm image picker executed: $filePath (filename: $fileName)',
+            'FasihForm image saved to media dir: $savedFilePath',
           );
 
           // Notify FasihForm of file selection via JavaScript callback
-          await _notifyFasihFormOfFileSelection(
+          await FasihFormNotifier.notifyFileSelection(
             dataKey: dataKey,
-            filePath: filePath,
+            filePath: savedFilePath,
             fileName: fileName,
           );
 
-          return ActionInfoJs(success: true, result: filePath);
+          return ActionInfoJs(success: true, result: savedFilePath);
         } else {
           FormGearLogger.webview('FasihForm image picker cancelled by user');
           return ActionInfoJs(
@@ -277,20 +309,51 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
       }
 
       if (result != null && result.files.single.path != null) {
-        final filePath = result.files.single.path!;
-        final fileName = result.files.single.name;
+        final originalPath = result.files.single.path!;
+        final originalName = result.files.single.name;
+
+        // Generate FASIH-compatible filename and save to media directory
+        final extension = originalPath.split('.').last.toLowerCase();
+        final fileName = FasihMediaHelper.generateFileName(
+          dataKey: dataKey,
+          mediaType: 'document',
+          extension: extension.isNotEmpty ? extension : 'bin',
+        );
+
+        // Save to media directory
+        final success = await FasihMediaHelper.saveMediaFile(
+          assignmentId: assignmentId,
+          sourceFile: File(originalPath),
+          fileName: fileName,
+          mediaType: 'document',
+        );
+
+        if (!success) {
+          return ActionInfoJs(
+            success: false,
+            error: 'Failed to save file',
+          );
+        }
+
+        // Get the full path in media directory for the URI
+        final savedFilePath = await FasihMediaHelper.getMediaFilePath(
+          assignmentId,
+          fileName,
+        );
+
         FormGearLogger.webview(
-          'FasihForm file picker executed: $filePath (filename: $fileName)',
+          'FasihForm file saved to media dir: $savedFilePath '
+          '(original: $originalName)',
         );
 
         // Notify FasihForm of file selection via JavaScript callback
-        await _notifyFasihFormOfFileSelection(
+        await FasihFormNotifier.notifyFileSelection(
           dataKey: dataKey,
-          filePath: filePath,
+          filePath: savedFilePath,
           fileName: fileName,
         );
 
-        return ActionInfoJs(success: true, result: filePath);
+        return ActionInfoJs(success: true, result: savedFilePath);
       } else {
         FormGearLogger.webview('FasihForm file picker cancelled by user');
         return ActionInfoJs(
@@ -303,41 +366,6 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
       return ActionInfoJs(
         success: false,
         error: 'Execute file picker error: $e',
-      );
-    }
-  }
-
-  /// Notifies FasihForm JavaScript of file selection
-  /// Calls: fasihForm.event.emit('file-selected', dataKey, '[{ "filename": "...", "uri": "file://..." }]')
-  Future<void> _notifyFasihFormOfFileSelection({
-    required String dataKey,
-    required String filePath,
-    required String fileName,
-  }) async {
-    try {
-      final jsExecutor = JSExecutorService();
-      if (!jsExecutor.isRegistered) {
-        FormGearLogger.webview(
-          'No JavaScript executor available, skipping file notification',
-        );
-        return;
-      }
-
-      // FasihForm expects: fasihForm.event.emit('file-selected', dataKey, '[{ "filename": "name", "uri": "file://path" }]')
-      final jsCommand =
-          '''
-javascript:fasihForm.event.emit(
-  "file-selected",
-  "$dataKey",
-  '[{ "filename": "$fileName", "uri": "file://$filePath" }]'
-)
-''';
-
-      FormGearLogger.webview('Executing file-selected JS callback: $jsCommand');
-      await jsExecutor.executeJavaScript(jsCommand);
-    } on Exception catch (e) {
-      FormGearLogger.webviewError(
-        'Failed to notify FasihForm of file selection: $e',
       );
     }
   }
@@ -375,7 +403,7 @@ javascript:fasihForm.event.emit(
       FormGearLogger.webview('FasihForm location executed: $locationData');
 
       // Notify FasihForm of location acquisition via JavaScript callback
-      await _notifyFasihFormOfLocation(
+      await FasihFormNotifier.notifyLocation(
         dataKey: dataKey,
         latitude: position.latitude,
         longitude: position.longitude,
@@ -386,44 +414,6 @@ javascript:fasihForm.event.emit(
     } on Exception catch (e) {
       FormGearLogger.webviewError('Execute location error: $e');
       return ActionInfoJs(success: false, error: 'Execute location error: $e');
-    }
-  }
-
-  /// Notifies FasihForm JavaScript of location acquisition
-  /// Calls: fasihForm.event.emit('geolocation-acquired', dataKey, jsonString)
-  Future<void> _notifyFasihFormOfLocation({
-    required String dataKey,
-    required double latitude,
-    required double longitude,
-    required double accuracy,
-  }) async {
-    try {
-      final jsExecutor = JSExecutorService();
-      if (!jsExecutor.isRegistered) {
-        FormGearLogger.webview(
-          'No JavaScript executor available, skipping location notification',
-        );
-        return;
-      }
-
-      // FasihForm expects:
-      // fasihForm.event.emit('geolocation-acquired', dataKey,
-      //   '{"latitude": lat, "longitude": lng, "accuracy": acc}')
-      final jsCommand =
-          '''
-javascript:fasihForm.event.emit(
-  "geolocation-acquired",
-  "$dataKey",
-  '{"latitude": $latitude, "longitude": $longitude, "accuracy": $accuracy}'
-)
-''';
-
-      FormGearLogger.webview('Executing geolocation JS callback: $jsCommand');
-      await jsExecutor.executeJavaScript(jsCommand);
-    } on Exception catch (e) {
-      FormGearLogger.webviewError(
-        'Failed to notify FasihForm of location: $e',
-      );
     }
   }
 }

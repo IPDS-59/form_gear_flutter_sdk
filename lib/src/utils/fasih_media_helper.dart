@@ -33,6 +33,34 @@ class FasihMediaHelper {
     }
   }
 
+  /// Save media from raw bytes (for signature data from WebView)
+  /// Writes bytes directly to assignment media directory and updates media.json
+  static Future<bool> saveMediaBytes({
+    required String assignmentId,
+    required List<int> bytes,
+    required String fileName,
+    required String mediaType, // 'photo', 'audio', 'signature', 'document'
+  }) async {
+    try {
+      // Get FASIH media directory
+      final mediaDir = await FormDataFileManager.getMediaDirectory(
+        assignmentId,
+      );
+      final targetPath = '${mediaDir.path}/$fileName';
+
+      // Write bytes directly to media directory
+      final file = File(targetPath);
+      await file.writeAsBytes(bytes);
+
+      // Update media.json with new file reference
+      await _updateMediaJson(assignmentId, fileName, targetPath, mediaType);
+
+      return true;
+    } on Exception {
+      return false;
+    }
+  }
+
   /// Generate FASIH-compatible file name for media
   /// Pattern: {type}_{timestamp}_{dataKey}.{extension}
   static String generateFileName({

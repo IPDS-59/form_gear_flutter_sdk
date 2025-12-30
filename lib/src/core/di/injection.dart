@@ -15,7 +15,6 @@ final getIt = GetIt.asNewInstance();
 
 @InjectableInit(
   initializerName: r'$initGetIt',
-  preferRelativeImports: false,
   asExtension: false,
 )
 Future<void> configureDependencies({

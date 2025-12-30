@@ -6,10 +6,10 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/config/form_config.dart';
 import 'package:form_gear_engine_sdk/src/core/di/injection.dart';
-import 'package:form_gear_engine_sdk/src/core/engine/engine_asset_loader.dart';
 import 'package:form_gear_engine_sdk/src/core/engine/handler_factory.dart';
 import 'package:form_gear_engine_sdk/src/core/engine/webview_builder.dart';
 import 'package:form_gear_engine_sdk/src/core/server/form_gear_server.dart';
+import 'package:form_gear_engine_sdk/src/core/services/services.dart';
 import 'package:form_gear_engine_sdk/src/core/version/form_gear_version_manager.dart';
 import 'package:form_gear_engine_sdk/src/domain/usecases/is_form_engine_downloaded_usecase.dart';
 import 'package:form_gear_engine_sdk/src/models/models.dart';
@@ -40,17 +40,12 @@ class FormGearSDK {
   /// Gets the current assignment context
   AssignmentContext? get currentAssignment => _currentAssignment;
 
-  // FormDataListener for save/submit operations
-  FormDataListener? _formDataListener;
-
-  // FileUploadListener for file upload operations
-  FileUploadListener? _fileUploadListener;
-
   // Version manager
   late FormGearVersionManager _versionManager;
 
-  // Engine asset loader
-  final EngineAssetLoader _assetLoader = EngineAssetLoader();
+  // Services
+  final ListenerRegistry _listenerRegistry = ListenerRegistry();
+  final EnginePreparationService _engineService = EnginePreparationService();
 
   /// Initializes the FormGear SDK with global configuration
   /// This is the new assignment-based initialization method
@@ -128,8 +123,6 @@ class FormGearSDK {
   }
 
   /// Prepares the form engine by loading HTML, JS, and CSS assets internally
-  /// Now accepts only FormEngineType enum for cleaner API
-  /// Internal method - use openFormWithAssignment instead
   Future<PreparedEngine> _prepareEngine({
     required FormEngineType engineType,
     String? baseUrl,
@@ -140,59 +133,12 @@ class FormGearSDK {
       throw Exception('FormGear SDK not initialized. Call initialize() first.');
     }
 
-    FormGearLogger.sdk(
-      'Preparing engine: ${engineType.displayName} (ID: ${engineType.id})',
+    return _engineService.prepareEngine(
+      engineType: engineType,
+      baseUrl: baseUrl,
+      historyUrl: historyUrl,
+      onProgress: onProgress,
     );
-
-    try {
-      // Load engine assets using the asset loader
-      final engineAssets = await _assetLoader.loadEngineAssets(
-        engineType,
-        onProgress: onProgress,
-      );
-
-      // Inject CSS and JS into HTML template
-      var processedHtml = engineAssets.htmlTemplate;
-
-      // Replace CSS placeholder
-      processedHtml = processedHtml.replaceAll(
-        '/*style*/',
-        engineAssets.cssContent,
-      );
-
-      // Replace JS placeholder
-      // Note: Don't wrap in IIFE as it's an ES module
-      processedHtml = processedHtml.replaceAll(
-        '//formgear_js',
-        engineAssets.jsContent,
-      );
-
-      // Fix hardcoded Android asset paths by replacing with placeholders
-      processedHtml = _assetLoader.fixAssetPaths(processedHtml);
-
-      // Inject actual vendor asset content into placeholders
-      processedHtml = await _assetLoader.injectVendorAssets(processedHtml);
-
-      final preparedEngine = PreparedEngine(
-        html: processedHtml,
-        baseUrl: baseUrl ?? 'about:blank',
-        historyUrl: historyUrl,
-      );
-
-      _currentPreparedEngine = preparedEngine;
-      _currentEngineType = engineType;
-      FormGearLogger.sdk(
-        'Engine ${engineType.displayName} prepared successfully with '
-        '${processedHtml.length} chars HTML',
-      );
-
-      return preparedEngine;
-    } catch (e) {
-      FormGearLogger.sdkError(
-        'Failed to prepare engine ${engineType.displayName}: $e',
-      );
-      rethrow;
-    }
   }
 
   /// Loads form configuration (validation, template, etc.)
@@ -206,111 +152,32 @@ class FormGearSDK {
   }
 
   /// Sets the FormDataListener for handling save/submit operations
-  ///
-  /// The FormDataListener provides a comprehensive interface for handling
-  /// save and submit operations from both FormGear (engine ID: 1) and
-  /// FasihForm (engine ID: 2) engines.
-  ///
-  /// Usage:
-  /// ```dart
-  /// class MyFormDataListener extends BaseFormDataListener {
-  ///   @override
-  ///   Future<SaveSubmitResult> onSaveOrSubmit(SaveSubmitData data) async {
-  ///     // Handle FormGear (engine ID: 1) save/submit
-  ///     await myDatabase.saveFormData(data);
-  ///     return SaveSubmitResult.success(
-  ///       submissionId: 'form_${data.assignmentId}',
-  ///     );
-  ///   }
-  ///
-  ///   @override
-  ///   Future<SaveSubmitResult> onSaveOrSubmitFasihForm(
-  ///     SaveSubmitData data,
-  ///   ) async {
-  ///     // Handle FasihForm (engine ID: 2) save/submit
-  ///     await myDatabase.saveFasihFormData(data);
-  ///     return SaveSubmitResult.success(
-  ///       submissionId: 'fasih_${data.assignmentId}',
-  ///     );
-  ///   }
-  /// }
-  ///
-  /// FormGearSDK.instance.setFormDataListener(MyFormDataListener());
-  /// ```
-  void setFormDataListener(FormDataListener? listener) {
-    _formDataListener = listener;
-
-    if (listener != null) {
-      FormGearLogger.sdk(
-        'FormDataListener registered: ${listener.runtimeType}',
-      );
-    } else {
-      FormGearLogger.sdk('FormDataListener removed');
-    }
-  }
+  void setFormDataListener(FormDataListener? listener) =>
+      _listenerRegistry.setFormDataListener(listener);
 
   /// Gets the currently registered FormDataListener
-  ///
-  /// Returns null if no listener is registered.
-  FormDataListener? get formDataListener => _formDataListener;
+  FormDataListener? get formDataListener => _listenerRegistry.formDataListener;
 
   /// Checks if a FormDataListener is currently registered
-  bool get hasFormDataListener => _formDataListener != null;
+  bool get hasFormDataListener => _listenerRegistry.hasFormDataListener;
 
   /// Removes the currently registered FormDataListener
-  ///
-  /// After calling this method, save/submit operations will fall back
-  /// to legacy callback behavior or default implementations.
-  void removeFormDataListener() {
-    setFormDataListener(null);
-  }
+  void removeFormDataListener() => _listenerRegistry.removeFormDataListener();
 
   /// Sets the FileUploadListener for handling file upload operations
-  ///
-  /// Register a custom listener to handle file uploads to your backend.
-  /// The listener will be called when files need to be uploaded from
-  /// FormGear/FasihForm.
-  ///
-  /// Example:
-  /// ```dart
-  /// class MyFileUploadListener implements FileUploadListener {
-  ///   @override
-  ///   Future<FileUploadResult> onFileUpload(FileUploadData data) async {
-  ///     // Upload to S3, server, etc.
-  ///     final url = await uploadToBackend(data.file);
-  ///     return FileUploadResult.success(uploadedUrl: url);
-  ///   }
-  /// }
-  ///
-  /// FormGearSDK.instance.setFileUploadListener(MyFileUploadListener());
-  /// ```
-  void setFileUploadListener(FileUploadListener? listener) {
-    _fileUploadListener = listener;
-
-    if (listener != null) {
-      FormGearLogger.sdk(
-        'FileUploadListener registered: ${listener.runtimeType}',
-      );
-    } else {
-      FormGearLogger.sdk('FileUploadListener removed');
-    }
-  }
+  void setFileUploadListener(FileUploadListener? listener) =>
+      _listenerRegistry.setFileUploadListener(listener);
 
   /// Gets the currently registered FileUploadListener
-  ///
-  /// Returns null if no listener is registered.
-  FileUploadListener? get fileUploadListener => _fileUploadListener;
+  FileUploadListener? get fileUploadListener =>
+      _listenerRegistry.fileUploadListener;
 
   /// Checks if a FileUploadListener is currently registered
-  bool get hasFileUploadListener => _fileUploadListener != null;
+  bool get hasFileUploadListener => _listenerRegistry.hasFileUploadListener;
 
   /// Removes the currently registered FileUploadListener
-  ///
-  /// After calling this method, file upload operations will fall back
-  /// to default behavior (local file verification only).
-  void removeFileUploadListener() {
-    setFileUploadListener(null);
-  }
+  void removeFileUploadListener() =>
+      _listenerRegistry.removeFileUploadListener();
 
   /// Opens form with assignment context (new assignment-based method)
   /// This method uses dynamic configuration based on assignment context
@@ -445,7 +312,7 @@ class FormGearSDK {
           currentFormConfig: _currentFormConfig,
           config: _config,
           getCurrentAssignment: () => _currentAssignment,
-          formDataListener: _formDataListener,
+          formDataListener: _listenerRegistry.formDataListener,
         ),
         ...customHandlers,
       ],
@@ -468,10 +335,8 @@ class FormGearSDK {
           'packages/form_gear_engine_sdk/assets/test/bridge_test.html';
       final htmlContent = await rootBundle.loadString(assetPath);
 
-      // Process the HTML through vendor asset injection to replace jQuery
-      // placeholder
-      final processedHtml = await _assetLoader.injectVendorAssets(htmlContent);
-      return processedHtml;
+      // Process the HTML through vendor asset injection
+      return _engineService.assetLoader.injectVendorAssets(htmlContent);
     } on Exception catch (e) {
       FormGearLogger.sdkError('Failed to load debug bridge test HTML: $e');
       return null;
@@ -479,17 +344,8 @@ class FormGearSDK {
   }
 
   /// Determines the FormEngineType based on template ID
-  FormEngineType _determineEngineTypeFromTemplate(String templateId) {
-    // Check if template ID indicates FasihForm usage
-    if (templateId.startsWith('fasih') ||
-        templateId.contains('fasih') ||
-        templateId.startsWith('survey')) {
-      return FormEngineType.fasihForm;
-    }
-
-    // Default to FormGear for other templates
-    return FormEngineType.formGear;
-  }
+  FormEngineType _determineEngineTypeFromTemplate(String templateId) =>
+      _engineService.determineEngineTypeFromTemplate(templateId);
 
   /// Starts server if needed based on global configuration
   Future<void> _startServerIfNeeded() async {
@@ -509,7 +365,7 @@ class FormGearSDK {
       currentFormConfig: _currentFormConfig,
       config: _config,
       getCurrentAssignment: () => _currentAssignment,
-      formDataListener: _formDataListener,
+      formDataListener: _listenerRegistry.formDataListener,
     );
   }
 

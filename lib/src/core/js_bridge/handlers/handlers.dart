@@ -1,6 +1,13 @@
 export 'action_handler.dart';
+export 'action_handler_contract.dart';
 export 'android_action_handler.dart';
 export 'android_data_handler.dart';
+export 'barcode_action_handler.dart';
 export 'client_action_handler.dart';
 export 'execute_handler.dart';
+export 'fasih_data_handler.dart';
+export 'file_action_handler.dart';
+export 'location_action_handler.dart';
+export 'lookup_action_handler.dart';
+export 'media_action_handler.dart';
 export 'mobile_exit_handler.dart';

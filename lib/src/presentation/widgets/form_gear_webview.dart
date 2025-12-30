@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_bridge.dart';
+import 'package:form_gear_engine_sdk/src/core/services/navigator_context_provider.dart';
 import 'package:form_gear_engine_sdk/src/presentation/bloc/form_gear_webview_bloc.dart';
+import 'package:form_gear_engine_sdk/src/presentation/widgets/exit_confirmation_dialog.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/form_gear_loading_screen.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
+import 'package:form_gear_engine_sdk/src/utils/webview_navigation_helper.dart';
 
 /// FormGear WebView widget with JSHandler integration and BLoC pattern
 /// Follows the web_view pattern - simple parameters, external handler injection
@@ -115,6 +118,16 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
   void initState() {
     super.initState();
     _initializeSettings();
+    // Register the navigator context for action handlers to use
+    NavigatorContextProvider.instance.register(
+      () => mounted ? context : null,
+    );
+  }
+
+  @override
+  void dispose() {
+    NavigatorContextProvider.instance.unregister();
+    super.dispose();
   }
 
   void _initializeSettings() {
@@ -145,9 +158,16 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
   Widget build(BuildContext context) {
     return BlocConsumer<FormGearWebViewBloc, FormGearWebViewState>(
       listener: (context, state) {
-        // Handle side effects here if needed
+        FormGearLogger.sdk(
+          'FormGearWebView BlocConsumer listener: '
+          'status=${state.status}, isLoading=${state.isLoading}',
+        );
       },
       builder: (context, state) {
+        FormGearLogger.sdk(
+          'FormGearWebView builder: status=${state.status}, '
+          'isLoading=${state.isLoading}',
+        );
         return PopScope(
           canPop: false, // Always handle pop manually
           onPopInvokedWithResult: (didPop, result) async {
@@ -262,8 +282,8 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
     );
   }
 
-  /// Handle back navigation - show exit confirmation dialog
-  /// Multi-section navigation is handled by FormGear/FasihForm JavaScript
+  /// Handle back navigation - navigate within form pages first,
+  /// then show exit confirmation dialog when can't go back anymore
   Future<void> _handleBackNavigation(InAppWebViewController? controller) async {
     if (controller == null) {
       // No WebView controller, allow normal back navigation
@@ -273,201 +293,45 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
       return;
     }
 
-    // Always show exit confirmation dialog
-    // Multi-section forms handle their own internal navigation
-    await _showExitConfirmationDialog(controller);
+    // Try to navigate back within the form using JavaScript
+    // The form engines handle their own section/page navigation internally
+    final canGoBackInForm = await _tryNavigateBackInForm(controller);
+
+    if (canGoBackInForm) {
+      FormGearLogger.webview('Navigated back within form sections');
+    } else {
+      // Can't go back anymore - show exit confirmation dialog
+      await _showExitConfirmationDialog(controller);
+    }
+  }
+
+  /// Try to navigate back within the form sections/pages
+  /// Returns true if navigation was handled, false if at first section
+  Future<bool> _tryNavigateBackInForm(InAppWebViewController controller) async {
+    return WebViewNavigationHelper.tryNavigateBackInForm(controller);
   }
 
   /// Show exit confirmation dialog before closing the form
-  /// Uses SDK's modern dialog design system
   Future<void> _showExitConfirmationDialog(
     InAppWebViewController controller,
   ) async {
     if (!mounted) return;
 
-    final shouldExit = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => Dialog(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 340),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header with warning icon
-              Container(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFEF3C7),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.warning_amber_rounded,
-                        color: Color(0xFFF59E0B),
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    const Expanded(
-                      child: Text(
-                        'Perhatian',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1F2937),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Content
-              Container(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Apakah Anda yakin akan keluar dari halaman ini?',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFF6B7280),
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Action buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () =>
-                                Navigator.of(dialogContext).pop(false),
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(
-                                color: Colors.grey.withValues(alpha: 0.3),
-                                width: 1.5,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            child: const Text(
-                              'Tidak',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF6B7280),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFF1E88E5),
-                                  Color(0xFF1976D2),
-                                ],
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(
-                                    0xFF1E88E5,
-                                  ).withValues(alpha: 0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: ElevatedButton(
-                              onPressed: () =>
-                                  Navigator.of(dialogContext).pop(true),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.transparent,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                              ),
-                              child: const Text(
-                                'Iya',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    final shouldExit = await ExitConfirmationDialog.show(context);
 
-    if ((shouldExit ?? false) && mounted) {
-      // Call mobileExit() to trigger cleanup in FormGear/FasihForm
-      try {
-        await controller.evaluateJavascript(
-          source: '''
-            (function() {
-              try {
-                if (typeof window.mobileExit === 'function') {
-                  window.mobileExit();
-                } else if (typeof Android !== 'undefined' && typeof Android.mobileExit === 'function') {
-                  Android.mobileExit();
-                }
-              } catch (e) {
-                console.log('mobileExit not available: ' + e);
-              }
-            })();
-          ''',
-        );
-        FormGearLogger.webview('Called mobileExit before closing form');
-      } on Exception catch (e) {
-        FormGearLogger.webviewError('Error calling mobileExit: $e');
-      }
+    if (shouldExit && mounted) {
+      await _callMobileExitAndClose(controller);
+    }
+  }
 
-      // Close the form
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
+  /// Call mobileExit() JavaScript function and close the form
+  Future<void> _callMobileExitAndClose(
+    InAppWebViewController controller,
+  ) async {
+    await WebViewNavigationHelper.callMobileExit(controller);
+
+    if (mounted) {
+      Navigator.of(context).pop();
     }
   }
 

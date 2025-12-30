@@ -13,7 +13,8 @@ enum FormGearFormMode {
   approved(4),
 
   /// Form is in debug/development mode
-  debug(5);
+  debug(5)
+  ;
 
   const FormGearFormMode(this.value);
   final int value;

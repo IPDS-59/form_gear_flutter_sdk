@@ -291,7 +291,8 @@ enum SaveSubmitEngineType {
 
   /// FasihForm engine (ID: 2) with simplified parameter set
   @JsonValue('fasihForm')
-  fasihForm;
+  fasihForm
+  ;
 
   /// Display name for the engine type
   String get displayName {
