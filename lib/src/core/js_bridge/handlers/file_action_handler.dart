@@ -90,7 +90,24 @@ class FileActionHandler with ActionHandlerContract {
 
       FormGearLogger.webview('File upload: fileName=$fileName, uri=$fileUri');
 
-      final filePath = fileUri.replaceFirst('file://', '');
+      var filePath = fileUri.replaceFirst('file://', '');
+
+      // If this is just a filename (not a full path), resolve it to the
+      // media directory. Files from camera/media handlers are stored there.
+      if (!filePath.contains('/') && !filePath.contains(r'\')) {
+        // Get the assignment ID from current context
+        final assignmentId =
+            FormGearSDK.instance.currentAssignment?.assignmentId ??
+            'current_assignment';
+
+        filePath = await FasihMediaHelper.getMediaFilePath(
+          assignmentId,
+          filePath,
+        );
+        FormGearLogger.webview(
+          'Resolved filename to full path: $filePath',
+        );
+      }
 
       final validationResult = PathValidator.validate(
         filePath,
@@ -233,26 +250,37 @@ class FileActionHandler with ActionHandlerContract {
       if (result != null && result.files.single.path != null) {
         final filePath = result.files.single.path!;
 
-        final validationResult = PathValidator.validate(
-          filePath,
-          type: PathValidationType.media,
-          checkExists: true,
-        );
-
-        if (!validationResult.isValid) {
-          FormGearLogger.webviewError(
-            'Invalid picked file path: ${validationResult.error}',
-          );
+        // For system file picker, we only validate:
+        // 1. No path traversal (handled by sanitizeFilename for the name)
+        // 2. File exists
+        // 3. Extension is allowed
+        // We don't check BPS directories since picked files come from anywhere
+        final file = File(filePath);
+        if (!file.existsSync()) {
+          FormGearLogger.webviewError('Picked file does not exist: $filePath');
           return ActionInfoJs(
             success: false,
-            error: 'Invalid file selected: ${validationResult.error}',
+            error: 'Selected file does not exist',
           );
         }
 
-        final originalFile = File(validationResult.sanitizedPath);
+        final extension = filePath.split('.').last.toLowerCase();
+        if (!PathValidator.isExtensionAllowed(
+          '.$extension',
+          PathValidationType.media,
+        )) {
+          FormGearLogger.webviewError(
+            'Invalid file extension: $extension',
+          );
+          return ActionInfoJs(
+            success: false,
+            error: 'File type not allowed: $extension',
+          );
+        }
+
+        final originalFile = file;
 
         final assignmentId = data.isNotEmpty ? data : 'current_assignment';
-        final extension = filePath.split('.').last;
         final fileName = FasihMediaHelper.generateFileName(
           dataKey: dataKey,
           mediaType: 'document',
