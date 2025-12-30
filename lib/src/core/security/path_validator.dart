@@ -231,8 +231,14 @@ class PathValidator {
       final decoded = Uri.decodeComponent(value);
       // Only return if actually different (was decoded)
       return decoded;
-    } on Exception {
-      // FormatException or other errors from invalid encoding
+    } on FormatException {
+      // Invalid UTF-8 sequence after decoding
+      return null;
+      // Uri.decodeComponent throws ArgumentError for invalid URL encoding
+      // (e.g., lone % sign). We must catch this Error to handle malformed
+      // input gracefully and return null to indicate decoding failure.
+      // ignore: avoid_catching_errors
+    } on ArgumentError {
       return null;
     }
   }
