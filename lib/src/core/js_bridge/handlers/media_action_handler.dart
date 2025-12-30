@@ -175,21 +175,19 @@ class MediaActionHandler with ActionHandlerContract {
     }
   }
 
-  /// Handle signature action - shows signature capture screen
+  /// Handle signature action
+  /// Both FormGear and FasihForm handle signatures in the WebView using
+  /// their built-in signature pad. The signature data is stored as part
+  /// of the form response, so this handler just acknowledges the action.
   Future<ActionInfoJs> handleSignature(String dataKey, String data) async {
     try {
-      FormGearLogger.webview('Signature action for dataKey: $dataKey');
+      FormGearLogger.webview(
+        'Signature action for dataKey: $dataKey, data length: ${data.length}',
+      );
 
-      // Get current context from navigator
-      final context = getCurrentContext();
-      if (context == null) {
-        return ActionInfoJs(
-          success: false,
-          error: 'No valid context available for signature capture',
-        );
-      }
-
-      // Signature capture not yet implemented
+      // Signature is handled by the WebView's built-in signature pad
+      // The signature data is saved as part of the form response
+      // Just acknowledge the action was received
       return ActionInfoJs(success: true);
     } on Exception catch (e) {
       FormGearLogger.webviewError('Signature action error: $e');
