@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_bridge.dart';
+import 'package:form_gear_engine_sdk/src/core/services/navigator_context_provider.dart';
 import 'package:form_gear_engine_sdk/src/presentation/bloc/form_gear_webview_bloc.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/exit_confirmation_dialog.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/form_gear_loading_screen.dart';
@@ -116,6 +117,16 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
   void initState() {
     super.initState();
     _initializeSettings();
+    // Register the navigator context for action handlers to use
+    NavigatorContextProvider.instance.register(
+      () => mounted ? context : null,
+    );
+  }
+
+  @override
+  void dispose() {
+    NavigatorContextProvider.instance.unregister();
+    super.dispose();
   }
 
   void _initializeSettings() {

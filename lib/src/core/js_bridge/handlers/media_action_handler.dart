@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/action_handler_contract.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
+import 'package:form_gear_engine_sdk/src/core/services/navigator_context_provider.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/audio_recorder_screen.dart';
 import 'package:form_gear_engine_sdk/src/utils/fasih_media_helper.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
@@ -108,7 +109,10 @@ class MediaActionHandler with ActionHandlerContract {
       }
     } on Exception catch (e) {
       FormGearLogger.webviewError('Camera error: $e');
-      return ActionInfoJs(success: false, error: 'Camera error: $e');
+      return ActionInfoJs(
+        success: false,
+        error: ErrorSanitizer.sanitizeWithContext('Camera', e.toString()),
+      );
     }
   }
 
@@ -161,7 +165,13 @@ class MediaActionHandler with ActionHandlerContract {
       }
     } on Exception catch (e) {
       FormGearLogger.webviewError('Audio recording error: $e');
-      return ActionInfoJs(success: false, error: 'Audio recording error: $e');
+      return ActionInfoJs(
+        success: false,
+        error: ErrorSanitizer.sanitizeWithContext(
+          'Audio recording',
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -183,21 +193,16 @@ class MediaActionHandler with ActionHandlerContract {
       return ActionInfoJs(success: true);
     } on Exception catch (e) {
       FormGearLogger.webviewError('Signature action error: $e');
-      return ActionInfoJs(success: false, error: 'Signature action error: $e');
+      return ActionInfoJs(
+        success: false,
+        error: ErrorSanitizer.sanitizeWithContext('Signature', e.toString()),
+      );
     }
   }
 
-  /// Get the current BuildContext from the navigator
-  BuildContext? getCurrentContext() {
-    try {
-      return WidgetsBinding.instance.rootElement?.mounted ?? false
-          ? WidgetsBinding.instance.rootElement
-          : null;
-    } on Exception catch (e) {
-      FormGearLogger.webviewError('Error getting context: $e');
-      return null;
-    }
-  }
+  /// Get the current BuildContext from the NavigatorContextProvider
+  BuildContext? getCurrentContext() =>
+      NavigatorContextProvider.instance.context;
 
   /// Notify FormGear engine of media selection following FASIH patterns
   Future<void> notifyFormGearOfMediaSelection({

@@ -404,5 +404,115 @@ void main() {
         expect(string, contains('/bad/path'));
       });
     });
+
+    group('Security: URL-Encoded Path Traversal Prevention', () {
+      test('should block URL-encoded path traversal (%2e%2e%2f)', () {
+        // %2e = '.' and %2f = '/'
+        // So %2e%2e%2f = '../'
+        const path = '/data/BPS/Template/%2e%2e%2f%2e%2e%2fetc/passwd';
+
+        final result = PathValidator.validate(path);
+
+        expect(result.isValid, isFalse);
+        expect(result.error, contains('traversal'));
+      });
+
+      test(
+        'should block double URL-encoded path traversal (%252e%252e%252f)',
+        () {
+          // %25 = '%', so %252e = '%2e' which decodes to '.'
+          // This tests double-encoding bypass attempts
+          const path = '/data/BPS/Template/%252e%252e%252f%252e%252e%252fetc';
+
+          final result = PathValidator.validate(path);
+
+          expect(result.isValid, isFalse);
+          expect(result.error, contains('traversal'));
+        },
+      );
+
+      test('should block mixed encoding path traversal (..%2f)', () {
+        const path = '/data/BPS/Template/..%2f..%2f..%2fetc/passwd';
+
+        final result = PathValidator.validate(path);
+
+        expect(result.isValid, isFalse);
+        expect(result.error, contains('traversal'));
+      });
+
+      test('should block backslash URL-encoded traversal (%2e%2e%5c)', () {
+        // %5c = '\'
+        const path = '/data/BPS/Template/%2e%2e%5c%2e%2e%5cetc';
+
+        final result = PathValidator.validate(path);
+
+        expect(result.isValid, isFalse);
+        expect(result.error, contains('traversal'));
+      });
+
+      test('should block uppercase URL-encoded traversal (%2E%2E%2F)', () {
+        const path = '/data/BPS/Template/%2E%2E%2F%2E%2E%2Fetc/passwd';
+
+        final result = PathValidator.validate(path);
+
+        expect(result.isValid, isFalse);
+        expect(result.error, contains('traversal'));
+      });
+
+      test('should block triple-encoded path traversal', () {
+        // %25252e decodes to %252e, then to %2e, then to '.'
+        const path = '/data/BPS/Template/%25252e%25252e%25252f';
+
+        final result = PathValidator.validate(path);
+
+        expect(result.isValid, isFalse);
+        expect(result.error, contains('traversal'));
+      });
+
+      test('should block null byte injection attempts (%00)', () {
+        const path = '/data/BPS/Template/file.json%00.exe';
+
+        // The file should still be validated, null bytes in path are suspicious
+        final result = PathValidator.validate(
+          path,
+          type: PathValidationType.data,
+        );
+
+        // Should reject because after null byte handling,
+        // extension validation may fail
+        expect(result.isValid, isFalse);
+      });
+
+      test('should block path with encoded dots only (%2e%2e)', () {
+        const path = '/data/BPS/Template/%2e%2e/secret';
+
+        final result = PathValidator.validate(path);
+
+        expect(result.isValid, isFalse);
+        expect(result.error, contains('traversal'));
+      });
+
+      test('should allow valid path with percent sign in filename', () {
+        // A legitimate file with % in name (not encoding)
+        const path = '/data/BPS/Template/report_50%25_complete.json';
+
+        final result = PathValidator.validate(
+          path,
+          type: PathValidationType.data,
+        );
+
+        // Should be valid as '50%' is legitimate content
+        expect(result.isValid, isTrue);
+      });
+
+      test('should block directory traversal via validateDirectory', () {
+        const path = '/data/BPS/Template/%2e%2e%2f%2e%2e%2fetc';
+
+        final result = PathValidator.validateDirectory(path);
+
+        expect(result.isValid, isFalse);
+        expect(result.error, contains('traversal'));
+      });
+    });
   });
 }

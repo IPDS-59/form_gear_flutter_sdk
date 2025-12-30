@@ -186,8 +186,70 @@ class PathValidator {
 
   // Private helper methods
 
+  /// Decodes URL-encoded characters and normalizes path for security checks.
+  ///
+  /// This prevents bypass attempts using encoded characters like:
+  /// - `%2e%2e%2f` (URL encoded `../`)
+  /// - `%252e%252e%252f` (double-encoded `../`)
+  /// - Mixed encoding attacks
+  static String _decodeAndNormalize(String path) {
+    var decoded = path;
+
+    // Repeatedly decode until no more encoded characters
+    // This handles double/triple encoding attacks
+    var previousDecoded = '';
+    var iterations = 0;
+    const maxIterations = 5; // Prevent infinite loops
+
+    while (decoded != previousDecoded && iterations < maxIterations) {
+      previousDecoded = decoded;
+      // Uri.decodeComponent can throw FormatException or ArgumentError
+      // for invalid encoding sequences. We catch all to handle edge cases.
+      final decodeResult = _tryDecodeComponent(decoded);
+      if (decodeResult == null) {
+        break;
+      }
+      decoded = decodeResult;
+      iterations++;
+    }
+
+    // Normalize path separators (Windows backslashes to forward slashes)
+    return decoded.replaceAll(r'\', '/');
+  }
+
+  /// Attempts to decode a URL component, returning null if decoding fails.
+  ///
+  /// Uri.decodeComponent throws ArgumentError for invalid sequences like '%zz'
+  /// or incomplete sequences like '%2'. We need to handle these gracefully.
+  static String? _tryDecodeComponent(String value) {
+    // Check if the value contains any percent encoding
+    if (!value.contains('%')) {
+      return value;
+    }
+
+    try {
+      final decoded = Uri.decodeComponent(value);
+      // Only return if actually different (was decoded)
+      return decoded;
+    } on FormatException {
+      // Invalid UTF-8 sequence after decoding
+      return null;
+      // Uri.decodeComponent throws ArgumentError for invalid URL encoding
+      // (e.g., lone % sign). We must catch this Error to handle malformed
+      // input gracefully and return null to indicate decoding failure.
+      // ignore: avoid_catching_errors
+    } on ArgumentError {
+      return null;
+    }
+  }
+
   static bool _containsPathTraversal(String path) {
-    // Check for common path traversal patterns
+    // First decode any URL-encoded characters
+    final decodedPath = _decodeAndNormalize(path);
+
+    // Check for common path traversal patterns in both original and decoded
+    final pathsToCheck = [path, decodedPath];
+
     final patterns = [
       '../',
       r'..\',
@@ -195,10 +257,20 @@ class PathValidator {
       r'.\',
       '//',
       r'\\',
+      // Also check for the patterns without slashes (at boundaries)
+      '..',
     ];
 
-    for (final pattern in patterns) {
-      if (path.contains(pattern)) {
+    for (final pathToCheck in pathsToCheck) {
+      for (final pattern in patterns) {
+        if (pathToCheck.contains(pattern)) {
+          return true;
+        }
+      }
+
+      // Additional check: path segments that are exactly '..'
+      final segments = pathToCheck.split(RegExp(r'[/\\]'));
+      if (segments.any((s) => s == '..')) {
         return true;
       }
     }

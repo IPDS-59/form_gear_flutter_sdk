@@ -49,7 +49,10 @@ class LookupActionHandler with ActionHandlerContract {
       }
     } on Exception catch (e) {
       FormGearLogger.webviewError('Get answer error: $e');
-      return ActionInfoJs(success: false, error: 'Get answer error: $e');
+      return ActionInfoJs(
+        success: false,
+        error: ErrorSanitizer.sanitizeWithContext('Get answer', e.toString()),
+      );
     }
   }
 
@@ -106,7 +109,10 @@ class LookupActionHandler with ActionHandlerContract {
       }
     } on Exception catch (e) {
       FormGearLogger.webviewError('Lookup error: $e');
-      return ActionInfoJs(success: false, error: 'Lookup error: $e');
+      return ActionInfoJs(
+        success: false,
+        error: ErrorSanitizer.sanitizeWithContext('Lookup', e.toString()),
+      );
     }
   }
 
