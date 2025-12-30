@@ -9,7 +9,9 @@ import 'package:flutter/material.dart';
 /// Usage:
 /// 1. Register the context getter from the widget that manages navigation:
 ///    ```dart
-///    NavigatorContextProvider.instance.register(() => mounted ? context : null);
+///    NavigatorContextProvider.instance.register(
+///      () => mounted ? context : null,
+///    );
 ///    ```
 ///
 /// 2. In handlers, get the context:
@@ -40,6 +42,7 @@ class NavigatorContextProvider {
   /// The getter should return null if the widget is not mounted.
   ///
   /// Call this from the WebView widget's didChangeDependencies.
+  // ignore: use_setters_to_change_properties
   void register(BuildContext? Function() contextGetter) {
     _contextGetter = contextGetter;
   }

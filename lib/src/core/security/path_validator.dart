@@ -231,11 +231,8 @@ class PathValidator {
       final decoded = Uri.decodeComponent(value);
       // Only return if actually different (was decoded)
       return decoded;
-    } on FormatException {
-      // Invalid UTF-8 sequence after decoding
-      return null;
-    } catch (_) {
-      // ArgumentError or other errors from invalid encoding
+    } on Exception {
+      // FormatException or other errors from invalid encoding
       return null;
     }
   }
