@@ -157,9 +157,16 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
   Widget build(BuildContext context) {
     return BlocConsumer<FormGearWebViewBloc, FormGearWebViewState>(
       listener: (context, state) {
-        // Handle side effects here if needed
+        FormGearLogger.sdk(
+          'FormGearWebView BlocConsumer listener: '
+          'status=${state.status}, isLoading=${state.isLoading}',
+        );
       },
       builder: (context, state) {
+        FormGearLogger.sdk(
+          'FormGearWebView builder: status=${state.status}, '
+          'isLoading=${state.isLoading}',
+        );
         return PopScope(
           canPop: false, // Always handle pop manually
           onPopInvokedWithResult: (didPop, result) async {
@@ -274,8 +281,8 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
     );
   }
 
-  /// Handle back navigation - show exit confirmation dialog
-  /// Multi-section navigation is handled by FormGear/FasihForm JavaScript
+  /// Handle back navigation - navigate within form pages first,
+  /// then show exit confirmation dialog when can't go back anymore
   Future<void> _handleBackNavigation(InAppWebViewController? controller) async {
     if (controller == null) {
       // No WebView controller, allow normal back navigation
@@ -285,9 +292,146 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
       return;
     }
 
-    // Always show exit confirmation dialog
-    // Multi-section forms handle their own internal navigation
-    await _showExitConfirmationDialog(controller);
+    // Try to navigate back within the form using JavaScript
+    // The form engines handle their own section/page navigation internally
+    final canGoBackInForm = await _tryNavigateBackInForm(controller);
+
+    if (canGoBackInForm) {
+      FormGearLogger.webview('Navigated back within form sections');
+    } else {
+      // Can't go back anymore - show exit confirmation dialog
+      await _showExitConfirmationDialog(controller);
+    }
+  }
+
+  /// Try to navigate back within the form sections/pages
+  /// Returns true if navigation was handled, false if at first section
+  Future<bool> _tryNavigateBackInForm(InAppWebViewController controller) async {
+    try {
+      // JavaScript that checks if form can go back and navigates if possible
+      // Works for both FormGear and FasihForm engines
+      // Priority:
+      // 1. Call mobileBack() if defined (form engine handles it)
+      // 2. Emit back-request event for FasihForm
+      // 3. Look for prev/back buttons in the DOM
+      // 4. Check WebView history
+      final result = await controller.evaluateJavascript(
+        source: '''
+          (function() {
+            try {
+              // 1. Check for mobileBack function (custom handler)
+              if (typeof window.mobileBack === 'function') {
+                var backResult = window.mobileBack();
+                // mobileBack returns true if it handled back, false if can't go back
+                if (backResult === true || backResult === 'true') {
+                  return true;
+                }
+                if (backResult === false || backResult === 'false') {
+                  return false;
+                }
+              }
+
+              // 2. FasihForm: Emit back-request event and check if handled
+              if (window.fasihForm && window.fasihForm.event) {
+                // Check if fasihForm has a canGoBack method or similar
+                if (typeof window.fasihForm.canGoBack === 'function') {
+                  if (window.fasihForm.canGoBack()) {
+                    window.fasihForm.goBack();
+                    return true;
+                  }
+                  return false;
+                }
+
+                // Try emitting back-request event
+                try {
+                  window.fasihForm.event.emit('back-request');
+                  // If no error, assume handled (form will handle it)
+                  // We need to check if we're on first section
+                } catch (e) {
+                  // Event not supported, continue to DOM check
+                }
+              }
+
+              // 3. Look for prev/back navigation buttons in DOM
+              var prevButton = document.querySelector(
+                'button[data-action="prev"], ' +
+                'button[data-action="back"], ' +
+                '[data-testid="prev-section"], ' +
+                '[data-testid="back-button"], ' +
+                '.prev-section-btn, ' +
+                '.back-btn, ' +
+                'button[aria-label*="previous" i], ' +
+                'button[aria-label*="sebelumnya" i], ' +
+                'button[aria-label*="kembali" i]'
+              );
+
+              if (prevButton && !prevButton.disabled &&
+                  prevButton.offsetParent !== null &&
+                  getComputedStyle(prevButton).display !== 'none') {
+                prevButton.click();
+                return true;
+              }
+
+              // 4. Check for stepper/pagination navigation
+              var steppers = document.querySelectorAll(
+                '.stepper-item, .step-item, .pagination-item, ' +
+                '[role="tab"], [data-step]'
+              );
+
+              if (steppers.length > 1) {
+                var activeIndex = -1;
+                steppers.forEach(function(el, idx) {
+                  if (el.classList.contains('active') ||
+                      el.classList.contains('current') ||
+                      el.getAttribute('aria-selected') === 'true' ||
+                      el.getAttribute('data-active') === 'true') {
+                    activeIndex = idx;
+                  }
+                });
+
+                // If we're past first step, click previous step
+                if (activeIndex > 0) {
+                  steppers[activeIndex - 1].click();
+                  return true;
+                }
+
+                // On first step, can't go back
+                if (activeIndex === 0) {
+                  return false;
+                }
+              }
+
+              // Can't determine navigation state
+              return 'unknown';
+            } catch (e) {
+              console.log('Back navigation check error: ' + e);
+              return 'error';
+            }
+          })();
+        ''',
+      );
+
+      // Parse result - could be bool, string, or null
+      if (result == true || result == 'true') {
+        return true;
+      }
+
+      if (result == false || result == 'false') {
+        return false;
+      }
+
+      // If unknown, check WebView history as fallback
+      final canGoBack = await controller.canGoBack();
+      if (canGoBack) {
+        await controller.goBack();
+        return true;
+      }
+
+      return false;
+    } on Exception catch (e) {
+      FormGearLogger.webviewError('Error checking form back navigation: $e');
+      return false;
+    }
   }
 
   /// Show exit confirmation dialog before closing the form

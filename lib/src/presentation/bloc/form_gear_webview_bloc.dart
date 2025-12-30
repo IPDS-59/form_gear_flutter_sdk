@@ -40,6 +40,7 @@ class FormGearWebViewBloc
     InitializeWebView event,
     Emitter<FormGearWebViewState> emit,
   ) async {
+    FormGearLogger.sdk('_onInitializeWebView: setting status to initializing');
     emit(state.copyWith(status: WebViewStatus.initializing));
 
     try {
@@ -74,9 +75,21 @@ class FormGearWebViewBloc
         _bridgeInjected = true;
       }
 
+      // Only set to ready if page hasn't already finished loading
+      // (loadData triggers onLoadStart/onLoadStop which may have already
+      // set status to loading or loaded)
+      final newStatus =
+          state.status == WebViewStatus.loaded ||
+              state.status == WebViewStatus.loading
+          ? state.status
+          : WebViewStatus.ready;
+      FormGearLogger.sdk(
+        '_onInitializeWebView: current status=${state.status}, '
+        'setting to $newStatus',
+      );
       emit(
         state.copyWith(
-          status: WebViewStatus.ready,
+          status: newStatus,
           controller: event.controller,
           isBridgeInjected: true,
         ),
@@ -150,20 +163,31 @@ class FormGearWebViewBloc
     WebViewLoadStart event,
     Emitter<FormGearWebViewState> emit,
   ) async {
-    // CRITICAL: Inject bridge SYNCHRONOUSLY before JavaScript executes
-    // onLoadStart is called BEFORE JavaScript in the page runs
-    // This ensures bridge is ready when FasihForm/FormGear JavaScript loads
-    try {
-      await _registerJavaScriptHandlers(event.controller);
-      await _injectAndroidBridgeFromFile(event.controller);
-      _bridgeInjected = true;
+    FormGearLogger.sdk(
+      '_onWebViewLoadStart: url=${event.url}, current status=${state.status}, '
+      'bridgeAlreadyInjected=$_bridgeInjected',
+    );
+
+    // Only inject bridge if not already done (for URL-based loading)
+    // For HTML content loaded via loadData(), bridge is embedded in HTML
+    if (!_bridgeInjected) {
+      try {
+        await _registerJavaScriptHandlers(event.controller);
+        await _injectAndroidBridgeFromFile(event.controller);
+        _bridgeInjected = true;
+        FormGearLogger.sdk(
+          'Bridge injected in onLoadStart (before JS execution)',
+        );
+      } on Exception catch (e) {
+        FormGearLogger.sdkError('Failed to inject bridge on load start: $e');
+      }
+    } else {
       FormGearLogger.sdk(
-        'Bridge injected in onLoadStart (before JS execution)',
+        'Bridge already injected, skipping redundant injection',
       );
-    } on Exception catch (e) {
-      FormGearLogger.sdkError('Failed to inject bridge on load start: $e');
     }
 
+    FormGearLogger.sdk('_onWebViewLoadStart: setting status to loading');
     emit(
       state.copyWith(
         status: WebViewStatus.loading,
@@ -178,20 +202,31 @@ class FormGearWebViewBloc
     WebViewLoadStop event,
     Emitter<FormGearWebViewState> emit,
   ) async {
-    emit(
-      state.copyWith(
-        status: WebViewStatus.loaded,
-        loadingProgress: 100,
-      ),
-    );
+    try {
+      FormGearLogger.sdk(
+        '_onWebViewLoadStop: url=${event.url}, current status=${state.status}',
+      );
+      FormGearLogger.sdk('_onWebViewLoadStop: setting status to loaded');
+      emit(
+        state.copyWith(
+          status: WebViewStatus.loaded,
+          loadingProgress: 100,
+        ),
+      );
+      FormGearLogger.sdk('_onWebViewLoadStop: emit completed successfully');
 
-    // iOS: Re-inject bridge after page load for better compatibility
-    if (Platform.isIOS) {
-      await Future<void>.delayed(const Duration(milliseconds: 1000));
-      await _injectAndroidBridgeFromFile(event.controller);
-      // Additional delay for iOS to ensure bridge is fully ready
-      await Future<void>.delayed(const Duration(milliseconds: 500));
-      add(VerifyBridgeInjection(event.controller));
+      // iOS: Re-inject bridge after page load for better compatibility
+      if (Platform.isIOS) {
+        await Future<void>.delayed(const Duration(milliseconds: 1000));
+        await _injectAndroidBridgeFromFile(event.controller);
+        // Additional delay for iOS to ensure bridge is fully ready
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+        add(VerifyBridgeInjection(event.controller));
+      }
+    } on Exception catch (e, stack) {
+      FormGearLogger.sdkError(
+        '_onWebViewLoadStop error: $e\n$stack',
+      );
     }
   }
 
