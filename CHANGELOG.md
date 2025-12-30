@@ -1,4 +1,47 @@
 # Changelog
+## [0.3.0] - 2025-12-30
+
+### ✨ Features
+
+- feat(security): add critical security fixes for Sprint 1 (8612502)
+
+### 🐛 Bug Fixes
+
+-  resolve analyzer info-level lint warnings (5aceb1d)
+-  catch ArgumentError from Uri.decodeComponent for invalid URL encoding (060fa72)
+-  resolve filename to full path before validation in FILE_UPLOAD (fbc5b8d)
+- fix(webview): prevent loading screen stuck and add back navigation (c6902b5)
+- fix(media): save picked files to FASIH media directory (cf7a80e)
+
+### ♻️ Refactoring
+
+- refactor(workflows): migrate to banua-coder-workflow reusable workflows (90f8c6e)
+-  split large files to meet sanity check limits (f7d018e)
+- refactor(example): use initializeGlobal instead of legacy initialize (9e4b595)
+-  extract webview navigation helper and fix lint warnings (7848fb6)
+-  extract FasihForm notifier to reduce execute_handler size (3bb21b8)
+
+### 👷 CI
+
+- ci(workflows): add sanity-check workflow (8557cb0)
+
+### 🔧 Chores
+
+-  bump version to v0.3.0 for next development cycle (260132e)
+-  back-merge v0.2.0 release from main to develop (bd662a0)
+- chore(pub): upgrade dependencies (d769698)
+- chore(dependencies): run dart pub upgrade (86d271f)
+- chore(pubignore): add some directories to pub ignore (32bc524)
+-  bump version to 0.3.0 (536ed07)
+
+### 📝 Other Changes
+
+- Merge pull request #23 from IPDS-59/chore/bump-version-to-v0.3.0-dev (239254d)
+- Merge pull request #26 from IPDS-59/chore/back-merge-v0.2.0-release-to-develop-20251109-080533 (650c259)
+- Merge pull request #27 from IPDS-59/chore/dependency-update (3ed7f7b)
+- Merge pull request #28 from IPDS-59/feature/sprint-1-security-fixes (2147095)
+- Merge pull request #29 from IPDS-59/release/0.3.0 (f33a721)
+
 
 ## [0.2.0] - 2025-11-09
 

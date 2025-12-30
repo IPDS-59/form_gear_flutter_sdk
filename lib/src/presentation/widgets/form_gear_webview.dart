@@ -7,6 +7,7 @@ import 'package:form_gear_engine_sdk/src/presentation/bloc/form_gear_webview_blo
 import 'package:form_gear_engine_sdk/src/presentation/widgets/exit_confirmation_dialog.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/form_gear_loading_screen.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
+import 'package:form_gear_engine_sdk/src/utils/webview_navigation_helper.dart';
 
 /// FormGear WebView widget with JSHandler integration and BLoC pattern
 /// Follows the web_view pattern - simple parameters, external handler injection
@@ -307,131 +308,7 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
   /// Try to navigate back within the form sections/pages
   /// Returns true if navigation was handled, false if at first section
   Future<bool> _tryNavigateBackInForm(InAppWebViewController controller) async {
-    try {
-      // JavaScript that checks if form can go back and navigates if possible
-      // Works for both FormGear and FasihForm engines
-      // Priority:
-      // 1. Call mobileBack() if defined (form engine handles it)
-      // 2. Emit back-request event for FasihForm
-      // 3. Look for prev/back buttons in the DOM
-      // 4. Check WebView history
-      final result = await controller.evaluateJavascript(
-        source: '''
-          (function() {
-            try {
-              // 1. Check for mobileBack function (custom handler)
-              if (typeof window.mobileBack === 'function') {
-                var backResult = window.mobileBack();
-                // mobileBack returns true if it handled back, false if can't go back
-                if (backResult === true || backResult === 'true') {
-                  return true;
-                }
-                if (backResult === false || backResult === 'false') {
-                  return false;
-                }
-              }
-
-              // 2. FasihForm: Emit back-request event and check if handled
-              if (window.fasihForm && window.fasihForm.event) {
-                // Check if fasihForm has a canGoBack method or similar
-                if (typeof window.fasihForm.canGoBack === 'function') {
-                  if (window.fasihForm.canGoBack()) {
-                    window.fasihForm.goBack();
-                    return true;
-                  }
-                  return false;
-                }
-
-                // Try emitting back-request event
-                try {
-                  window.fasihForm.event.emit('back-request');
-                  // If no error, assume handled (form will handle it)
-                  // We need to check if we're on first section
-                } catch (e) {
-                  // Event not supported, continue to DOM check
-                }
-              }
-
-              // 3. Look for prev/back navigation buttons in DOM
-              var prevButton = document.querySelector(
-                'button[data-action="prev"], ' +
-                'button[data-action="back"], ' +
-                '[data-testid="prev-section"], ' +
-                '[data-testid="back-button"], ' +
-                '.prev-section-btn, ' +
-                '.back-btn, ' +
-                'button[aria-label*="previous" i], ' +
-                'button[aria-label*="sebelumnya" i], ' +
-                'button[aria-label*="kembali" i]'
-              );
-
-              if (prevButton && !prevButton.disabled &&
-                  prevButton.offsetParent !== null &&
-                  getComputedStyle(prevButton).display !== 'none') {
-                prevButton.click();
-                return true;
-              }
-
-              // 4. Check for stepper/pagination navigation
-              var steppers = document.querySelectorAll(
-                '.stepper-item, .step-item, .pagination-item, ' +
-                '[role="tab"], [data-step]'
-              );
-
-              if (steppers.length > 1) {
-                var activeIndex = -1;
-                steppers.forEach(function(el, idx) {
-                  if (el.classList.contains('active') ||
-                      el.classList.contains('current') ||
-                      el.getAttribute('aria-selected') === 'true' ||
-                      el.getAttribute('data-active') === 'true') {
-                    activeIndex = idx;
-                  }
-                });
-
-                // If we're past first step, click previous step
-                if (activeIndex > 0) {
-                  steppers[activeIndex - 1].click();
-                  return true;
-                }
-
-                // On first step, can't go back
-                if (activeIndex === 0) {
-                  return false;
-                }
-              }
-
-              // Can't determine navigation state
-              return 'unknown';
-            } catch (e) {
-              console.log('Back navigation check error: ' + e);
-              return 'error';
-            }
-          })();
-        ''',
-      );
-
-      // Parse result - could be bool, string, or null
-      if (result == true || result == 'true') {
-        return true;
-      }
-
-      if (result == false || result == 'false') {
-        return false;
-      }
-
-      // If unknown, check WebView history as fallback
-      final canGoBack = await controller.canGoBack();
-      if (canGoBack) {
-        await controller.goBack();
-        return true;
-      }
-
-      return false;
-    } on Exception catch (e) {
-      FormGearLogger.webviewError('Error checking form back navigation: $e');
-      return false;
-    }
+    return WebViewNavigationHelper.tryNavigateBackInForm(controller);
   }
 
   /// Show exit confirmation dialog before closing the form
@@ -451,26 +328,7 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
   Future<void> _callMobileExitAndClose(
     InAppWebViewController controller,
   ) async {
-    try {
-      await controller.evaluateJavascript(
-        source: '''
-          (function() {
-            try {
-              if (typeof window.mobileExit === 'function') {
-                window.mobileExit();
-              } else if (typeof Android !== 'undefined' && typeof Android.mobileExit === 'function') {
-                Android.mobileExit();
-              }
-            } catch (e) {
-              console.log('mobileExit not available: ' + e);
-            }
-          })();
-        ''',
-      );
-      FormGearLogger.webview('Called mobileExit before closing form');
-    } on Exception catch (e) {
-      FormGearLogger.webviewError('Error calling mobileExit: $e');
-    }
+    await WebViewNavigationHelper.callMobileExit(controller);
 
     if (mounted) {
       Navigator.of(context).pop();
