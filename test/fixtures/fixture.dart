@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 enum Fixture {
-  checkFormEngineVersion('check_form_engine_version_fixture.json');
+  checkFormEngineVersion('check_form_engine_version_fixture.json')
+  ;
 
   const Fixture(this.value);
 

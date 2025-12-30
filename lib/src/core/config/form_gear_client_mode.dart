@@ -7,7 +7,8 @@ enum FormGearClientMode {
   capi(2),
 
   /// Test mode for development and testing
-  test(3);
+  test(3)
+  ;
 
   const FormGearClientMode(this.value);
   final int value;
