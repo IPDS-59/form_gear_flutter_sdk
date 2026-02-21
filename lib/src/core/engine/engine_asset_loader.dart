@@ -171,10 +171,11 @@ class EngineAssetLoader {
   }
 
   /// Gets the primary JS file name for the engine type
+  /// Uses UMD build for Flutter WebView compatibility (sets window.FormGear)
   String _getJSFileName(FormEngineType engineType) {
     switch (engineType) {
       case FormEngineType.formGear:
-        return 'form-gear.es.js';
+        return 'form-gear.umd.js';
       case FormEngineType.fasihForm:
         return 'fasih-form.es.js';
     }
@@ -185,14 +186,14 @@ class EngineAssetLoader {
     switch (engineType) {
       case FormEngineType.formGear:
         return [
-          'form-gear.umd.js',
+          'form-gear.es.js',
           'formgear.js',
           'main.js',
           'index.js',
         ];
       case FormEngineType.fasihForm:
         return [
-          'fasih-form.umd.js',
+          'fasih-form.es.js',
           'fasihform.js',
           'main.js',
           'index.js',

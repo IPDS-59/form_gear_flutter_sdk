@@ -1,224 +1,614 @@
 <!DOCTYPE html>
 <html lang="en">
 
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
 
-    <title>FormGear</title>
-    <style>
-      /*style*/
-    </style>
-    <!-- <link rel="stylesheet" href="https://unpkg.com/form-gear/dist/style.css"> -->
-  </head>
+  <title>FormGear</title>
+  <style>
+    /*style*/
+  </style>
+</head>
 
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="FormGear-root"></div>
-    <div id="FormGear-loader" class="bg-gray-200 dark:bg-[#181f30] absolute top-0 h-screen" style="display: none"></div>
-    <script>
-      window.addEventListener("DOMContentLoaded", function () {
-        document.getElementById("FormGear-loader").style.display = "block";
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+
+  <!-- Loading skeleton shown until FormGear renders -->
+  <div id="FormGear-loader" class="bg-gray-200 dark:bg-[#181f30] h-screen">
+    <div class="overflow-hidden">
+      <div class="bg-gray-50 dark:bg-gray-900 dark:text-white h-screen shadow-xl text-gray-600 flex overflow-hidden text-sm font-montserrat rounded-lg dark:shadow-gray-800">
+        <div class="flex-grow flex flex-col bg-white dark:bg-gray-900 z-0">
+          <div class="relative md:flex max-h-screen">
+            <div class="block">
+              <div class="backdrop-blur-sm col-span-12 overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none flex justify-center items-center">
+                <svg class="w-20 h-20 animate-spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 94.53 98.372">
+                  <circle cx="23.536" cy="16.331" r="8.646" style="fill:#0a77e8"/>
+                  <circle cx="8.646" cy="36.698" r="8.646" style="fill:#0f9af0"/>
+                  <circle cx="8.646" cy="61.867" r="8.646" style="fill:#0f9af0"/>
+                  <circle cx="23.536" cy="82.233" r="8.646" style="fill:#13bdf7"/>
+                  <circle cx="47.361" cy="89.726" r="8.646" style="fill:#13bdf7"/>
+                  <circle cx="71.282" cy="82.233" r="8.646" style="fill:#18e0ff"/>
+                  <circle cx="85.884" cy="61.867" r="8.646" style="fill:#65eaff"/>
+                  <circle cx="85.884" cy="36.698" r="8.646" style="fill:#b2f5ff"/>
+                  <circle cx="47.361" cy="8.646" r="8.646" style="fill:#1d4970"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FormGear mount point -->
+  <div id="FormGear-root"></div>
+
+  <!-- FormGear UMD bundle (injected by Flutter SDK at runtime) -->
+  <!-- The SDK replaces this placeholder with form-gear.umd.js content -->
+  <!-- After injection, FormGear API is available at window.FormGear -->
+  <script>
+    //formgear_js
+  </script>
+
+  <script>
+    /**
+     * FormGear 2.0 - Flutter Integration (Android & iOS)
+     *
+     * This uses flutter_inappwebview.callHandler() directly.
+     * No bridge script injection needed - Flutter SDK registers handlers
+     * that FormGear calls directly.
+     */
+
+    // Extract FormGear API from global namespace (set by UMD bundle)
+    const { createFormGear, ClientMode, FormMode, InitialMode, LookupMode } = window.FormGear || {};
+
+    // Verify FormGear API is available
+    if (!createFormGear) {
+      console.error('[FormGear] FATAL: FormGear API not loaded! window.FormGear =', window.FormGear);
+      const loader = document.getElementById('FormGear-loader');
+      if (loader) {
+        loader.innerHTML = `
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;padding:20px;">
+            <p style="color:#e53e3e;font-size:16px;">Failed to load FormGear engine</p>
+            <p style="color:#999;font-size:12px;">createFormGear API not available</p>
+          </div>
+        `;
+      }
+      throw new Error('FormGear API not loaded');
+    }
+
+    console.log('[FormGear] API loaded successfully:', Object.keys(window.FormGear || {}));
+
+    // =============================================================================
+    // PLATFORM DETECTION
+    // =============================================================================
+
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    const platform = isIOS ? 'iOS' : (isAndroid ? 'Android' : 'Unknown');
+
+    console.log('[FormGear] Platform detected:', platform);
+    console.log('[FormGear] User Agent:', navigator.userAgent);
+
+    // =============================================================================
+    // FLUTTER BRIDGE HELPERS
+    // =============================================================================
+
+    /**
+     * Check if Flutter InAppWebView bridge is available
+     */
+    const isFlutterAvailable = () => {
+      return typeof window.flutter_inappwebview !== 'undefined' &&
+             typeof window.flutter_inappwebview.callHandler === 'function';
+    };
+
+    /**
+     * Call Flutter handler and return result
+     * Handles JSON parsing and response unwrapping
+     */
+    const callFlutterHandler = async (handlerName, args) => {
+      if (!isFlutterAvailable()) {
+        console.warn(`[FormGear] Flutter bridge not available for ${handlerName}`);
+        return null;
+      }
+
+      try {
+        const result = await window.flutter_inappwebview.callHandler(handlerName, args);
+
+        // Handle null/undefined
+        if (result === null || result === undefined) {
+          return null;
+        }
+
+        // If it's already an object, return as-is
+        if (typeof result === 'object') {
+          return result;
+        }
+
+        // If it's a string, try to parse as JSON
+        if (typeof result === 'string') {
+          try {
+            return JSON.parse(result);
+          } catch {
+            return result;
+          }
+        }
+
+        return result;
+      } catch (e) {
+        console.error(`[FormGear] Flutter handler ${handlerName} error:`, e);
+        return null;
+      }
+    };
+
+    /**
+     * Call Flutter handler and return as object (for data methods)
+     */
+    const callFlutterFunction = async (name) => {
+      const result = await callFlutterHandler(name);
+      return result || {};
+    };
+
+    /**
+     * Call Flutter handler and return as string
+     */
+    const callFlutterString = async (name) => {
+      const result = await callFlutterHandler(name);
+      if (result === null || result === undefined) return '';
+      if (typeof result === 'string') return result;
+      if (typeof result === 'object' && result.value !== undefined) {
+        return result.value || '';
+      }
+      return String(result);
+    };
+
+    /**
+     * Call Flutter handler and return as number
+     */
+    const callFlutterNumber = async (name, defaultValue = 0) => {
+      const result = await callFlutterHandler(name);
+      if (result === null || result === undefined) return defaultValue;
+
+      let value = result;
+      if (typeof result === 'object' && result.value !== undefined) {
+        value = result.value;
+      }
+
+      const parsed = parseInt(value, 10);
+      return isNaN(parsed) ? defaultValue : parsed;
+    };
+
+    /**
+     * Call Flutter handler and return as array
+     */
+    const callFlutterArray = async (name) => {
+      const result = await callFlutterHandler(name);
+      if (Array.isArray(result)) return result;
+      if (result && result.data !== undefined) {
+        return Array.isArray(result.data) ? result.data : [];
+      }
+      return [];
+    };
+
+    // =============================================================================
+    // FORM STATE
+    // =============================================================================
+
+    let formInstance = null;
+    let responseGear = null;
+    let mediaGear = null;
+    let remarkGear = null;
+    let principalGear = null;
+    let referenceGear = null;
+
+    // Callback references for native handlers
+    let cameraFunction = null;
+    let cameraGPSFunction = null;
+    let mobileExitFunction = null;
+    let fileUploadedFunction = null;
+    let audioFunction = null;
+    let videoFunction = null;
+    let barcodeFunction = null;
+    let filePickerFunction = null;
+
+    // =============================================================================
+    // MOBILE HANDLERS (Called from Flutter)
+    // =============================================================================
+
+    /**
+     * Camera handler - opens native camera
+     * Flutter ActionHandler expects: action(action, dataKey, data)
+     */
+    const cameraHandler = (setValue, filename) => {
+      console.log('[FormGear] Camera handler triggered', filename);
+      cameraFunction = setValue;
+      // Pass arguments as separate values - ActionHandler expects [action, dataKey, data]
+      window.flutter_inappwebview.callHandler('action', 'CAMERA', filename || '', '');
+    };
+
+    /**
+     * GPS handler - opens GPS capture with optional photo
+     * Flutter ActionHandler expects: action(action, dataKey, data)
+     */
+    const gpsHandler = (setter, needPhoto = false) => {
+      console.log('[FormGear] GPS handler triggered, needPhoto:', needPhoto);
+      cameraGPSFunction = setter;
+      // Pass arguments as separate values - ActionHandler expects [action, dataKey, data]
+      window.flutter_inappwebview.callHandler('action', 'CAMERA_GPS', '', needPhoto.toString());
+    };
+
+    /**
+     * File upload handler - handles file uploads with optional reload
+     * Flutter ActionHandler expects: action(action, dataKey, data)
+     */
+    const fileUploadHandler = (files, updateMedia, isReload) => {
+      console.log('[FormGear] File upload handler:', { files, isReload });
+      fileUploadedFunction = updateMedia;
+      const action = isReload ? 'FILE_RELOAD' : 'FILE_UPLOAD';
+      // Pass arguments as separate values - ActionHandler expects [action, dataKey, data]
+      window.flutter_inappwebview.callHandler('action', action, '', JSON.stringify(files));
+    };
+
+    /**
+     * Exit handler - registers exit callback
+     */
+    const exitHandler = (callback) => {
+      console.log('[FormGear] Exit handler registered');
+      mobileExitFunction = callback;
+    };
+
+    /**
+     * Open map handler - opens native map app
+     * Flutter ActionHandler expects: action(action, dataKey, data)
+     */
+    const openMap = (koordinat) => {
+      console.log('[FormGear] Open map:', koordinat);
+      // Pass coordinates as data (3rd argument) - ActionHandler expects [action, dataKey, data]
+      window.flutter_inappwebview.callHandler('action', 'OPEN_MAPS', '', JSON.stringify(koordinat));
+    };
+
+    /**
+     * Audio recording handler - opens native audio recorder
+     */
+    const audioHandler = (setValue) => {
+      console.log('[FormGear] Audio handler triggered');
+      audioFunction = setValue;
+      window.flutter_inappwebview.callHandler('action', 'AUDIO', '', '');
+    };
+
+    /**
+     * Video recording handler - opens native video recorder
+     */
+    const videoHandler = (setValue) => {
+      console.log('[FormGear] Video handler triggered');
+      videoFunction = setValue;
+      window.flutter_inappwebview.callHandler('action', 'VIDEO', '', '');
+    };
+
+    /**
+     * Barcode/QR scanner handler - opens native scanner
+     */
+    const barcodeHandler = (setValue) => {
+      console.log('[FormGear] Barcode handler triggered');
+      barcodeFunction = setValue;
+      window.flutter_inappwebview.callHandler('action', 'BARCODE', '', '');
+    };
+
+    /**
+     * File picker handler - opens native file picker
+     */
+    const filePickerHandler = (setValue) => {
+      console.log('[FormGear] File picker handler triggered');
+      filePickerFunction = setValue;
+      window.flutter_inappwebview.callHandler('action', 'FILE_PICKER', '', '');
+    };
+
+    /**
+     * Offline search handler - searches offline lookup data
+     */
+    const offlineSearch = (id, version, dataJson, setter) => {
+      console.log('[FormGear] Offline search:', { id, version, dataJson });
+
+      callFlutterHandler('searchOffline', { lookupId: id, version, conditions: dataJson })
+        .then(result => {
+          console.log('[FormGear] Offline search result:', result);
+
+          let data = [];
+          if (Array.isArray(result)) {
+            data = result;
+          } else if (result && result.data !== undefined) {
+            data = Array.isArray(result.data) ? result.data : [];
+          } else if (typeof result === 'string') {
+            try {
+              const parsed = JSON.parse(result);
+              data = Array.isArray(parsed) ? parsed : (parsed.data || []);
+            } catch {
+              data = [];
+            }
+          }
+
+          setter(data);
+        })
+        .catch(err => {
+          console.error('[FormGear] Offline search error:', err);
+          setter([]);
+        });
+    };
+
+    /**
+     * Online search handler - searches via API
+     */
+    const onlineSearch = async (url) => {
+      console.log('[FormGear] Online search:', url);
+      try {
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (res.ok) {
+          return await res.json();
+        }
+        return { success: false, data: {}, message: res.status.toString() };
+      } catch (error) {
+        console.error('[FormGear] Online search error:', error);
+        return { success: false, data: {}, message: '500' };
+      }
+    };
+
+    // =============================================================================
+    // RESPONSE CALLBACKS
+    // =============================================================================
+
+    /**
+     * Save response callback - called when user saves form
+     */
+    const onSave = (res, med, rem, princ, ref) => {
+      responseGear = res;
+      mediaGear = med;
+      remarkGear = rem;
+      principalGear = princ;
+      referenceGear = ref;
+
+      console.log('[FormGear] Save triggered');
+      console.log('Response:', responseGear);
+      console.log('Media:', mediaGear);
+      console.log('Remark:', remarkGear);
+
+      // Pass 6 arguments: response, remark, principal, reference, media, flag
+      window.flutter_inappwebview.callHandler(
+        'saveOrSubmit',
+        JSON.stringify(responseGear),
+        JSON.stringify(remarkGear),
+        JSON.stringify(principalGear),
+        JSON.stringify(referenceGear),
+        JSON.stringify(mediaGear),
+        'SAVE'
+      );
+    };
+
+    /**
+     * Submit response callback - called when user submits form
+     */
+    const onSubmit = (res, med, rem, princ, ref) => {
+      responseGear = res;
+      mediaGear = med;
+      remarkGear = rem;
+      principalGear = princ;
+      referenceGear = ref;
+
+      console.log('[FormGear] Submit triggered');
+      console.log('Response:', responseGear);
+      console.log('Media:', mediaGear);
+      console.log('Remark:', remarkGear);
+
+      // Pass 6 arguments: response, remark, principal, reference, media, flag
+      window.flutter_inappwebview.callHandler(
+        'saveOrSubmit',
+        JSON.stringify(responseGear),
+        JSON.stringify(remarkGear),
+        JSON.stringify(principalGear),
+        JSON.stringify(referenceGear),
+        JSON.stringify(mediaGear),
+        'SUBMIT'
+      );
+    };
+
+    // =============================================================================
+    // RESULT HANDLERS (Called by Flutter native code)
+    // =============================================================================
+
+    /**
+     * Global result handler - called from Flutter after native actions complete
+     */
+    window.result = function(action, result, customData) {
+      console.log('[FormGear] Result received:', { action, result, customData });
+
+      switch (action) {
+        case 'CAMERA':
+          console.log('[FormGear] CAMERA result handler - cameraFunction exists:', !!cameraFunction);
+          if (cameraFunction) {
+            // PhotoInput expects JSON object with {image, label, type}
+            const photoData = JSON.stringify({
+              image: result,
+              label: result,
+              type: customData || 'image/jpeg'
+            });
+            console.log('[FormGear] Calling cameraFunction with:', photoData);
+            cameraFunction(photoData);
+            console.log('[FormGear] cameraFunction called successfully');
+          } else {
+            console.error('[FormGear] cameraFunction is null/undefined!');
+          }
+          break;
+
+        case 'CAMERA_GPS':
+          if (cameraGPSFunction) {
+            try {
+              const obj = typeof result === 'string' ? JSON.parse(result) : result;
+              cameraGPSFunction(obj, obj.remark || '');
+            } catch (e) {
+              console.error('[FormGear] GPS result parse error:', e);
+            }
+          }
+          break;
+
+        case 'FILE_UPLOADED':
+          if (fileUploadedFunction) {
+            const isReload = customData === 'true' || customData === true;
+            fileUploadedFunction(result, isReload);
+          }
+          break;
+
+        case 'AUDIO':
+          if (audioFunction) {
+            const audioData = JSON.stringify({
+              value: result,
+              label: result,
+              type: customData || 'audio/m4a'
+            });
+            audioFunction(audioData);
+          }
+          break;
+
+        case 'VIDEO':
+          if (videoFunction) {
+            const videoData = JSON.stringify({
+              value: result,
+              label: result,
+              type: customData || 'video/mp4'
+            });
+            videoFunction(videoData);
+          }
+          break;
+
+        case 'BARCODE':
+          if (barcodeFunction) {
+            const barcodeData = JSON.stringify({
+              value: result,
+              label: result,
+              type: 'barcode'
+            });
+            barcodeFunction(barcodeData);
+          }
+          break;
+
+        case 'FILE_PICKED':
+          if (filePickerFunction) {
+            const fileData = JSON.stringify({
+              value: result,
+              label: result,
+              type: customData || 'application/octet-stream'
+            });
+            filePickerFunction(fileData);
+          }
+          break;
+
+        case 'GET_LOC':
+          if (cameraGPSFunction) {
+            try {
+              const obj = typeof result === 'string' ? JSON.parse(result) : result;
+              cameraGPSFunction(obj, obj.remark || '');
+            } catch (e) {
+              console.error('[FormGear] Location result parse error:', e);
+            }
+          }
+          break;
+
+        default:
+          console.log('[FormGear] Unhandled action:', action);
+      }
+    };
+
+    /**
+     * Mobile exit handler - called from Flutter when back is pressed
+     */
+    window.mobileExitAndroid = function() {
+      console.log('[FormGear] Mobile exit requested');
+      if (mobileExitFunction) {
+        mobileExitFunction();
+      }
+    };
+
+    /**
+     * Approve/Reject handler - called from Flutter for approval flows
+     */
+    window.approveRejectAndroid = function() {
+      console.log('[FormGear] Approve/Reject triggered');
+      if (mobileExitFunction) {
+        mobileExitFunction();
+      }
+    };
+
+    // =============================================================================
+    // FORM INITIALIZATION
+    // =============================================================================
+
+    /**
+     * Initialize FormGear with data from Flutter bridge
+     */
+    const initForm = async () => {
+      console.log('[FormGear] Initializing form on', platform, '...');
+
+      // Wait for Flutter InAppWebView bridge to be available
+      let retries = 0;
+      const maxRetries = isIOS ? 100 : 50;
+      const retryDelay = isIOS ? 150 : 100;
+
+      while (!isFlutterAvailable() && retries < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+        retries++;
+        if (retries % 10 === 0) {
+          console.log(`[FormGear] Waiting for Flutter bridge... attempt ${retries}/${maxRetries}`);
+        }
+      }
+
+      if (!isFlutterAvailable()) {
+        console.error('[FormGear] Flutter bridge not available after waiting on', platform);
+        const loader = document.getElementById('FormGear-loader');
+        if (loader) {
+          loader.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;padding:20px;">
+              <p style="color:#666;font-size:16px;">Failed to initialize form engine</p>
+              <p style="color:#999;font-size:12px;">Flutter bridge not available on ${platform}</p>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      console.log('[FormGear] Flutter bridge detected on', platform, ', loading data...');
+
+      // Load form data from Flutter bridge
+      const reference = await callFlutterFunction('getReference');
+      const template = await callFlutterFunction('getTemplate');
+      const preset = await callFlutterFunction('getPreset');
+      const response = await callFlutterFunction('getResponse');
+      const validation = await callFlutterFunction('getValidation');
+      const media = await callFlutterFunction('getMedia');
+      const remark = await callFlutterFunction('getRemark');
+
+      // Load configuration from Flutter bridge
+      const username = await callFlutterString('getUserName') || 'user';
+      const formMode = await callFlutterNumber('getFormMode', 0);
+      const initialMode = await callFlutterNumber('getIsNew', 1);
+      const rolePetugas = await callFlutterString('getRolePetugas') || 'USER';
+      const principalCollection = await callFlutterArray('getPrincipalCollection');
+
+      console.log('[FormGear] Data loaded:', {
+        hasReference: Object.keys(reference).length > 0,
+        hasTemplate: Object.keys(template).length > 0,
+        hasPreset: Object.keys(preset).length > 0,
+        hasResponse: Object.keys(response).length > 0,
+        username,
+        formMode,
+        initialMode
       });
-    </script>
 
-    <script src="file:///android_asset/asset/jquery-3.5.1.js"></script>
-
-    <script type="module">
-      //formgear_js
-      let config = {
-        clientMode: 2,
-        token: ``,
-        baseUrl: ``,
-        baseUrlFile: ``,
-        lookupKey: `key%5B%5D`,
-        lookupValue: `value%5B%5D`,
-        lookupMode: 2,
-        username: Android.getUserName(),
-        formMode: Android.getFormMode(),
-        initialMode: Android.getIsNew(),
-        assignmentID : '',
-        principalCollection: JSON.parse(Android.getPrincipalCollection()),
-        rolePetugas: Android.getRolePetugas()
-      };
-
-      var responseGear = null;
-      var mediaGear = null;
-      var remarkGear = null;
-      var principalGear = null;
-      var referenceGear = null;
-
-      function openCamera(filename) {
-        window.Android.action("CAMERA", "", filename, "");
-        console.log("open camera");
-      }
-
-      let gpsHandler = function (setter, isPhoto) {
-        console.log("camera handler", setter);
-        (isPhoto = false), (cameraGPSFunction = setter);
-        openCameraGPS(isPhoto);
-      };
-
-      function openCameraGPS(needPhoto) {
-        var isNeedPhoto = false;
-        if (needPhoto !== null && needPhoto !== undefined)
-          isNeedPhoto = needPhoto;
-        console.log("new-capi: open-camera-gps " + isNeedPhoto.toString());
-
-        window.Android.action("CAMERA_GPS", "", isNeedPhoto.toString(), "");
-      }
-
-      let cameraHandler = function (setValue, filename) {
-        console.log("camera handler", setValue);
-        cameraFunction = setValue;
-        openCamera(filename);
-      };
-
-      //function to upload file on Mobile
-      let fileUploadHandler = function (files, updateMedia, isReload) {
-        console.log('media content', files);
-        console.log('media callback ', updateMedia)
-        console.log('media isReload ', isReload )
-        fileUploadedFunction = updateMedia
-        if (isReload) {
-          window.Android.action(
-            "FILE_RELOAD",
-            "",
-            JSON.stringify(files),
-            ""
-          )
-        } else {
-          window.Android.action(
-            "FILE_UPLOAD",
-            "",
-            JSON.stringify(files),
-            ""
-          )
-        }
-       
-      }
-
-      let mobileExit = (fun) => {
-        mobileExitFunction = fun;
-      };
-
-      let setResponseMobile = function (res, med, rem, princ, ref) {
-        responseGear = res;
-        mediaGear = med;
-        remarkGear = rem;
-        principalGear = princ;
-        referenceGear = ref;
-
-        console.log("response save", responseGear);
-        console.log("media", mediaGear);
-        console.log("remark save", remarkGear);
-        console.log("principal save", principalGear);
-        console.log("reference save", referenceGear);
-
-        window.Android.saveOrSubmit(
-          JSON.stringify(responseGear),
-           JSON.stringify(remarkGear), 
-           JSON.stringify(principalGear), 
-           JSON.stringify(referenceGear), 
-           JSON.stringify(mediaGear),
-           "SAVE"
-        )
-      };
-
-      let setSubmitMobile = function (res, med, rem, princ, ref) {
-        responseGear = res;
-        mediaGear = med;
-        remarkGear = rem;
-        principalGear = princ;
-        referenceGear = ref;
-
-        console.log("response submit", responseGear);
-        console.log("media", mediaGear);
-        console.log("remark submit", remarkGear);
-        console.log("principal submit", principalGear);
-        console.log("reference submit", referenceGear);
-
-        window.Android.saveOrSubmit(
-          JSON.stringify(responseGear),
-           JSON.stringify(remarkGear), 
-           JSON.stringify(principalGear), 
-           JSON.stringify(referenceGear), 
-           JSON.stringify(mediaGear),
-           "SUBMIT"
-        )
-      };
-
-      let openMap = function (koordinat) {
-        window.Android.action("OPEN_MAPS", "", JSON.stringify(koordinat), "");
-      };
-
-      function saveData() {
-        window.Android.action(
-          "SAVE_DATA",
-          "",
-          JSON.stringify(setResponseMobile),
-          ""
-        );
-      }
-
-      const clientAction = {
-        cameraHandler,
-        gpsHandler,
-        mobileExit,
-        setResponseMobile,
-        setSubmitMobile,
-        openMap,
-        fileUploadHandler
-      }
-
-      function initForm(
-        reference,
-        template,
-        preset,
-        response,
-        validation,
-        media,
-        remark
-      ) {
-        let form = new FormGear(
-          reference,
-          template,
-          preset,
-          response,
-          validation,
-          media,
-          remark,
-          config,
-          clientAction
-        );
-        return form;
-      }
-
-      const callAndroidFunction = (name) => {
-        try {
-          const result = Android[name]()
-          if (!result) throw new Error()
-          return JSON.parse(result)
-        } catch (e) {
-          console.log(`${name} error:`, e)
-          return {}
-        }
-      }
-
-      const data = Promise.all([
-        callAndroidFunction("getReference"),
-        callAndroidFunction("getTemplate"),
-        callAndroidFunction("getPreset"),
-        callAndroidFunction("getResponse"),
-        callAndroidFunction("getValidation"),
-        callAndroidFunction("getMedia"),
-        callAndroidFunction("getRemark")
-      ])
-
-      data.then(
-        ([reference, template, preset, response, validation, media, remark]) =>
-        initForm(
+      // Create form using FormGear v2 API
+      formInstance = createFormGear({
+        data: {
           reference,
           template,
           preset,
@@ -226,70 +616,58 @@
           validation,
           media,
           remark
-        )
-      );
-    </script>
-    <script type="text/javascript">
-      let cameraFunction = null;
-      let cameraGPSFunction = null;
-      let mobileExitFunction = null;
-      let fileUploadedFunction = null
-
-      function result(action, result, customData) {
-        if (action == "GET_LOC") {
-          resultGps(result);
-        } else if (action == "CAMERA") {
-          resultCamera(result, customData);
-        } else if (action == "CAMERA_GPS") {
-          resultCameraGPS(result);
-        } else if (action == "SIGNATURE") {
-          resultSignature(result);
-        } else if (action == "BARCODE") {
-          resultBarcode(result);
-        } else if (action == "AUDIO") {
-          resultAudio(result);
-        } else if (action == "GET_ANSWER") {
-          resultAnswer(result, customData);
-        } else if (action == "LOOKUP") {
-          resultAnswer(result, customData);
-        } else if (action == "FILE_UPLOADED") {
-          resultFileUpload(result, customData)
+        },
+        config: {
+          clientMode: ClientMode.CAPI, // Mobile client
+          formMode: formMode,
+          initialMode: initialMode,
+          lookupMode: LookupMode.OFFLINE,
+          username: username,
+          token: '',
+          baseUrl: '',
+          lookupKey: 'key%5B%5D',
+          lookupValue: 'value%5B%5D',
+          principalCollection: principalCollection,
+          rolePetugas: rolePetugas
+        },
+        mobileHandlers: {
+          uploadHandler: cameraHandler,
+          gpsHandler: gpsHandler,
+          offlineSearch: offlineSearch,
+          onlineSearch: onlineSearch,
+          exitHandler: exitHandler,
+          openMap: openMap,
+          fileUploadHandler: fileUploadHandler,
+          audioHandler: audioHandler,
+          videoHandler: videoHandler,
+          barcodeHandler: barcodeHandler,
+          fileHandler: filePickerHandler
+        },
+        callbacks: {
+          onSave: onSave,
+          onSubmit: onSubmit
         }
+      });
+
+      console.log('[FormGear] Form initialized successfully');
+
+      // Hide loader
+      const loader = document.getElementById('FormGear-loader');
+      if (loader) {
+        loader.style.display = 'none';
       }
 
-      function resultCamera(result, filename) {
-        if (cameraFunction != null) {
-          cameraFunction(result, filename);
-        } else {
-          console.log("camera_result_funcion : null");
-        }
-      }
+      // Expose instance for debugging
+      window.formGear = formInstance;
+    };
 
-      function resultCameraGPS(result) {
-        const obj = JSON.parse(result);
-        var remark = obj.remark;
-        cameraGPSFunction(obj, remark);
-      }
-
-      function mobileExitAndroid() {
-        console.log("mobileExit");
-        mobileExitFunction();
-      }
-
-      function approveRejectAndroid() {
-        mobileExitFunction();
-      }
-
-      function resultFileUpload(result, customData) {
-        if (fileUploadedFunction != null) {
-          const isReload = (customData == 'true' ? true : false)
-          console.log(isReload)
-          fileUploadedFunction(result, isReload)
-        } else {
-          console.log("file uploaded function : null")
-        }
-      }
-    </script>
-  </body>
+    // Start initialization when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initForm);
+    } else {
+      initForm();
+    }
+  </script>
+</body>
 
 </html>

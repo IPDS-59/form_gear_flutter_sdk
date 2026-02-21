@@ -6,10 +6,20 @@ import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/android_data_ha
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/client_action_handler.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/execute_handler.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/mobile_exit_handler.dart';
+import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/offline_search_handler.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
 import 'package:form_gear_engine_sdk/src/core/listeners/form_data_listener.dart';
 import 'package:form_gear_engine_sdk/src/models/assignment_context.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
+
+/// Callback type for offline search operations
+/// Takes lookupId, version, and conditions, returns matching data
+typedef OfflineSearchCallback =
+    Future<List<dynamic>> Function(
+      String lookupId,
+      String version,
+      List<dynamic> conditions,
+    );
 
 /// Factory for creating JavaScript bridge handlers for FormGear and FasihForm
 class HandlerFactory {
@@ -19,6 +29,12 @@ class HandlerFactory {
     required FormGearConfig? config,
     required AssignmentContext? Function() getCurrentAssignment,
     FormDataListener? formDataListener,
+    Future<List<dynamic>> Function(
+      String lookupId,
+      String version,
+      List<dynamic> conditions,
+    )?
+    onSearchOffline,
   }) {
     final dataHandler = AndroidDataHandler(
       getCurrentAssignment: getCurrentAssignment,
@@ -134,11 +150,25 @@ class HandlerFactory {
         )
         .toList();
 
+    // Offline search handler for lookup queries
+    final offlineSearchHandler = OfflineSearchHandler(
+      onSearchOffline:
+          onSearchOffline ??
+          (lookupId, version, conditions) async {
+            FormGearLogger.webview(
+              'Default offline search: lookupId=$lookupId, '
+              'version=$version (no data provider)',
+            );
+            return <dynamic>[];
+          },
+    );
+
     return [
       ...dataHandler.createHandlers(),
       actionCameraHandler, // Individual action handler
       executeHandler, // Individual execute handler
       mobileExitHandler, // Mobile exit handler
+      offlineSearchHandler, // Offline lookup search handler
       ...clientActionHandler.createHandlers(), // Client action handlers
       ...saveSubmitHandlers,
     ];
@@ -151,6 +181,12 @@ class HandlerFactory {
     required FormGearConfig? config,
     required AssignmentContext? Function() getCurrentAssignment,
     FormDataListener? formDataListener,
+    Future<List<dynamic>> Function(
+      String lookupId,
+      String version,
+      List<dynamic> conditions,
+    )?
+    onSearchOffline,
   }) {
     final dataHandler = AndroidDataHandler(
       getCurrentAssignment: getCurrentAssignment,
@@ -291,11 +327,25 @@ class HandlerFactory {
         )
         .toList();
 
+    // Offline search handler for lookup queries (assignment-aware)
+    final offlineSearchHandler = OfflineSearchHandler(
+      onSearchOffline:
+          onSearchOffline ??
+          (lookupId, version, conditions) async {
+            FormGearLogger.webview(
+              'Default offline search for ${assignment.assignmentId}: '
+              'lookupId=$lookupId, version=$version (no data provider)',
+            );
+            return <dynamic>[];
+          },
+    );
+
     return [
       ...dataHandler.createHandlers(),
       actionCameraHandler,
       executeHandler,
       mobileExitHandler,
+      offlineSearchHandler, // Offline lookup search handler
       ...clientActionHandler.createHandlers(),
       ...saveSubmitHandlers,
     ];

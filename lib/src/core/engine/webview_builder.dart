@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:form_gear_engine_sdk/src/core/config/config.dart';
 import 'package:form_gear_engine_sdk/src/core/engine/handler_factory.dart';
@@ -12,6 +14,10 @@ import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 /// Builder for creating FormGear WebView widgets with proper configuration
 class WebViewBuilder {
   /// Creates WebView with assignment-specific handlers
+  ///
+  /// On iOS, if `serverUrl` is set in the prepared engine, the WebView
+  /// will load from the server URL instead of using loadData() with HTML.
+  /// This works around iOS WKWebView limitations with large HTML content.
   static FormGearWebView createWebViewWithAssignment({
     required AssignmentContext assignment,
     required PreparedEngine preparedEngine,
@@ -21,9 +27,26 @@ class WebViewBuilder {
     required AssignmentContext? Function() getCurrentAssignment,
     FormDataListener? formDataListener,
   }) {
+    // iOS: Use server URL if available (works around loadData() issues)
+    // Android: Use HTML content directly with loadData()
+    final useServerUrl = Platform.isIOS && preparedEngine.serverUrl != null;
+    final url = useServerUrl ? preparedEngine.serverUrl! : 'about:blank';
+    final htmlContent = useServerUrl ? null : preparedEngine.html;
+
+    if (useServerUrl) {
+      FormGearLogger.sdk(
+        'iOS: Loading form from server URL: ${preparedEngine.serverUrl}',
+      );
+    } else {
+      FormGearLogger.sdk(
+        'Loading form with loadData '
+        '(HTML: ${preparedEngine.html.length} chars)',
+      );
+    }
+
     return FormGearWebView(
-      url: 'about:blank',
-      htmlContent: preparedEngine.html,
+      url: url,
+      htmlContent: htmlContent,
       jsHandlers: HandlerFactory.createAssignmentAwareHandlers(
         assignment: assignment,
         currentFormConfig: currentFormConfig,

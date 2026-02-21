@@ -57,6 +57,14 @@ class BarcodeActionHandler with ActionHandlerContract {
 
       if (scannedResult != null && scannedResult.isNotEmpty) {
         FormGearLogger.webview('Barcode scan completed: $scannedResult');
+
+        // Notify FormGear JS of the scanned barcode value
+        await notifyJavaScript(
+          action: 'BARCODE',
+          result: scannedResult,
+          dataKey: dataKey,
+        );
+
         return ActionInfoJs(success: true, result: scannedResult);
       } else {
         FormGearLogger.webview('Barcode scan cancelled by user');

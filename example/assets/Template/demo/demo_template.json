@@ -28,7 +28,9 @@
               "dataKey": "agreement",
               "type": 16,
               "enableCondition": "getValue('age_confirmation') == true",
-              "componentEnable": ["age_confirmation"]
+              "componentEnable": [
+                "age_confirmation"
+              ]
             }
           ]
         ]
@@ -39,7 +41,10 @@
         "description": "House and Materials",
         "type": 1,
         "enableCondition": "getValue('age_confirmation') == true && getValue('agreement') == true",
-        "componentEnable": ["age_confirmation", "agreement"],
+        "componentEnable": [
+          "age_confirmation",
+          "agreement"
+        ],
         "components": [
           [
             {
@@ -118,7 +123,10 @@
         "description": "Head of household",
         "type": 1,
         "enableCondition": "getValue('age_confirmation') == true && getValue('agreement') == true",
-        "componentEnable": ["age_confirmation", "agreement"],
+        "componentEnable": [
+          "age_confirmation",
+          "agreement"
+        ],
         "components": [
           [
             {
@@ -290,7 +298,9 @@
               "dataKey": "my_fav",
               "type": 4,
               "expression": "getValue('hobbies')",
-              "componentVar": ["hobbies"],
+              "componentVar": [
+                "hobbies"
+              ],
               "render": true,
               "renderType": 2
             },
@@ -322,14 +332,19 @@
                     "dataKey": "frec_tea",
                     "type": 28,
                     "enableCondition": "Number(getValue('frec_coffee@$ROW$')) == 0",
-                    "componentEnable": ["frec_coffee@$ROW$"]
+                    "componentEnable": [
+                      "frec_coffee@$ROW$"
+                    ]
                   },
                   {
                     "label": "Total frecuency",
                     "dataKey": "frec_total",
                     "type": 4,
-                    "expression": "Number(getValue('frec_coffee@$ROW$'))+Number(getValue('frek_teh@$ROW$'))",
-                    "componentVar": ["frek_kopi@$ROW$", "frek_teh@$ROW$"],
+                    "expression": "Number(getValue('frec_coffee@$ROW$'))+Number(getValue('frec_tea@$ROW$'))",
+                    "componentVar": [
+                      "frec_coffee@$ROW$",
+                      "frec_tea@$ROW$"
+                    ],
                     "render": true,
                     "renderType": 1
                   },
@@ -381,13 +396,34 @@
                       }
                     ],
                     "options": [
-                      { "label": "Dog", "value": "4101" },
-                      { "label": "Cow", "value": "4103" },
-                      { "label": "Bird", "value": "4104" },
-                      { "label": "Chicken", "value": "4105" },
-                      { "label": "Cat", "value": "4102" },
-                      { "label": "Pig", "value": "4201" },
-                      { "label": "Others", "value": "4499" }
+                      {
+                        "label": "Dog",
+                        "value": "4101"
+                      },
+                      {
+                        "label": "Cow",
+                        "value": "4103"
+                      },
+                      {
+                        "label": "Bird",
+                        "value": "4104"
+                      },
+                      {
+                        "label": "Chicken",
+                        "value": "4105"
+                      },
+                      {
+                        "label": "Cat",
+                        "value": "4102"
+                      },
+                      {
+                        "label": "Pig",
+                        "value": "4201"
+                      },
+                      {
+                        "label": "Others",
+                        "value": "4499"
+                      }
                     ]
                   },
                   {
@@ -413,14 +449,18 @@
                           "dataKey": "menu_lunch",
                           "type": 25,
                           "enableCondition": "Number(getValue('time_eat@$ROW$')) > 0",
-                          "componentEnable": ["times_eat@$ROW$"]
+                          "componentEnable": [
+                            "times_eat@$ROW$"
+                          ]
                         },
                         {
                           "label": "Menu for dinner",
                           "dataKey": "menu_dinner",
                           "type": 25,
                           "enableCondition": "Number(getValue('time_eat@$ROW$')) > 0",
-                          "componentEnable": ["times_eat@$ROW$"]
+                          "componentEnable": [
+                            "times_eat@$ROW$"
+                          ]
                         },
                         {
                           "label": "Activities of Pet",
@@ -449,9 +489,89 @@
               "dataKey": "count_time_coffee",
               "type": 4,
               "expression": "let result = 0; let valueRoot = getValue('name_child'); for(let x in valueRoot){ if(x > 0) { result += Number(getValue('frec_coffee#'+x));}}; result;",
-              "componentVar": ["frec_coffee"],
+              "componentVar": [
+                "frec_coffee"
+              ],
               "render": true,
               "renderType": 1
+            }
+          ]
+        ]
+      },
+      {
+        "label": "Media & Scan",
+        "dataKey": "media-scan-example",
+        "description": "New Media Input Types",
+        "type": 1,
+        "components": [
+          [
+            {
+              "label": "<div class=\"text-center text-white border-2 p-4 rounded-lg\" style=\"background-color: #7c3aed\"><b>Audio Recording (type 39)</b></div>",
+              "dataKey": "html_audio",
+              "type": 3
+            },
+            {
+              "label": "Record Interview Audio",
+              "dataKey": "interview_audio",
+              "hint": "Tap the microphone button to record audio (CAPI) or upload an audio file (CAWI)",
+              "type": 39,
+              "required": false,
+              "enableRemark": true
+            },
+            {
+              "label": "<div class=\"text-center text-white border-2 p-4 rounded-lg\" style=\"background-color: #0369a1\"><b>Barcode / QR Scanner (type 40)</b></div>",
+              "dataKey": "html_barcode",
+              "type": 3
+            },
+            {
+              "label": "Product Barcode",
+              "dataKey": "product_barcode",
+              "hint": "Tap the barcode icon to scan a barcode or QR code",
+              "type": 40,
+              "required": false,
+              "enableRemark": true
+            },
+            {
+              "label": "Serial Number",
+              "dataKey": "serial_number",
+              "hint": "Scan serial number barcode",
+              "type": 40,
+              "required": false,
+              "enableRemark": false
+            },
+            {
+              "label": "<div class=\"text-center text-white border-2 p-4 rounded-lg\" style=\"background-color: #b91c1c\"><b>Video Recording (type 41)</b></div>",
+              "dataKey": "html_video",
+              "type": 3
+            },
+            {
+              "label": "Field Observation Video",
+              "dataKey": "observation_video",
+              "hint": "Tap the video camera icon to record a video (CAPI) or upload a video file (CAWI)",
+              "type": 41,
+              "required": false,
+              "enableRemark": true
+            },
+            {
+              "label": "<div class=\"text-center text-white border-2 p-4 rounded-lg\" style=\"background-color: #065f46\"><b>File Picker (type 42)</b></div>",
+              "dataKey": "html_file",
+              "type": 3
+            },
+            {
+              "label": "Supporting Document",
+              "dataKey": "supporting_doc",
+              "hint": "Tap the attachment icon to pick any file (PDF, image, document, etc.)",
+              "type": 42,
+              "required": false,
+              "enableRemark": true
+            },
+            {
+              "label": "Additional Attachment",
+              "dataKey": "additional_attachment",
+              "hint": "Upload any additional supporting file",
+              "type": 42,
+              "required": false,
+              "enableRemark": false
             }
           ]
         ]
@@ -501,7 +621,7 @@
                   "label": "email"
                 }
               ]
-            },  
+            },
             {
               "label": "<div class=\"text-center text-white border-2 p-4 rounded-lg\" style=\"background-color: #1e40af\"><b>Public API Dependent Select Example</b></div>",
               "dataKey": "html_dependent",
@@ -604,7 +724,7 @@
               "dataKey": "html_multi_select",
               "type": 3
             },
-            { 
+            {
               "label": "Crypto Assets | <a style=\"color: #0000FF\" target=\"_blank\" href=\"https://nova.bitcambio.com.br/api/v3/public/getassets\">https://nova.bitcambio.com.br/api/v3/public/getassets</a>",
               "dataKey": "crypto_assets_multi",
               "type": 23,

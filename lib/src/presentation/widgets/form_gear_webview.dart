@@ -267,6 +267,12 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
                             action: PermissionResponseAction.GRANT,
                           );
                         },
+                        shouldOverrideUrlLoading:
+                            (controller, navigationAction) async {
+                              // Allow all URL loading - required for iOS
+                              // when useShouldOverrideUrlLoading is true
+                              return NavigationActionPolicy.ALLOW;
+                            },
                       ),
                     ),
                   ),

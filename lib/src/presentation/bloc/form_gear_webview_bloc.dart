@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
@@ -46,33 +45,36 @@ class FormGearWebViewBloc
     try {
       _controller = event.controller;
 
-      // Register JavaScript handlers
+      // Register JavaScript handlers - FormGear will call these directly
+      // via flutter_inappwebview.callHandler()
       await _registerJavaScriptHandlers(event.controller);
 
-      // iOS: Delay initial bridge injection for WebView to be fully ready
+      // iOS: Delay for WebView to be fully ready
       if (Platform.isIOS) {
         await Future<void>.delayed(const Duration(milliseconds: 200));
       }
 
-      // Load HTML content with embedded bridge script (if provided)
+      // Load HTML content directly - no bridge script injection needed!
+      // FormGear v2+ detects Flutter and uses
+      // flutter_inappwebview.callHandler()
       if (event.htmlContent != null) {
-        // CRITICAL: Build bridge script and inject INTO HTML before loading
-        final bridgeScript = await _buildBridgeScript();
-        final htmlWithBridge = _injectBridgeIntoHtml(
-          event.htmlContent!,
-          bridgeScript,
-        );
-
+        // Android: Use loadData() for HTML content
         await event.controller.loadData(
-          data: htmlWithBridge,
+          data: event.htmlContent!,
           baseUrl: WebUri('about:blank'),
         );
         _bridgeInjected = true;
-        FormGearLogger.sdk('HTML loaded with embedded bridge script');
+        FormGearLogger.sdk(
+          'HTML loaded via loadData() - '
+          'FormGear will use flutter_inappwebview directly',
+        );
       } else {
-        // Fallback: Inject bridge for URL-based loading
-        await _injectAndroidBridgeFromFile(event.controller);
+        // iOS: HTML content is null, WebView loads from initialUrlRequest
+        // (server URL set by WebViewBuilder)
         _bridgeInjected = true;
+        FormGearLogger.sdk(
+          'iOS: WebView loading from server URL via initialUrlRequest',
+        );
       }
 
       // Only set to ready if page hasn't already finished loading
@@ -109,14 +111,16 @@ class FormGearWebViewBloc
     Emitter<FormGearWebViewState> emit,
   ) async {
     if (_bridgeInjected && !event.force) {
-      FormGearLogger.sdk('Bridge already injected, skipping...');
+      FormGearLogger.sdk('Bridge already set up, skipping...');
       return;
     }
 
     emit(state.copyWith(isBridgeInjecting: true));
 
     try {
-      await _injectAndroidBridgeFromFile(event.controller);
+      // FormGear v2+ doesn't need bridge injection - it calls handlers directly
+      // Just ensure handlers are registered
+      await _registerJavaScriptHandlers(event.controller);
       _bridgeInjected = true;
       _injectionRetries = 0;
 
@@ -127,19 +131,14 @@ class FormGearWebViewBloc
         ),
       );
 
-      FormGearLogger.sdk('Bridge injection successful');
-
-      // Verify bridge injection after a delay
-      if (Platform.isIOS) {
-        await Future<void>.delayed(const Duration(milliseconds: 500));
-        add(VerifyBridgeInjection(event.controller));
-      }
+      FormGearLogger.sdk('JavaScript handlers registered successfully');
     } on Exception catch (e) {
       _injectionRetries++;
 
       if (_injectionRetries < _maxInjectionRetries) {
         FormGearLogger.jsBridgeError(
-          'Bridge injection failed (attempt $_injectionRetries), retrying: $e',
+          'Handler registration failed (attempt $_injectionRetries), '
+          'retrying: $e',
         );
 
         // Retry after delay
@@ -151,7 +150,7 @@ class FormGearWebViewBloc
             status: WebViewStatus.error,
             isBridgeInjecting: false,
             errorMessage:
-                'Failed to inject bridge after '
+                'Failed to register handlers after '
                 '$_maxInjectionRetries attempts: $e',
           ),
         );
@@ -165,26 +164,22 @@ class FormGearWebViewBloc
   ) async {
     FormGearLogger.sdk(
       '_onWebViewLoadStart: url=${event.url}, current status=${state.status}, '
-      'bridgeAlreadyInjected=$_bridgeInjected',
+      'handlersRegistered=$_bridgeInjected',
     );
 
-    // Only inject bridge if not already done (for URL-based loading)
-    // For HTML content loaded via loadData(), bridge is embedded in HTML
+    // Ensure handlers are registered
     if (!_bridgeInjected) {
       try {
         await _registerJavaScriptHandlers(event.controller);
-        await _injectAndroidBridgeFromFile(event.controller);
         _bridgeInjected = true;
         FormGearLogger.sdk(
-          'Bridge injected in onLoadStart (before JS execution)',
+          'JavaScript handlers registered in onLoadStart',
         );
       } on Exception catch (e) {
-        FormGearLogger.sdkError('Failed to inject bridge on load start: $e');
+        FormGearLogger.sdkError(
+          'Failed to register handlers on load start: $e',
+        );
       }
-    } else {
-      FormGearLogger.sdk(
-        'Bridge already injected, skipping redundant injection',
-      );
     }
 
     FormGearLogger.sdk('_onWebViewLoadStart: setting status to loading');
@@ -215,11 +210,8 @@ class FormGearWebViewBloc
       );
       FormGearLogger.sdk('_onWebViewLoadStop: emit completed successfully');
 
-      // iOS: Re-inject bridge after page load for better compatibility
+      // iOS: Verify handlers are registered after page load
       if (Platform.isIOS) {
-        await Future<void>.delayed(const Duration(milliseconds: 1000));
-        await _injectAndroidBridgeFromFile(event.controller);
-        // Additional delay for iOS to ensure bridge is fully ready
         await Future<void>.delayed(const Duration(milliseconds: 500));
         add(VerifyBridgeInjection(event.controller));
       }
@@ -258,36 +250,35 @@ class FormGearWebViewBloc
     Emitter<FormGearWebViewState> emit,
   ) async {
     try {
+      // Verify flutter_inappwebview is available
       final result = await event.controller.evaluateJavascript(
         source: '''
           (function() {
-            if (typeof window.Android === 'undefined') {
-              return 'bridge_missing';
+            if (typeof window.flutter_inappwebview === 'undefined') {
+              return 'flutter_inappwebview_missing';
             }
-            if (typeof window.Android.getUserName !== 'function') {
-              return 'methods_missing';
+            if (typeof window.flutter_inappwebview.callHandler !== 'function') {
+              return 'callHandler_missing';
             }
-            try {
-              var testResult = window.Android.getUserName();
-              return 'bridge_working';
-            } catch (e) {
-              return 'bridge_error: ' + e.message;
-            }
+            return 'handlers_ready';
           })();
         ''',
       );
 
-      if (result != 'bridge_working') {
-        FormGearLogger.jsBridgeError('iOS bridge verification failed: $result');
-        // Try to re-inject using the file-based method as fallback
-        await _injectAndroidBridgeFromFile(event.controller);
+      if (result != 'handlers_ready') {
+        FormGearLogger.jsBridgeError(
+          'Flutter handler verification failed: $result',
+        );
+        // Re-register handlers as fallback
+        await _registerJavaScriptHandlers(event.controller);
       } else {
-        FormGearLogger.sdk('iOS bridge verification successful');
+        FormGearLogger.sdk('Flutter handler verification successful');
         emit(state.copyWith(isBridgeVerified: true));
       }
     } on Exception catch (e) {
-      FormGearLogger.jsBridgeError('iOS bridge verification error: $e');
-      await _injectAndroidBridgeFromFile(event.controller);
+      FormGearLogger.jsBridgeError('Flutter handler verification error: $e');
+      // Re-register handlers as fallback
+      await _registerJavaScriptHandlers(event.controller);
     }
   }
 
@@ -330,164 +321,6 @@ class FormGearWebViewBloc
           return result is JsonCodable ? result.toJson() : result;
         },
       );
-    }
-  }
-
-  Future<void> _injectAndroidBridgeFromFile(
-    InAppWebViewController controller,
-  ) async {
-    final handlerNames = jsHandlers.map((h) => h.handlerName).toList();
-
-    // Pre-load all data from data handlers synchronously
-    final preloadedData = <String, dynamic>{};
-    for (final handler in jsHandlers) {
-      if (handler.handlerName.startsWith('get') ||
-          handler.handlerName.contains('Role')) {
-        try {
-          final result = await handler.callback([]);
-          if (result is StringInfoJs) {
-            preloadedData[handler.handlerName] = result.value ?? '';
-          } else if (result is JsonInfoJs) {
-            preloadedData[handler.handlerName] = result.data ?? {};
-          } else if (result is ListInfoJs) {
-            preloadedData[handler.handlerName] = result.data ?? [];
-          }
-        } on Exception catch (e) {
-          FormGearLogger.jsBridgeError(
-            'Failed to pre-load ${handler.handlerName}: $e',
-          );
-          preloadedData[handler.handlerName] =
-              handler.handlerName.contains('get')
-              ? (handler.handlerName.toLowerCase().contains('mode') ||
-                        handler.handlerName.toLowerCase().contains('new')
-                    ? '1'
-                    : (handler.handlerName.toLowerCase().contains('principal')
-                          ? <dynamic>[]
-                          : ''))
-              : <String, dynamic>{};
-        }
-      }
-    }
-
-    try {
-      // Inject data as global variables first
-      final dataScript = _buildDataScript(preloadedData, handlerNames);
-      await controller.evaluateJavascript(source: dataScript);
-
-      // Then inject the bridge file
-      await controller.injectJavascriptFileFromAsset(
-        assetFilePath:
-            'packages/form_gear_engine_sdk/assets/js/android_bridge.js',
-      );
-    } on Exception catch (e) {
-      FormGearLogger.jsBridgeError('File-based bridge injection failed: $e');
-      rethrow;
-    }
-  }
-
-  String _buildDataScript(
-    Map<String, dynamic> preloadedData,
-    List<String> handlerNames,
-  ) {
-    final dataEntries = preloadedData.entries
-        .map((entry) {
-          final value = entry.value;
-          final returnValue = value is String ? value : jsonEncode(value);
-          final escapedValue = returnValue
-              .replaceAll(r'\', r'\\')
-              .replaceAll("'", r"\'")
-              .replaceAll('\n', r'\n')
-              .replaceAll('\r', r'\r');
-          return "'${entry.key}': '$escapedValue'";
-        })
-        .join(', ');
-
-    final actionMethods = handlerNames
-        .where((name) => !name.startsWith('get') && !name.contains('Role'))
-        .map((name) => "'$name'")
-        .join(', ');
-
-    return '''
-      window._formGearBridgeData = { $dataEntries };
-      window._formGearActionMethods = [ $actionMethods ];
-      window._formGearHandlerNames = ${_jsArrayFromList(handlerNames)};
-    ''';
-  }
-
-  /// Convert Dart list to JavaScript array string
-  String _jsArrayFromList(List<String> items) {
-    final escapedItems = items.map((item) => "'$item'").join(', ');
-    return '[$escapedItems]';
-  }
-
-  /// Build complete bridge script with data and bridge code
-  Future<String> _buildBridgeScript() async {
-    final handlerNames = jsHandlers.map((h) => h.handlerName).toList();
-
-    // Pre-load all data from data handlers
-    final preloadedData = <String, dynamic>{};
-    for (final handler in jsHandlers) {
-      if (handler.handlerName.startsWith('get') ||
-          handler.handlerName.contains('Role')) {
-        try {
-          final result = await handler.callback([]);
-          if (result is StringInfoJs) {
-            preloadedData[handler.handlerName] = result.value ?? '';
-          } else if (result is JsonInfoJs) {
-            preloadedData[handler.handlerName] = result.data ?? {};
-          } else if (result is ListInfoJs) {
-            preloadedData[handler.handlerName] = result.data ?? [];
-          }
-        } on Exception catch (e) {
-          FormGearLogger.jsBridgeError(
-            'Failed to pre-load ${handler.handlerName}: $e',
-          );
-          preloadedData[handler.handlerName] =
-              handler.handlerName.contains('get')
-              ? (handler.handlerName.toLowerCase().contains('mode') ||
-                        handler.handlerName.toLowerCase().contains('new')
-                    ? '1'
-                    : (handler.handlerName.toLowerCase().contains('principal')
-                          ? <dynamic>[]
-                          : ''))
-              : <String, dynamic>{};
-        }
-      }
-    }
-
-    // Build data script
-    final dataScript = _buildDataScript(preloadedData, handlerNames);
-
-    // Load bridge JavaScript from assets
-    final bridgeJs = await rootBundle.loadString(
-      'packages/form_gear_engine_sdk/assets/js/android_bridge.js',
-    );
-
-    // Combine data + bridge
-    return '''
-<script>
-// Pre-loaded data for Android bridge
-$dataScript
-
-// Android bridge implementation
-$bridgeJs
-</script>
-''';
-  }
-
-  /// Inject bridge script into HTML head tag
-  String _injectBridgeIntoHtml(String html, String bridgeScript) {
-    // Try to inject into <head> tag first
-    if (html.contains('<head>')) {
-      return html.replaceFirst('<head>', '<head>\n$bridgeScript');
-    }
-    // Fallback: inject at the beginning of <html>
-    else if (html.contains('<html>')) {
-      return html.replaceFirst('<html>', '<html>\n$bridgeScript');
-    }
-    // Last resort: prepend to HTML
-    else {
-      return bridgeScript + html;
     }
   }
 
