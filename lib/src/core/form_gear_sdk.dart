@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -240,6 +242,21 @@ class FormGearSDK {
     // Start server if configured to auto-start
     await _startServerIfNeeded();
 
+    // iOS: Set dynamic HTML on server and get URL for loading
+    // iOS WKWebView has issues with loadData() for large HTML content
+    var engineToUse = preparedEngine;
+    if (Platform.isIOS && _server != null && _server!.isRunning) {
+      _server!.setDynamicHtmlContent(preparedEngine.html);
+      final serverUrl = _server!.dynamicHtmlUrl;
+      if (serverUrl != null) {
+        engineToUse = preparedEngine.withServerUrl(serverUrl);
+        FormGearLogger.sdk(
+          'iOS: Using server URL for HTML loading: $serverUrl',
+        );
+      }
+    }
+    _currentPreparedEngine = engineToUse;
+
     // Create WebView with assignment-specific handlers
     final webView = _createWebViewWithAssignment(assignment);
 
@@ -260,6 +277,10 @@ class FormGearSDK {
       // Clear assignment context and stop server when done
       _currentAssignment = null;
       if (_server != null && _server!.isRunning) {
+        // Clear dynamic HTML content on iOS
+        if (Platform.isIOS) {
+          _server!.clearDynamicHtmlContent();
+        }
         await _server!.stop();
         FormGearLogger.sdk('FormGear server stopped - Assignment completed');
       }

@@ -19,6 +19,26 @@ class FormGearServer {
   final int port;
   final String? lookupAssetPath;
 
+  /// Dynamic HTML content to serve at /formgear endpoint
+  /// Used for iOS which has issues with loadData() for large HTML
+  String? _dynamicHtmlContent;
+
+  /// Sets the dynamic HTML content to be served at /formgear
+  void setDynamicHtmlContent(String html) {
+    _dynamicHtmlContent = html;
+    FormGearLogger.sdk(
+      'Dynamic HTML content set (${html.length} chars)',
+    );
+  }
+
+  /// Clears the dynamic HTML content
+  void clearDynamicHtmlContent() {
+    _dynamicHtmlContent = null;
+  }
+
+  /// Gets the URL for serving dynamic HTML content
+  String? get dynamicHtmlUrl => _baseUrl != null ? '$_baseUrl/formgear' : null;
+
   /// Starts the HTTP server
   Future<String?> start() async {
     try {
@@ -117,12 +137,37 @@ class FormGearServer {
       );
     }
 
+    // Route FormGear dynamic HTML (for iOS)
+    if (path == 'formgear' && method == 'GET') {
+      return _handleFormGearHtml(request);
+    }
+
     // Route lookup requests
     if (path == 'lookup' && method == 'GET') {
       return _handleLookup(request);
     }
 
     return Response.notFound('API endpoint not found');
+  }
+
+  /// Handles FormGear dynamic HTML requests (for iOS)
+  Response _handleFormGearHtml(Request request) {
+    if (_dynamicHtmlContent == null) {
+      FormGearLogger.sdkError('FormGear HTML requested but no content set');
+      return Response.notFound(
+        'FormGear HTML content not available',
+        headers: {'Content-Type': 'text/plain'},
+      );
+    }
+
+    FormGearLogger.sdk(
+      'Serving dynamic FormGear HTML (${_dynamicHtmlContent!.length} chars)',
+    );
+
+    return Response.ok(
+      _dynamicHtmlContent,
+      headers: {'Content-Type': 'text/html; charset=utf-8'},
+    );
   }
 
   /// Handles lookup requests - serves from local documents directory

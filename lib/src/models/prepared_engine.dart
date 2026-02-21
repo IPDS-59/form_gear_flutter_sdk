@@ -6,6 +6,7 @@ class PreparedEngine extends Equatable {
     required this.html,
     required this.baseUrl,
     this.historyUrl,
+    this.serverUrl,
   });
 
   /// Complete HTML content with injected JS and CSS
@@ -17,6 +18,18 @@ class PreparedEngine extends Equatable {
   /// History URL for navigation
   final String? historyUrl;
 
+  /// Server URL for dynamic HTML serving (used on iOS)
+  /// When set, iOS will load from this URL instead of using loadData()
+  final String? serverUrl;
+
+  /// Creates a copy with optional server URL
+  PreparedEngine withServerUrl(String? serverUrl) => PreparedEngine(
+    html: html,
+    baseUrl: baseUrl,
+    historyUrl: historyUrl,
+    serverUrl: serverUrl,
+  );
+
   @override
-  List<Object?> get props => [html, baseUrl, historyUrl];
+  List<Object?> get props => [html, baseUrl, historyUrl, serverUrl];
 }
