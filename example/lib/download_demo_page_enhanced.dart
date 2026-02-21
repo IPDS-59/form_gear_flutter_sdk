@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -85,14 +84,12 @@ class _EnhancedDownloadDemoPageState extends State<EnhancedDownloadDemoPage> {
     });
 
     try {
-      // List all files in the asset directory
-      final manifestContent = await rootBundle.loadString('AssetManifest.json');
-      final manifestMap = Map<String, dynamic>.from(
-        json.decode(manifestContent) as Map,
-      );
+      // Load asset manifest using the modern API (works with both old and new Flutter)
+      final assetManifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+      final allAssets = assetManifest.listAssets();
 
       // Filter assets that start with our path and skip system files
-      final assetFiles = manifestMap.keys.where((key) {
+      final assetFiles = allAssets.where((key) {
         if (!key.startsWith(status.assetPath)) return false;
 
         // Skip macOS system files

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:alice/alice.dart';
@@ -107,14 +106,12 @@ Future<void> _initializeAssets() async {
 /// Recursively copy directory from assets to local storage
 Future<void> _copyAssetDirectory(String assetPath, String targetPath) async {
   try {
-    // List all files in the asset directory
-    final manifestContent = await rootBundle.loadString('AssetManifest.json');
-    final Map<String, dynamic> manifestMap = Map<String, dynamic>.from(
-      json.decode(manifestContent) as Map,
-    );
+    // Load asset manifest using the modern API (works with both old and new Flutter)
+    final assetManifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+    final allAssets = assetManifest.listAssets();
 
     // Filter assets that start with our path and skip system files
-    final assetFiles = manifestMap.keys.where((key) {
+    final assetFiles = allAssets.where((key) {
       if (!key.startsWith(assetPath)) return false;
 
       // Skip macOS system files
