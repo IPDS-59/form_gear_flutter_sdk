@@ -69,10 +69,20 @@ class LocationActionHandler with ActionHandlerContract {
         'remark': 'GPS location acquired successfully',
       };
 
+      final resultJson = jsonEncode(result);
+
       FormGearLogger.webview(
         'GPS location completed: ${position.latitude},${position.longitude}',
       );
-      return ActionInfoJs(success: true, result: jsonEncode(result));
+
+      // Notify JavaScript of the result
+      await notifyJavaScript(
+        action: 'CAMERA_GPS',
+        result: resultJson,
+        dataKey: dataKey,
+      );
+
+      return ActionInfoJs(success: true, result: resultJson);
     } on Exception catch (e) {
       FormGearLogger.webviewError('Camera with GPS error: $e');
       return ActionInfoJs(
@@ -108,6 +118,14 @@ class LocationActionHandler with ActionHandlerContract {
       final position = locationResult.position!;
       final locationData = '${position.latitude},${position.longitude}';
       FormGearLogger.webview('Location completed: $locationData');
+
+      // Notify JavaScript of the result
+      await notifyJavaScript(
+        action: 'LOCATION',
+        result: locationData,
+        dataKey: dataKey,
+      );
+
       return ActionInfoJs(success: true, result: locationData);
     } on Exception catch (e) {
       FormGearLogger.webviewError('Location error: $e');

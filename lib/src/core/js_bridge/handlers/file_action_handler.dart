@@ -298,6 +298,7 @@ class FileActionHandler with ActionHandlerContract {
           FormGearLogger.webview('File picker completed: $fileName');
 
           await _mediaHandler.notifyFormGearOfMediaSelection(
+            action: 'FILE_PICKED',
             dataKey: dataKey,
             fileName: fileName,
             assignmentId: assignmentId,
