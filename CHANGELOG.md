@@ -1,4 +1,10 @@
 # Changelog
+## [Unreleased]
+
+### ⚠️ Breaking changes
+
+- Removed the internal `EncryptionService` (all-zero default key, zero IV) and `EncryptionUtils` (XOR). Neither was exported or called, and neither can read FASIH data. Encrypting answer files is the host's job, as in native FASIH (`AssignmentEncryptionHelper`: AES-GCM with the per-region `wrappedDatakey`, or legacy `Kripto`). Do it in your `FormDataListener`. The `crypto` and `encrypt` dependencies are gone.
+
 ## [0.4.0] - 2026-10-15
 
 ### ⚠️ Breaking changes

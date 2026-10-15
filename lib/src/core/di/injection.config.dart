@@ -20,8 +20,6 @@ import 'package:form_gear_engine_sdk/src/core/config/form_gear_api_config.dart'
 import 'package:form_gear_engine_sdk/src/core/di/injection.dart' as _i621;
 import 'package:form_gear_engine_sdk/src/core/retry/retry_service.dart'
     as _i825;
-import 'package:form_gear_engine_sdk/src/core/security/encryption_service.dart'
-    as _i175;
 import 'package:form_gear_engine_sdk/src/core/version/form_gear_version_manager.dart'
     as _i772;
 import 'package:form_gear_engine_sdk/src/data/datasources/form_engine_remote_data_source.dart'
@@ -81,9 +79,6 @@ _i174.GetIt $initGetIt(
   final registerModule = _$RegisterModule();
   gh.lazySingleton<_i60.CompressionService>(() => _i60.CompressionService());
   gh.lazySingleton<_i825.RetryService>(() => _i825.RetryService());
-  gh.lazySingleton<_i175.EncryptionService>(
-    () => _i175.EncryptionService(customKey: gh<String>()),
-  );
   gh.lazySingleton<_i1048.GetAssignmentUseCase>(
     () => _i1048.GetAssignmentUseCase(gh<_i771.FormDataRepository>()),
   );
