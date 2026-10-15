@@ -1,4 +1,35 @@
 # Changelog
+## [0.4.0] - 2026-10-15
+
+### ⚠️ Breaking changes
+
+- The WebView host moved from `flutter_inappwebview` to the first-party `webview_flutter` (+ `webview_flutter_android` / `webview_flutter_wkwebview`). `FormGearWebView` and `FormGearSDK.createDebugBridgeTest` callbacks now receive `WebViewController` / `JavaScriptConsoleMessage`. The `settings` parameter was removed. Engine pages keep calling `window.flutter_inappwebview.callHandler(...)`: the SDK injects a polyfill over a JavaScript channel.
+- If the template has no components, `openFormWithAssignment` throws `DataFailure` (code `invalid_template`). Before, it opened a blank WebView. `failure.dart` is now exported.
+- `mocktail` moved to `dev_dependencies`. Major bumps: `file_picker` 13, `injectable` 3, `permission_handler` 13, `record` 7, `camera` 0.12.
+- Android apps must compile against SDK 37 (`permission_handler` 13). The Flutter 3.47 toolchain needs Gradle 8.14+, AGP 8.11.1+ and Kotlin 2.2.20+ (see `example/android`).
+- The `assets/js/android_bridge.js` asset and the unused `FasihDataHandler` were removed. The SDK now injects the bridge shim.
+
+### 🐛 Bug Fixes
+
+- FasihForm (engine 2) can start. The SDK injects a synchronous `window.Android` before the page script. Before, the page threw `ReferenceError: Android is not defined`.
+- The SDK logs uncaught JS errors and unhandled rejections with stack traces. If the engine of a form fails to start, the form shows an error with a retry action.
+- Missing or fallback-shaped validation is coerced to `{testFunctions: []}`.
+- Saves run one at a time per assignment (the latest auto-save wins) and are written atomically. The SDK refuses a SAVE that erases the answers the form opened with.
+- JS callbacks are built with `jsonEncode`, so file names with quotes no longer break them. Results that arrive after a form closed are dropped.
+- The lookup server returns `{success, data}` with condition filtering. The hardcoded `:3310` in the page follows the bound port. Port fallback works on iOS.
+- The SDK emits `upload-finished` after `FILE_UPLOAD`. On exit, it emits `trigger-save` like native FASIH.
+- FasihForm `FILE_UPLOAD` goes through the registered `FileUploadListener` with the same path checks as FormGear. If the upload fails, the SDK does not emit `upload-finished`. On success, `upload-finished` now also carries `url`.
+- FormGear (engine 1) saves on exit again. The exit script calls `mobileExitAndroid()` like native FASIH. Before, it called `window.mobileExit`, which no engine page defines.
+
+### ✨ Features
+
+- `FormGearSDK.finalizeForm()` emits `trigger-finalize` to FasihForm, like the native FASIH approval button. For FormGear it returns `false`.
+- Native video recording handler and screen (67f66bd).
+- `OfflineSearchHandler` answers the `searchOffline` lookup calls of FormGear through an `OfflineSearchCallback` (2001f3e).
+- `notifyJavaScript` on the action handler contract, used by the barcode handler (38df574, ac58ba5).
+- On iOS, the embedded HTTP server serves the generated form HTML, to avoid WKWebView limits on large inline HTML (74350c6).
+- The UMD build is the primary FormGear bundle (a802cd2).
+
 ## [0.3.0] - 2025-12-30
 
 ### ✨ Features
