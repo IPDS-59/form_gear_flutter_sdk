@@ -121,10 +121,7 @@ class _VideoRecorderScreenState extends State<VideoRecorderScreen>
         orElse: () => cameras.first,
       );
 
-      final controller = CameraController(
-        backCamera,
-        ResolutionPreset.high,
-      );
+      final controller = CameraController(backCamera, ResolutionPreset.high);
 
       await controller.initialize();
 
@@ -279,10 +276,7 @@ class _VideoStatusView extends StatelessWidget {
 }
 
 class _VideoErrorView extends StatelessWidget {
-  const _VideoErrorView({
-    required this.message,
-    required this.onRetry,
-  });
+  const _VideoErrorView({required this.message, required this.onRetry});
 
   final String message;
   final VoidCallback onRetry;
@@ -407,10 +401,7 @@ class _RecordingTimerBadge extends StatelessWidget {
 }
 
 class _RecordControls extends StatelessWidget {
-  const _RecordControls({
-    required this.isRecording,
-    required this.onTap,
-  });
+  const _RecordControls({required this.isRecording, required this.onTap});
 
   final bool isRecording;
   final VoidCallback onTap;

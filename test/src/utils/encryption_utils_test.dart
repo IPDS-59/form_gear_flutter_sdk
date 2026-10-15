@@ -270,10 +270,7 @@ void main() {
       });
 
       test('should return unencrypted data as-is', () {
-        final unencrypted = <String, dynamic>{
-          'name': 'Plain Text',
-          'age': 25,
-        };
+        final unencrypted = <String, dynamic>{'name': 'Plain Text', 'age': 25};
 
         final result = EncryptionUtils.decryptFormData(
           unencrypted,

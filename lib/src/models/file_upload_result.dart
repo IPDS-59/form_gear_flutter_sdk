@@ -21,21 +21,13 @@ class FileUploadResult extends Equatable {
   const FileUploadResult.success({
     required String uploadedUrl,
     Map<String, dynamic>? metadata,
-  }) : this(
-         isSuccess: true,
-         uploadedUrl: uploadedUrl,
-         metadata: metadata,
-       );
+  }) : this(isSuccess: true, uploadedUrl: uploadedUrl, metadata: metadata);
 
   /// Creates a failed upload result
   const FileUploadResult.failure({
     required String error,
     Map<String, dynamic>? metadata,
-  }) : this(
-         isSuccess: false,
-         error: error,
-         metadata: metadata,
-       );
+  }) : this(isSuccess: false, error: error, metadata: metadata);
 
   /// Whether the upload was successful
   final bool isSuccess;

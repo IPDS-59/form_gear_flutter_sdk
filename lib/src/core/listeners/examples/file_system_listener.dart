@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:form_gear_engine_sdk/src/core/listeners/form_data_listener.dart';
 import 'package:form_gear_engine_sdk/src/core/listeners/save_submit_data.dart';
 import 'package:form_gear_engine_sdk/src/core/listeners/save_submit_result.dart';
+import 'package:form_gear_engine_sdk/src/utils/form_data_file_manager.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -221,30 +222,21 @@ class FileSystemFormDataListener extends UnifiedFormDataListener {
       await _createBackup(file, data);
     }
 
-    // Process content (encryption, compression, etc.)
-    var processedContent = content;
+    // Parse before replace: invalid JSON never overwrites a good file
+    // (throws FormatException, the caller skips this file).
+    var processedContent = fileName.endsWith('.json')
+        ? const JsonEncoder.withIndent('  ').convert(jsonDecode(content))
+        : content;
 
     if (enableEncryption &&
         data.shouldEncrypt &&
         _shouldEncryptFile(fileName)) {
       // Note: In a real implementation, you would use proper
       // encryption. This is just a placeholder for demonstration
-      processedContent = _encryptContent(content, data);
+      processedContent = _encryptContent(processedContent, data);
     }
 
-    // Optionally format JSON for readability
-    if (fileName.endsWith('.json')) {
-      try {
-        final jsonData = jsonDecode(processedContent);
-        processedContent = const JsonEncoder.withIndent('  ').convert(jsonData);
-      } catch (e) {
-        // If JSON parsing fails, use original content
-        FormGearLogger.sdkError('Failed to format JSON for $fileName: $e');
-      }
-    }
-
-    // Write to file
-    await file.writeAsString(processedContent);
+    await FormDataFileManager.writeAtomically(filePath, processedContent);
 
     return filePath;
   }
@@ -329,7 +321,10 @@ class FileSystemFormDataListener extends UnifiedFormDataListener {
 
       final metadataFile = File('${assignmentDir.path}/metadata.json');
       final metadataJson = const JsonEncoder.withIndent('  ').convert(metadata);
-      await metadataFile.writeAsString(metadataJson);
+      await FormDataFileManager.writeAtomically(
+        metadataFile.path,
+        metadataJson,
+      );
 
       FormGearLogger.sdk('Saved metadata to ${metadataFile.path}');
     } catch (e) {

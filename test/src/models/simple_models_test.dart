@@ -19,10 +19,7 @@ void main() {
       });
 
       test('should create failed result with error', () {
-        const result = DownloadResult(
-          success: false,
-          error: 'Network timeout',
-        );
+        const result = DownloadResult(success: false, error: 'Network timeout');
 
         expect(result.success, isFalse);
         expect(result.error, equals('Network timeout'));
@@ -64,27 +61,15 @@ void main() {
       });
 
       test('should not be equal when error differs', () {
-        const result1 = DownloadResult(
-          success: false,
-          error: 'Error 1',
-        );
-        const result2 = DownloadResult(
-          success: false,
-          error: 'Error 2',
-        );
+        const result1 = DownloadResult(success: false, error: 'Error 1');
+        const result2 = DownloadResult(success: false, error: 'Error 2');
 
         expect(result1, isNot(equals(result2)));
       });
 
       test('should not be equal when localPath differs', () {
-        const result1 = DownloadResult(
-          success: true,
-          localPath: '/path1',
-        );
-        const result2 = DownloadResult(
-          success: true,
-          localPath: '/path2',
-        );
+        const result1 = DownloadResult(success: true, localPath: '/path1');
+        const result2 = DownloadResult(success: true, localPath: '/path2');
 
         expect(result1, isNot(equals(result2)));
       });
@@ -309,14 +294,8 @@ void main() {
       });
 
       test('should not be equal when error differs', () {
-        const result1 = ValidationResult(
-          isValid: false,
-          error: 'Error 1',
-        );
-        const result2 = ValidationResult(
-          isValid: false,
-          error: 'Error 2',
-        );
+        const result1 = ValidationResult(isValid: false, error: 'Error 1');
+        const result2 = ValidationResult(isValid: false, error: 'Error 2');
 
         expect(result1, isNot(equals(result2)));
       });

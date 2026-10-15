@@ -83,11 +83,7 @@ class ModernResultDialog extends StatelessWidget {
                       color: iconColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(
-                      icon,
-                      color: iconColor,
-                      size: 24,
-                    ),
+                    child: Icon(icon, color: iconColor, size: 24),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -199,10 +195,7 @@ class ModernResultDialog extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFF1E88E5),
-                            Color(0xFF1976D2),
-                          ],
+                          colors: [Color(0xFF1E88E5), Color(0xFF1976D2)],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                         ),
@@ -264,11 +257,7 @@ class ModernResultDialog extends StatelessWidget {
             color: indicatorColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(6),
           ),
-          child: Icon(
-            icon,
-            size: 14,
-            color: indicatorColor,
-          ),
+          child: Icon(icon, size: 14, color: indicatorColor),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -285,10 +274,7 @@ class ModernResultDialog extends StatelessWidget {
               ),
               Text(
                 subtitle,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
             ],
           ),

@@ -51,9 +51,7 @@ void main() {
       });
 
       test('should return null when endpoint is missing', () {
-        const config = FormGearApiConfig(
-          baseUrl: 'https://api.example.com',
-        );
+        const config = FormGearApiConfig(baseUrl: 'https://api.example.com');
 
         expect(config.formEngineUrl, isNull);
       });
@@ -81,9 +79,7 @@ void main() {
       });
 
       test('should not support version check without endpoint', () {
-        const config = FormGearApiConfig(
-          baseUrl: 'https://api.example.com',
-        );
+        const config = FormGearApiConfig(baseUrl: 'https://api.example.com');
 
         expect(config.supportsFormEngineVersionCheck, isFalse);
       });
@@ -177,9 +173,7 @@ void main() {
           authToken: 'old-token',
         );
 
-        final updated = original.copyWith(
-          authToken: 'new-token',
-        );
+        final updated = original.copyWith(authToken: 'new-token');
 
         expect(updated.baseUrl, equals(original.baseUrl));
         expect(updated.formEngineEndpoint, equals(original.formEngineEndpoint));
@@ -218,9 +212,7 @@ void main() {
       });
 
       test('should handle null pinned certificates', () {
-        const config = FormGearApiConfig(
-          baseUrl: 'https://api.example.com',
-        );
+        const config = FormGearApiConfig(baseUrl: 'https://api.example.com');
 
         expect(config.pinnedCertificates, isNull);
       });

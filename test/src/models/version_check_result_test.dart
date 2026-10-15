@@ -7,10 +7,7 @@ void main() {
   group('VersionCheckResult Tests', () {
     group('Construction', () {
       test('should create result with all parameters', () {
-        const formEngine = FormEngineEntity(
-          formEngineId: 1,
-          version: '2.0.0',
-        );
+        const formEngine = FormEngineEntity(formEngineId: 1, version: '2.0.0');
 
         const result = VersionCheckResult(
           state: VersionState.outdated,
@@ -26,10 +23,7 @@ void main() {
       });
 
       test('should create result with missing state', () {
-        const formEngine = FormEngineEntity(
-          formEngineId: 1,
-          version: '1.0.0',
-        );
+        const formEngine = FormEngineEntity(formEngineId: 1, version: '1.0.0');
 
         const result = VersionCheckResult(
           state: VersionState.missing,
@@ -43,10 +37,7 @@ void main() {
       });
 
       test('should create result with current state', () {
-        const formEngine = FormEngineEntity(
-          formEngineId: 1,
-          version: '1.0.0',
-        );
+        const formEngine = FormEngineEntity(formEngineId: 1, version: '1.0.0');
 
         const result = VersionCheckResult(
           state: VersionState.current,
@@ -99,10 +90,7 @@ void main() {
 
     group('isForced getter', () {
       test('should return true when formEngine.isForce is true', () {
-        const formEngine = FormEngineEntity(
-          formEngineId: 1,
-          isForce: true,
-        );
+        const formEngine = FormEngineEntity(formEngineId: 1, isForce: true);
         const result = VersionCheckResult(
           state: VersionState.outdated,
           formEngine: formEngine,
@@ -112,10 +100,7 @@ void main() {
       });
 
       test('should return false when formEngine.isForce is false', () {
-        const formEngine = FormEngineEntity(
-          formEngineId: 1,
-          isForce: false,
-        );
+        const formEngine = FormEngineEntity(formEngineId: 1, isForce: false);
         const result = VersionCheckResult(
           state: VersionState.outdated,
           formEngine: formEngine,
@@ -169,9 +154,7 @@ void main() {
 
     group('engineDisplayName getter', () {
       test('should return FormGear for engine ID 1', () {
-        const formEngine = FormEngineEntity(
-          formEngineId: 1,
-        );
+        const formEngine = FormEngineEntity(formEngineId: 1);
         const result = VersionCheckResult(
           state: VersionState.current,
           formEngine: formEngine,
@@ -181,9 +164,7 @@ void main() {
       });
 
       test('should return FasihForm for engine ID 2', () {
-        const formEngine = FormEngineEntity(
-          formEngineId: 2,
-        );
+        const formEngine = FormEngineEntity(formEngineId: 2);
         const result = VersionCheckResult(
           state: VersionState.current,
           formEngine: formEngine,
@@ -316,10 +297,7 @@ void main() {
 
     group('toString', () {
       test('should have readable string representation', () {
-        const formEngine = FormEngineEntity(
-          formEngineId: 1,
-          version: '2.0.0',
-        );
+        const formEngine = FormEngineEntity(formEngineId: 1, version: '2.0.0');
         const result = VersionCheckResult(
           state: VersionState.outdated,
           formEngine: formEngine,
@@ -337,10 +315,7 @@ void main() {
 
     group('JSON Serialization', () {
       test('should serialize to JSON', () {
-        const formEngine = FormEngineEntity(
-          formEngineId: 1,
-          version: '1.0.0',
-        );
+        const formEngine = FormEngineEntity(formEngineId: 1, version: '1.0.0');
         const result = VersionCheckResult(
           state: VersionState.current,
           formEngine: formEngine,
@@ -358,10 +333,7 @@ void main() {
       test('should deserialize from JSON', () {
         final json = {
           'state': 'outdated',
-          'formEngine': {
-            'formEngineId': 1,
-            'version': '2.0.0',
-          },
+          'formEngine': {'formEngineId': 1, 'version': '2.0.0'},
           'localVersion': '1.0.0',
           'remoteVersion': '2.0.0',
         };
@@ -414,10 +386,7 @@ void main() {
       });
 
       test('should handle up-to-date scenario', () {
-        const formEngine = FormEngineEntity(
-          formEngineId: 2,
-          version: '1.5.0',
-        );
+        const formEngine = FormEngineEntity(formEngineId: 2, version: '1.5.0');
         const result = VersionCheckResult(
           state: VersionState.current,
           formEngine: formEngine,

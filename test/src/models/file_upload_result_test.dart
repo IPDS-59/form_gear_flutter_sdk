@@ -36,9 +36,7 @@ void main() {
       });
 
       test('should create failure result with error', () {
-        const result = FileUploadResult.failure(
-          error: 'Network timeout',
-        );
+        const result = FileUploadResult.failure(error: 'Network timeout');
 
         expect(result.isSuccess, isFalse);
         expect(result.error, equals('Network timeout'));
@@ -67,18 +65,14 @@ void main() {
     group('Assertion Tests', () {
       test('should enforce uploadedUrl when isSuccess is true', () {
         expect(
-          () => FileUploadResult(
-            isSuccess: true,
-          ),
+          () => FileUploadResult(isSuccess: true),
           throwsA(isA<AssertionError>()),
         );
       });
 
       test('should enforce error when isSuccess is false', () {
         expect(
-          () => FileUploadResult(
-            isSuccess: false,
-          ),
+          () => FileUploadResult(isSuccess: false),
           throwsA(isA<AssertionError>()),
         );
       });
@@ -95,10 +89,8 @@ void main() {
 
       test('should allow failure with error', () {
         expect(
-          () => const FileUploadResult(
-            isSuccess: false,
-            error: 'Upload failed',
-          ),
+          () =>
+              const FileUploadResult(isSuccess: false, error: 'Upload failed'),
           returnsNormally,
         );
       });
@@ -119,13 +111,9 @@ void main() {
       });
 
       test('should be equal when all properties match (failure)', () {
-        const result1 = FileUploadResult.failure(
-          error: 'Upload failed',
-        );
+        const result1 = FileUploadResult.failure(error: 'Upload failed');
 
-        const result2 = FileUploadResult.failure(
-          error: 'Upload failed',
-        );
+        const result2 = FileUploadResult.failure(error: 'Upload failed');
 
         expect(result1, equals(result2));
         expect(result1.hashCode, equals(result2.hashCode));
@@ -144,13 +132,9 @@ void main() {
       });
 
       test('should not be equal when error differs', () {
-        const result1 = FileUploadResult.failure(
-          error: 'Network error',
-        );
+        const result1 = FileUploadResult.failure(error: 'Network error');
 
-        const result2 = FileUploadResult.failure(
-          error: 'Server error',
-        );
+        const result2 = FileUploadResult.failure(error: 'Server error');
 
         expect(result1, isNot(equals(result2)));
       });

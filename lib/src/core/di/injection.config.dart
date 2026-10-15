@@ -9,6 +9,7 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+
 import 'package:dio/dio.dart' as _i361;
 import 'package:form_gear_engine_sdk/src/core/compression/compression_service.dart'
     as _i60;
@@ -20,9 +21,9 @@ import 'package:form_gear_engine_sdk/src/core/di/injection.dart' as _i621;
 import 'package:form_gear_engine_sdk/src/core/retry/retry_service.dart'
     as _i825;
 import 'package:form_gear_engine_sdk/src/core/security/encryption_service.dart'
-    as _i174;
+    as _i175;
 import 'package:form_gear_engine_sdk/src/core/version/form_gear_version_manager.dart'
-    as _i771;
+    as _i772;
 import 'package:form_gear_engine_sdk/src/data/datasources/form_engine_remote_data_source.dart'
     as _i242;
 import 'package:form_gear_engine_sdk/src/data/repositories/download_repository_impl.dart'
@@ -78,44 +79,36 @@ _i174.GetIt $initGetIt(
 }) {
   final gh = _i526.GetItHelper(getIt, environment, environmentFilter);
   final registerModule = _$RegisterModule();
-  gh.lazySingleton<_i825.RetryService>(() => _i825.RetryService());
   gh.lazySingleton<_i60.CompressionService>(() => _i60.CompressionService());
-  gh.lazySingleton<_i931.ConfigProvider>(
-    () => const _i931.FormGearConfigProvider(),
-  );
-  gh.lazySingleton<_i260.FileRepository>(() => _i1070.FileRepositoryImpl());
-  gh.lazySingleton<_i906.VersionRepository>(
-    () =>
-        _i609.VersionRepositoryImpl(fileRepository: gh<_i260.FileRepository>()),
-  );
-  gh.lazySingleton<_i422.ZipRepository>(
-    () => _i542.ZipRepositoryImpl(fileRepository: gh<_i260.FileRepository>()),
-  );
-  gh.lazySingleton<_i518.UpdateAssignmentUseCase>(
-    () => _i518.UpdateAssignmentUseCase(gh<_i771.FormDataRepository>()),
+  gh.lazySingleton<_i825.RetryService>(() => _i825.RetryService());
+  gh.lazySingleton<_i175.EncryptionService>(
+    () => _i175.EncryptionService(customKey: gh<String>()),
   );
   gh.lazySingleton<_i1048.GetAssignmentUseCase>(
     () => _i1048.GetAssignmentUseCase(gh<_i771.FormDataRepository>()),
   );
-  gh.lazySingleton<_i174.EncryptionService>(
-    () => _i174.EncryptionService(customKey: gh<String>()),
+  gh.lazySingleton<_i518.UpdateAssignmentUseCase>(
+    () => _i518.UpdateAssignmentUseCase(gh<_i771.FormDataRepository>()),
+  );
+  gh.lazySingleton<_i931.ConfigProvider>(
+    () => const _i931.FormGearConfigProvider(),
   );
   gh.lazySingleton<_i361.Dio>(
     () => registerModule.dio(gh<_i931.ConfigProvider>()),
   );
-  gh.lazySingleton<_i242.FormEngineRemoteDataSource>(
-    () => _i242.FormEngineRemoteDataSourceImpl(
-      apiConfig: gh<_i100.FormGearApiConfig>(),
-      dio: gh<_i361.Dio>(),
-    ),
+  gh.lazySingleton<_i260.FileRepository>(() => _i1070.FileRepositoryImpl());
+  gh.lazySingleton<_i422.ZipRepository>(
+    () => _i542.ZipRepositoryImpl(fileRepository: gh<_i260.FileRepository>()),
+  );
+  gh.lazySingleton<_i906.VersionRepository>(
+    () =>
+        _i609.VersionRepositoryImpl(fileRepository: gh<_i260.FileRepository>()),
   );
   gh.lazySingleton<_i356.ExtractFormEngineUseCase>(
     () => _i356.ExtractFormEngineUseCase(gh<_i422.ZipRepository>()),
   );
-  gh.lazySingleton<_i458.FormEngineRepository>(
-    () => _i1069.FormEngineRepositoryImpl(
-      remoteDataSource: gh<_i242.FormEngineRemoteDataSource>(),
-    ),
+  gh.lazySingleton<_i190.GetLocalFormEngineVersionUseCase>(
+    () => _i190.GetLocalFormEngineVersionUseCase(gh<_i906.VersionRepository>()),
   );
   gh.lazySingleton<_i471.GetLocalTemplateVersionUseCase>(
     () => _i471.GetLocalTemplateVersionUseCase(gh<_i906.VersionRepository>()),
@@ -123,14 +116,25 @@ _i174.GetIt $initGetIt(
   gh.lazySingleton<_i58.SaveFormEngineVersionUseCase>(
     () => _i58.SaveFormEngineVersionUseCase(gh<_i906.VersionRepository>()),
   );
-  gh.lazySingleton<_i190.GetLocalFormEngineVersionUseCase>(
-    () => _i190.GetLocalFormEngineVersionUseCase(gh<_i906.VersionRepository>()),
-  );
   gh.lazySingleton<_i980.SaveTemplateVersionUseCase>(
     () => _i980.SaveTemplateVersionUseCase(gh<_i906.VersionRepository>()),
   );
   gh.lazySingleton<_i170.DownloadRepository>(
     () => _i323.DownloadRepositoryImpl(gh<_i361.Dio>()),
+  );
+  gh.lazySingleton<_i242.FormEngineRemoteDataSource>(
+    () => _i242.FormEngineRemoteDataSourceImpl(
+      apiConfig: gh<_i100.FormGearApiConfig>(),
+      dio: gh<_i361.Dio>(),
+    ),
+  );
+  gh.lazySingleton<_i458.FormEngineRepository>(
+    () => _i1069.FormEngineRepositoryImpl(
+      remoteDataSource: gh<_i242.FormEngineRemoteDataSource>(),
+    ),
+  );
+  gh.lazySingleton<_i985.DownloadFormEngineUseCase>(
+    () => _i985.DownloadFormEngineUseCase(gh<_i170.DownloadRepository>()),
   );
   gh.lazySingleton<_i876.CheckFormEngineVersionUseCase>(
     () => _i876.CheckFormEngineVersionUseCase(gh<_i458.FormEngineRepository>()),
@@ -138,16 +142,13 @@ _i174.GetIt $initGetIt(
   gh.lazySingleton<_i186.IsFormEngineDownloadedUseCase>(
     () => _i186.IsFormEngineDownloadedUseCase(gh<_i458.FormEngineRepository>()),
   );
-  gh.lazySingleton<_i771.FormGearVersionManager>(
-    () => _i771.FormGearVersionManager(
+  gh.lazySingleton<_i772.FormGearVersionManager>(
+    () => _i772.FormGearVersionManager(
       gh<_i876.CheckFormEngineVersionUseCase>(),
       gh<_i186.IsFormEngineDownloadedUseCase>(),
       gh<_i190.GetLocalFormEngineVersionUseCase>(),
       gh<_i361.Dio>(),
     ),
-  );
-  gh.lazySingleton<_i985.DownloadFormEngineUseCase>(
-    () => _i985.DownloadFormEngineUseCase(gh<_i170.DownloadRepository>()),
   );
   return getIt;
 }

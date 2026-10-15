@@ -10,6 +10,6 @@ class IsFormEngineDownloadedUseCase
 
   @override
   Future<bool> call(String engineId) async {
-    return repo.isFormEngineDownloaded(engineId);
+    return await repo.isFormEngineDownloaded(engineId);
   }
 }

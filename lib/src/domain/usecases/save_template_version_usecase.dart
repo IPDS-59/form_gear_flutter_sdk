@@ -34,6 +34,6 @@ class SaveTemplateVersionUseCase
 
   @override
   Future<Result<void>> call(SaveTemplateVersionParams params) async {
-    return repo.saveTemplateVersion(params.templateId, params.version);
+    return await repo.saveTemplateVersion(params.templateId, params.version);
   }
 }

@@ -4,19 +4,22 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/config/form_config.dart';
 import 'package:form_gear_engine_sdk/src/core/di/injection.dart';
 import 'package:form_gear_engine_sdk/src/core/engine/handler_factory.dart';
+import 'package:form_gear_engine_sdk/src/core/engine/page_prelude.dart';
 import 'package:form_gear_engine_sdk/src/core/engine/webview_builder.dart';
+import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
 import 'package:form_gear_engine_sdk/src/core/server/form_gear_server.dart';
 import 'package:form_gear_engine_sdk/src/core/services/services.dart';
 import 'package:form_gear_engine_sdk/src/core/version/form_gear_version_manager.dart';
 import 'package:form_gear_engine_sdk/src/domain/usecases/is_form_engine_downloaded_usecase.dart';
 import 'package:form_gear_engine_sdk/src/models/models.dart';
 import 'package:form_gear_engine_sdk/src/presentation/presentation.dart';
+import 'package:form_gear_engine_sdk/src/utils/fasih_form_notifier.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 /// Main FormGear SDK class - single entry point for all FormGear functionality
 class FormGearSDK {
@@ -33,8 +36,6 @@ class FormGearSDK {
 
   // Current form configuration (legacy)
   FormConfig? _currentFormConfig;
-  late PreparedEngine? _currentPreparedEngine;
-  FormEngineType? _currentEngineType;
 
   // Current assignment context (new assignment-based system)
   AssignmentContext? _currentAssignment;
@@ -135,7 +136,7 @@ class FormGearSDK {
       throw Exception('FormGear SDK not initialized. Call initialize() first.');
     }
 
-    return _engineService.prepareEngine(
+    return await _engineService.prepareEngine(
       engineType: engineType,
       baseUrl: baseUrl,
       historyUrl: historyUrl,
@@ -183,6 +184,9 @@ class FormGearSDK {
 
   /// Opens form with assignment context (new assignment-based method)
   /// This method uses dynamic configuration based on assignment context
+  ///
+  /// Throws [DataFailure] (code `invalid_template`) when the template has no
+  /// renderable components.
   Future<void> openFormWithAssignment({
     required BuildContext context,
     required AssignmentContext assignment,
@@ -195,24 +199,35 @@ class FormGearSDK {
       );
     }
 
+    // Refuse data the engine cannot start with, instead of a blank WebView.
+    if (!assignment.data.hasRenderableTemplate) {
+      throw DataFailure(
+        'Template ${assignment.templateId} for assignment '
+            '${assignment.assignmentId} is missing or has no components; '
+            'it may be corrupt or not fully downloaded.',
+        'invalid_template',
+      );
+    }
+    final current = assignment.copyWith(
+      data: assignment.data.normalizedForEngine(),
+    );
+
     // Store current assignment context
-    _currentAssignment = assignment;
+    _currentAssignment = current;
 
     // Update legacy config with assignment-specific settings for compatibility
     if (_globalConfig != null) {
-      _config = _globalConfig!.toLegacyConfig(
-        assignmentConfig: assignment.config,
-      );
+      _config = _globalConfig!.toLegacyConfig(assignmentConfig: current.config);
     }
 
     // Prepare engine based on explicit engine ID or determine from template
-    final engineType = assignment.formEngineId != null
-        ? FormEngineType.fromId(int.tryParse(assignment.formEngineId!))
-        : _determineEngineTypeFromTemplate(assignment.templateId);
+    final engineType = current.formEngineId != null
+        ? FormEngineType.fromId(int.tryParse(current.formEngineId!))
+        : _determineEngineTypeFromTemplate(current.templateId);
 
     if (engineType == null) {
       throw Exception(
-        'Invalid form engine ID: ${assignment.formEngineId}. '
+        'Invalid form engine ID: ${current.formEngineId}. '
         'Valid IDs are: 1 (FormGear), 2 (FasihForm)',
       );
     }
@@ -221,44 +236,78 @@ class FormGearSDK {
       engineType: engineType,
       onProgress: onProgress,
     );
-    _currentPreparedEngine = preparedEngine;
-    _currentEngineType = engineType;
 
     // Load form configuration from assignment data
     loadFormConfig(
       FormConfig(
-        formId: assignment.assignmentId,
-        template: assignment.data.template,
-        validation: assignment.data.validation,
-        response: assignment.data.response,
-        media: assignment.data.media,
-        reference: assignment.data.reference,
-        remark: assignment.data.remark,
-        preset: assignment.data.preset,
-        principals: assignment.data.principals,
+        formId: current.assignmentId,
+        template: current.data.template,
+        validation: current.data.validation,
+        response: current.data.response,
+        media: current.data.media,
+        reference: current.data.reference,
+        remark: current.data.remark,
+        preset: current.data.preset,
+        principals: current.data.principals,
       ),
     );
 
     // Start server if configured to auto-start
     await _startServerIfNeeded();
 
+    // One handler set serves both the sync window.Android shim and the
+    // async callHandler bridge, so the two can never disagree.
+    final jsHandlers = HandlerFactory.createAssignmentAwareHandlers(
+      assignment: current,
+      currentFormConfig: _currentFormConfig,
+      config: _config,
+      formDataListener: _listenerRegistry.formDataListener,
+      getCurrentAssignment: () => _currentAssignment,
+    );
+    // The stock pages hardcode the lookup server at :3310; point them at the
+    // port actually bound (it moves when 3310 is taken, e.g. by native FASIH).
+    final serverBase = _server?.baseUrl;
+    if (serverBase == null) {
+      FormGearLogger.sdkError('Lookup server not running; lookups will fail');
+    }
+    final pageHtml = serverBase == null
+        ? preparedEngine.html
+        : preparedEngine.html.replaceAll(
+            RegExp(r'http://(localhost|127\.0\.0\.1):3310\b'),
+            serverBase,
+          );
+    final html = PagePrelude.inject(pageHtml, [
+      PagePrelude.bridgePolyfill,
+      PagePrelude.errorForwarder,
+      if (engineType == FormEngineType.fasihForm)
+        await PagePrelude.fasihAndroidShim(jsHandlers),
+    ]);
+
     // iOS: Set dynamic HTML on server and get URL for loading
     // iOS WKWebView has issues with loadData() for large HTML content
-    var engineToUse = preparedEngine;
+    var engineToUse = PreparedEngine(
+      html: html,
+      baseUrl: preparedEngine.baseUrl,
+      historyUrl: preparedEngine.historyUrl,
+    );
     if (Platform.isIOS && _server != null && _server!.isRunning) {
-      _server!.setDynamicHtmlContent(preparedEngine.html);
+      _server!.setDynamicHtmlContent(html);
       final serverUrl = _server!.dynamicHtmlUrl;
       if (serverUrl != null) {
-        engineToUse = preparedEngine.withServerUrl(serverUrl);
+        // Unique per open so WKWebView never reuses an older form's page.
+        engineToUse = engineToUse.withServerUrl(serverUrl);
         FormGearLogger.sdk(
           'iOS: Using server URL for HTML loading: $serverUrl',
         );
       }
     }
-    _currentPreparedEngine = engineToUse;
 
-    // Create WebView with assignment-specific handlers
-    final webView = _createWebViewWithAssignment(assignment);
+    final webView = WebViewBuilder.createWebViewWithAssignment(
+      assignment: current,
+      preparedEngine: engineToUse,
+      currentEngineType: engineType,
+      jsHandlers: jsHandlers,
+    );
 
     try {
       // Check if context is still mounted before navigation
@@ -268,7 +317,7 @@ class FormGearSDK {
       await Navigator.of(context).push<void>(
         MaterialPageRoute(
           builder: (context) => WebViewBuilder.createFormGearEnginePage(
-            title: title ?? 'FormGear - ${assignment.templateId}',
+            title: title ?? 'FormGear - ${current.templateId}',
             webView: webView,
           ),
         ),
@@ -290,22 +339,23 @@ class FormGearSDK {
   /// Creates debug-only WebView for testing bridge functionality
   /// **DEBUG/TESTING ONLY** - Not for production use
   /// Use openFormWithAssignment for production forms
+  // ignore: remove_deprecations_in_breaking_versions -- debug-only API, kept on purpose
   @Deprecated('Only for testing - use openFormWithAssignment for production')
   Future<FormGearWebView?> createDebugBridgeTest({
     List<JSHandler<dynamic>> customHandlers = const [],
-    void Function(InAppWebViewController controller)? onWebViewCreated,
-    void Function(InAppWebViewController controller, String url)? onLoadStart,
-    void Function(InAppWebViewController controller, String url)? onLoadStop,
+    void Function(WebViewController controller)? onWebViewCreated,
+    void Function(WebViewController controller, String url)? onLoadStart,
+    void Function(WebViewController controller, String url)? onLoadStop,
     void Function(
-      InAppWebViewController controller,
+      WebViewController controller,
       String url,
       int code,
       String message,
     )?
     onLoadError,
     void Function(
-      InAppWebViewController controller,
-      ConsoleMessage consoleMessage,
+      WebViewController controller,
+      JavaScriptConsoleMessage consoleMessage,
     )?
     onConsoleMessage,
   }) async {
@@ -327,7 +377,10 @@ class FormGearSDK {
 
     return FormGearWebView(
       url: 'about:blank',
-      htmlContent: bridgeTestHtml,
+      htmlContent: PagePrelude.inject(bridgeTestHtml, [
+        PagePrelude.bridgePolyfill,
+        PagePrelude.errorForwarder,
+      ]),
       jsHandlers: [
         ...HandlerFactory.createRequiredHandlers(
           currentFormConfig: _currentFormConfig,
@@ -357,7 +410,7 @@ class FormGearSDK {
       final htmlContent = await rootBundle.loadString(assetPath);
 
       // Process the HTML through vendor asset injection
-      return _engineService.assetLoader.injectVendorAssets(htmlContent);
+      return await _engineService.assetLoader.injectVendorAssets(htmlContent);
     } on Exception catch (e) {
       FormGearLogger.sdkError('Failed to load debug bridge test HTML: $e');
       return null;
@@ -375,19 +428,6 @@ class FormGearSDK {
     if (shouldStartServer && _server?.isRunning != true) {
       await _startServer();
     }
-  }
-
-  /// Creates WebView with assignment-specific handlers
-  FormGearWebView _createWebViewWithAssignment(AssignmentContext assignment) {
-    return WebViewBuilder.createWebViewWithAssignment(
-      assignment: assignment,
-      preparedEngine: _currentPreparedEngine!,
-      currentEngineType: _currentEngineType,
-      currentFormConfig: _currentFormConfig,
-      config: _config,
-      getCurrentAssignment: () => _currentAssignment,
-      formDataListener: _listenerRegistry.formDataListener,
-    );
   }
 
   Future<void> _startServer() async {
@@ -437,7 +477,7 @@ class FormGearSDK {
     }
 
     // Delegate to version manager - returns full result with rich context
-    return _versionManager.checkFormEngineVersion(
+    return await _versionManager.checkFormEngineVersion(
       engineId: engineId,
       showNotifications: showNotifications,
       context: context,
@@ -453,7 +493,20 @@ class FormGearSDK {
     }
 
     final useCase = getIt<IsFormEngineDownloadedUseCase>();
-    return useCase(engineId);
+    return await useCase(engineId);
+  }
+
+  /// Finalizes the open form, like native FASIH's approval button. FasihForm
+  /// (engine 2) gets `trigger-finalize`; FormGear (engine 1) has no in-page
+  /// finalize (native shows its own approval dialog), so returns false.
+  Future<bool> finalizeForm() async {
+    final engineId = JSExecutorService().formEngineId;
+    if (engineId != FormEngineType.fasihForm.id.toString()) {
+      FormGearLogger.sdk('finalizeForm: no finalize for engine $engineId');
+      return false;
+    }
+    await FasihFormNotifier.triggerFinalize();
+    return true;
   }
 
   /// Gets the current configuration

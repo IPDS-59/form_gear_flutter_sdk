@@ -12,6 +12,10 @@ analyzer:
     implementation_imports: ignore
     use_build_context_synchronously: ignore
     deprecated_member_use: ignore
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
 include: package:flutter_lints/flutter.yaml
 
 linter:

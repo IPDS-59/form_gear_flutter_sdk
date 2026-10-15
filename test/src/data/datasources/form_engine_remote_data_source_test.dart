@@ -250,10 +250,7 @@ void main() {
           expect(result, isA<Failure<FormEngineResponse>>());
           final failureResult = result as Failure<FormEngineResponse>;
           expect(failureResult.error, isA<NetworkFailure>());
-          expect(
-            failureResult.error.toString(),
-            contains('Network timeout'),
-          );
+          expect(failureResult.error.toString(), contains('Network timeout'));
         });
 
         test('it should handle send timeout', () async {
@@ -326,10 +323,7 @@ void main() {
           expect(result, isA<Failure<FormEngineResponse>>());
           final failureResult = result as Failure<FormEngineResponse>;
           expect(failureResult.error, isA<NetworkFailure>());
-          expect(
-            failureResult.error.toString(),
-            contains('Connection error'),
-          );
+          expect(failureResult.error.toString(), contains('Connection error'));
         });
 
         test('it should handle 401 unauthorized response', () async {
@@ -474,10 +468,7 @@ void main() {
           expect(result, isA<Failure<FormEngineResponse>>());
           final failureResult = result as Failure<FormEngineResponse>;
           expect(failureResult.error, isA<NetworkFailure>());
-          expect(
-            failureResult.error.toString(),
-            contains('Request cancelled'),
-          );
+          expect(failureResult.error.toString(), contains('Request cancelled'));
         });
 
         test('it should handle bad certificate', () async {
@@ -502,10 +493,7 @@ void main() {
           expect(result, isA<Failure<FormEngineResponse>>());
           final failureResult = result as Failure<FormEngineResponse>;
           expect(failureResult.error, isA<NetworkFailure>());
-          expect(
-            failureResult.error.toString(),
-            contains('Bad certificate'),
-          );
+          expect(failureResult.error.toString(), contains('Bad certificate'));
         });
 
         test('it should handle unknown DioException', () async {
@@ -560,10 +548,7 @@ void main() {
           expect(result, isA<Failure<FormEngineResponse>>());
           final failureResult = result as Failure<FormEngineResponse>;
           expect(failureResult.error, isA<UnknownFailure>());
-          expect(
-            failureResult.error.toString(),
-            contains(errorMessage),
-          );
+          expect(failureResult.error.toString(), contains(errorMessage));
         });
 
         test('it should handle FormatException during JSON parsing', () async {

@@ -22,10 +22,7 @@ void main() {
       test('should have consistent toString', () {
         const failure = ServerFailure('Test error', '503');
 
-        expect(
-          failure.toString(),
-          contains('message: Test error'),
-        );
+        expect(failure.toString(), contains('message: Test error'));
       });
     });
 

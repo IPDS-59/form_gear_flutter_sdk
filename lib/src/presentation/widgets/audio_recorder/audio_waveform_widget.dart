@@ -26,9 +26,7 @@ class AudioWaveformWidget extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.grey.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.grey.withValues(alpha: 0.1),
-            ),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,

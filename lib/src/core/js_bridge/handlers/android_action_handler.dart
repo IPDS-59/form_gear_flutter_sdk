@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/models/response_models.dart';
 import 'package:form_gear_engine_sdk/src/core/listeners/form_data_listener.dart';
@@ -5,6 +7,7 @@ import 'package:form_gear_engine_sdk/src/core/listeners/save_submit_data.dart';
 import 'package:form_gear_engine_sdk/src/core/listeners/save_submit_result.dart';
 import 'package:form_gear_engine_sdk/src/models/assignment_context.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
+import 'package:form_gear_engine_sdk/src/utils/serial_save_queue.dart';
 
 /// Factory class that creates JSHandlers for Android action methods
 /// Now supports both direct callbacks and FormDataListener architecture
@@ -26,11 +29,7 @@ class AndroidActionHandler {
   )?
   onAction;
 
-  final Future<String?> Function(
-    String action,
-    String dataKey,
-    String data,
-  )?
+  final Future<String?> Function(String action, String dataKey, String data)?
   onExecute;
 
   /// Optional callback for FormGear (engine ID: 1) saveOrSubmit
@@ -77,12 +76,55 @@ class AndroidActionHandler {
       // Removed 'execute' handler - provided by ExecuteHandler class
       // instead
       _AndroidActionMethodHandler('saveOrSubmit', (args) async {
-        return _handleSaveOrSubmit(args, SaveSubmitEngineType.formGear);
+        return await _serialized(args, SaveSubmitEngineType.formGear);
       }),
       _AndroidActionMethodHandler('saveOrSubmitFasihForm', (args) async {
-        return _handleSaveOrSubmit(args, SaveSubmitEngineType.fasihForm);
+        return await _serialized(args, SaveSubmitEngineType.fasihForm);
       }),
     ];
+  }
+
+  /// One write at a time per assignment; queued auto-saves collapse to the
+  /// latest so overlapping saves can't interleave on disk.
+  Future<SubmissionInfoJs> _serialized(
+    List<dynamic> args,
+    SaveSubmitEngineType engineType,
+  ) async {
+    final flagIndex = engineType == SaveSubmitEngineType.formGear ? 5 : 3;
+    final isSave =
+        args.length > flagIndex &&
+        args[flagIndex].toString().toUpperCase() == 'SAVE';
+    final key = getCurrentAssignment?.call()?.assignmentId ?? '_default';
+    final result = await SerialSaveQueue.run(
+      key,
+      () => _handleSaveOrSubmit(args, engineType),
+      droppable: isSave,
+    );
+    if (result != null) return result;
+    FormGearLogger.webview('Auto-save for $key superseded by a newer save');
+    return SubmissionInfoJs(success: true);
+  }
+
+  /// True when a SAVE would replace answers the form opened with by none
+  /// (or by invalid JSON), e.g. the engine's mount-time auto-save after a
+  /// failed/fallback load. Unknown response shapes are allowed through.
+  bool _wouldEraseAnswers(String formData) {
+    final opened = _answerCount(getCurrentAssignment?.call()?.data.response);
+    Object? decoded;
+    try {
+      decoded = jsonDecode(formData);
+    } on FormatException {
+      return true;
+    }
+    if (opened == null || opened == 0) return false;
+    return _answerCount(decoded) == 0;
+  }
+
+  static int? _answerCount(Object? response) {
+    if (response is! Map) return null;
+    final details = response['details'];
+    final answers = details is Map ? details['answers'] : response['answers'];
+    return answers is List ? answers.length : null;
   }
 
   /// Handles saveOrSubmit operations for both FormGear and FasihForm
@@ -140,6 +182,17 @@ class AndroidActionHandler {
         '${media != null ? ', media=${media.length} chars' : ''}',
       );
 
+      if (flag.toUpperCase() == 'SAVE' && _wouldEraseAnswers(formData)) {
+        FormGearLogger.sdkError(
+          'Refused ${engineType.displayName} SAVE: it would replace saved '
+          'answers with an empty or invalid response',
+        );
+        return SubmissionInfoJs(
+          success: false,
+          error: 'Refused to overwrite saved answers with an empty response',
+        );
+      }
+
       // Try new FormDataListener first (preferred approach)
       if (formDataListener != null) {
         return await _handleWithListener(
@@ -168,10 +221,7 @@ class AndroidActionHandler {
         'Error in ${engineType.displayName} saveOrSubmit: $e',
       );
       FormGearLogger.sdkError('Stack trace: $stackTrace');
-      return SubmissionInfoJs(
-        success: false,
-        error: 'Save/submit failed: $e',
-      );
+      return SubmissionInfoJs(success: false, error: 'Save/submit failed: $e');
     }
   }
 
@@ -245,10 +295,7 @@ class AndroidActionHandler {
 
       // Call completion callback if successful
       if (result.isSuccess) {
-        await formDataListener!.onSaveOrSubmitCompleted(
-          saveSubmitData,
-          result,
-        );
+        await formDataListener!.onSaveOrSubmitCompleted(saveSubmitData, result);
         FormGearLogger.webview(
           '${engineType.displayName} saveOrSubmit completed '
           'successfully: ${result.submissionId}',
@@ -344,10 +391,7 @@ class AndroidActionHandler {
           '${DateTime.now().millisecondsSinceEpoch}';
     }
 
-    return SubmissionInfoJs(
-      success: true,
-      submissionId: submissionId,
-    );
+    return SubmissionInfoJs(success: true, submissionId: submissionId);
   }
 }
 

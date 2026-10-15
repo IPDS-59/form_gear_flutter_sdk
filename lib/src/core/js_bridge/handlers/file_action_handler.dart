@@ -29,11 +29,11 @@ class FileActionHandler with ActionHandlerContract {
   ) async {
     switch (action) {
       case 'FILE_UPLOAD':
-        return handleFileUpload(dataKey, data);
+        return await handleFileUpload(dataKey, data);
       case 'FILE_PICKER':
-        return handleFilePicker(dataKey, data);
+        return await handleFilePicker(dataKey, data);
       case 'FILE_RELOAD':
-        return handleFileReload(dataKey, data);
+        return await handleFileReload(dataKey, data);
       default:
         return ActionInfoJs(
           success: false,
@@ -71,10 +71,7 @@ class FileActionHandler with ActionHandlerContract {
         }
       } on Exception catch (e) {
         FormGearLogger.webviewError('Failed to parse file data: $e');
-        return ActionInfoJs(
-          success: false,
-          error: 'Invalid file data format',
-        );
+        return ActionInfoJs(success: false, error: 'Invalid file data format');
       }
 
       final fileName =
@@ -104,9 +101,7 @@ class FileActionHandler with ActionHandlerContract {
           assignmentId,
           filePath,
         );
-        FormGearLogger.webview(
-          'Resolved filename to full path: $filePath',
-        );
+        FormGearLogger.webview('Resolved filename to full path: $filePath');
       }
 
       final validationResult = PathValidator.validate(
@@ -128,7 +123,7 @@ class FileActionHandler with ActionHandlerContract {
       final file = File(validationResult.sanitizedPath);
 
       if (FormGearSDK.instance.hasFileUploadListener) {
-        return _handleFileUploadWithListener(
+        return await _handleFileUploadWithListener(
           dataKey: dataKey,
           file: file,
           fileName: fileName,
@@ -136,9 +131,7 @@ class FileActionHandler with ActionHandlerContract {
           fileInfo: fileInfo,
         );
       } else {
-        FormGearLogger.webview(
-          'File verified (no upload listener): $fileName',
-        );
+        FormGearLogger.webview('File verified (no upload listener): $fileName');
 
         return ActionInfoJs(
           success: true,
@@ -180,9 +173,7 @@ class FileActionHandler with ActionHandlerContract {
       );
 
       final result = await FormGearSDK.instance.fileUploadListener!
-          .onFileUpload(
-            uploadData,
-          );
+          .onFileUpload(uploadData);
 
       if (result.isSuccess) {
         await FormGearSDK.instance.fileUploadListener!.onUploadCompleted(
@@ -245,11 +236,10 @@ class FileActionHandler with ActionHandlerContract {
         }
       }
 
-      final result = await FilePicker.platform.pickFiles();
+      final picked = await FilePicker.pickFile();
+      final filePath = picked?.path;
 
-      if (result != null && result.files.single.path != null) {
-        final filePath = result.files.single.path!;
-
+      if (filePath != null) {
         // For system file picker, we only validate:
         // 1. No path traversal (handled by sanitizeFilename for the name)
         // 2. File exists
@@ -269,9 +259,7 @@ class FileActionHandler with ActionHandlerContract {
           '.$extension',
           PathValidationType.media,
         )) {
-          FormGearLogger.webviewError(
-            'Invalid file extension: $extension',
-          );
+          FormGearLogger.webviewError('Invalid file extension: $extension');
           return ActionInfoJs(
             success: false,
             error: 'File type not allowed: $extension',
@@ -341,10 +329,7 @@ class FileActionHandler with ActionHandlerContract {
         }
       }
 
-      return ActionInfoJs(
-        success: true,
-        result: 'File reload completed',
-      );
+      return ActionInfoJs(success: true, result: 'File reload completed');
     } on Exception catch (e) {
       FormGearLogger.webviewError('File reload error: $e');
       return ActionInfoJs(

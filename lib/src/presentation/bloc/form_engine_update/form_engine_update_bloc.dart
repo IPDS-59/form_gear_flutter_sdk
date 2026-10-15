@@ -9,10 +9,8 @@ part 'form_engine_update_state.dart';
 
 class FormEngineUpdateBloc
     extends Bloc<FormEngineUpdateEvent, FormEngineUpdateState> {
-  FormEngineUpdateBloc({
-    required this.versionResult,
-    required this.onDownload,
-  }) : super(FormEngineUpdateState.initial()) {
+  FormEngineUpdateBloc({required this.versionResult, required this.onDownload})
+    : super(FormEngineUpdateState.initial()) {
     on<FormEngineStartDownloadEvent>(_onStartDownload);
     on<FormEngineUpdateProgressEvent>(_onUpdateProgress);
     on<FormEngineDownloadCompletedEvent>(_onDownloadCompleted);

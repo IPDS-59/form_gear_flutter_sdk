@@ -3,10 +3,7 @@ import 'package:form_gear_engine_sdk/src/models/models.dart';
 
 /// Callback type for download progress updates
 typedef DownloadProgressCallback =
-    void Function(
-      int bytesReceived,
-      int totalBytes,
-    );
+    void Function(int bytesReceived, int totalBytes);
 
 /// Repository interface for HTTP download operations
 abstract class DownloadRepository {

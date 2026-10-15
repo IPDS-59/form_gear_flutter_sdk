@@ -155,22 +155,14 @@ class ScannerOverlayPainter extends CustomPainter {
 
   void _drawScanLine(Canvas canvas, Rect scanArea) {
     final scanLinePaint = Paint()
-      ..shader =
-          LinearGradient(
-            colors: [
-              const Color(0xFF1E88E5).withValues(alpha: 0),
-              const Color(0xFF1E88E5).withValues(alpha: 0.8),
-              const Color(0xFF1E88E5).withValues(alpha: 0),
-            ],
-            stops: const [0, 0.5, 1],
-          ).createShader(
-            Rect.fromLTWH(
-              scanArea.left,
-              0,
-              scanArea.width,
-              4,
-            ),
-          )
+      ..shader = LinearGradient(
+        colors: [
+          const Color(0xFF1E88E5).withValues(alpha: 0),
+          const Color(0xFF1E88E5).withValues(alpha: 0.8),
+          const Color(0xFF1E88E5).withValues(alpha: 0),
+        ],
+        stops: const [0, 0.5, 1],
+      ).createShader(Rect.fromLTWH(scanArea.left, 0, scanArea.width, 4))
       ..style = PaintingStyle.fill;
 
     final scanLineY = scanArea.top + (scanArea.height * scanLineProgress);

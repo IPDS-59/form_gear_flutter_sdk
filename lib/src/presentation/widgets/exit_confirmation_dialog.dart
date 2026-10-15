@@ -35,10 +35,7 @@ class ExitConfirmationDialog extends StatelessWidget {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildHeader(),
-          _buildContent(context),
-        ],
+        children: [_buildHeader(), _buildContent(context)],
       ),
     ),
   );
@@ -109,13 +106,8 @@ class _CancelButton extends StatelessWidget {
   Widget build(BuildContext context) => OutlinedButton(
     onPressed: () => Navigator.of(context).pop(false),
     style: OutlinedButton.styleFrom(
-      side: BorderSide(
-        color: Colors.grey.withValues(alpha: 0.3),
-        width: 1.5,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      side: BorderSide(color: Colors.grey.withValues(alpha: 0.3), width: 1.5),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       padding: const EdgeInsets.symmetric(vertical: 14),
     ),
     child: const Text(
@@ -153,9 +145,7 @@ class _ConfirmButton extends StatelessWidget {
         backgroundColor: Colors.transparent,
         shadowColor: Colors.transparent,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(vertical: 14),
       ),
       child: const Text(

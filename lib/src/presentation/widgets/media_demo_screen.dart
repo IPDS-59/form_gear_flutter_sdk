@@ -26,19 +26,13 @@ class MediaDemoScreen extends StatelessWidget {
             // Header
             const Text(
               'FormGear Media Widgets Demo',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               'Test audio recording and barcode scanning capabilities',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 48),
@@ -99,10 +93,7 @@ class MediaDemoScreen extends StatelessWidget {
                     '• Media references tracked in media.json\n'
                     '• Permission handling with BLoC state management\n'
                     '• FASIH-compatible file naming patterns',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.blue.shade600,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.blue.shade600),
                   ),
                 ],
               ),
@@ -146,9 +137,7 @@ class MediaDemoScreen extends StatelessWidget {
             builder: (context) => BlocProvider(
               create: (context) =>
                   BarcodeScannerBloc()..add(const InitializeScanner()),
-              child: const BarcodeScannerScreen(
-                title: 'Demo Barcode Scanner',
-              ),
+              child: const BarcodeScannerScreen(title: 'Demo Barcode Scanner'),
             ),
           ),
         )
@@ -201,9 +190,7 @@ class _MediaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -218,11 +205,7 @@ class _MediaCard extends StatelessWidget {
                   color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  icon,
-                  size: 32,
-                  color: color,
-                ),
+                child: Icon(icon, size: 32, color: color),
               ),
               const SizedBox(width: 16),
               Expanded(

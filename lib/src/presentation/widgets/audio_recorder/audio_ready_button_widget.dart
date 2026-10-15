@@ -17,19 +17,15 @@ class AudioReadyButtonWidget extends StatelessWidget {
   Widget build(BuildContext context) => ClipRect(
     child: AnimatedSwitcher(
       duration: const Duration(milliseconds: 400),
-      transitionBuilder: (Widget child, Animation<double> animation) =>
-          FadeTransition(
-            opacity: animation,
-            child: ScaleTransition(
-              scale: Tween<double>(begin: 0.8, end: 1).animate(
-                CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.elasticOut,
-                ),
-              ),
-              child: child,
-            ),
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: ScaleTransition(
+          scale: Tween<double>(begin: 0.8, end: 1).animate(
+            CurvedAnimation(parent: animation, curve: Curves.elasticOut),
           ),
+          child: child,
+        ),
+      ),
       child: SizedBox(
         key: const ValueKey('ready'),
         width: double.infinity,
@@ -52,10 +48,7 @@ class AudioReadyButtonWidget extends StatelessWidget {
           ),
           child: ElevatedButton.icon(
             onPressed: () => context.read<AudioRecorderBloc>().add(
-              StartRecording(
-                assignmentId: assignmentId,
-                fileName: fileName,
-              ),
+              StartRecording(assignmentId: assignmentId, fileName: fileName),
             ),
             icon: const Icon(Icons.mic, color: Colors.white),
             label: const Text(

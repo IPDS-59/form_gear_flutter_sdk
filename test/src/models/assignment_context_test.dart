@@ -239,9 +239,7 @@ void main() {
       test('should create copy with modified lookupMode', () {
         final original = AssignmentConfig.capi();
 
-        final copy = original.copyWith(
-          lookupMode: FormGearLookupMode.online,
-        );
+        final copy = original.copyWith(lookupMode: FormGearLookupMode.online);
 
         expect(copy.lookupMode, equals(FormGearLookupMode.online));
         expect(copy.clientMode, equals(original.clientMode));

@@ -74,17 +74,11 @@ void main() {
         );
 
         expect(successResult.getSubmissionId(), equals('form_123'));
-        expect(
-          successResult.getSubmissionId('default'),
-          equals('form_123'),
-        );
+        expect(successResult.getSubmissionId('default'), equals('form_123'));
 
         final failureResult = SaveSubmitResult.failure(error: 'Error');
 
-        expect(
-          failureResult.getSubmissionId(),
-          equals('unknown_submission'),
-        );
+        expect(failureResult.getSubmissionId(), equals('unknown_submission'));
         expect(
           failureResult.getSubmissionId('custom_default'),
           equals('custom_default'),
@@ -92,9 +86,7 @@ void main() {
       });
 
       test('getError should return error message or default', () {
-        final failureResult = SaveSubmitResult.failure(
-          error: 'Network error',
-        );
+        final failureResult = SaveSubmitResult.failure(error: 'Network error');
 
         expect(failureResult.getError(), equals('Network error'));
         expect(failureResult.getError('default'), equals('Network error'));
@@ -125,11 +117,7 @@ void main() {
 
       test('getMetadata should return value by key with type safety', () {
         final result = SaveSubmitResult.success(
-          metadata: const {
-            'count': 5,
-            'name': 'test',
-            'enabled': true,
-          },
+          metadata: const {'count': 5, 'name': 'test', 'enabled': true},
         );
 
         expect(result.getMetadata<int>('count'), equals(5));

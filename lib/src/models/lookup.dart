@@ -6,10 +6,7 @@ part 'lookup.g.dart';
 /// Lookup data model matching FASIH domain structure
 @JsonSerializable()
 class Lookup extends Equatable {
-  const Lookup({
-    required this.id,
-    this.version,
-  });
+  const Lookup({required this.id, this.version});
 
   factory Lookup.fromJson(Map<String, dynamic> json) => _$LookupFromJson(json);
 
@@ -21,14 +18,8 @@ class Lookup extends Equatable {
   @override
   List<Object?> get props => [id, version];
 
-  Lookup copyWith({
-    String? id,
-    String? version,
-  }) {
-    return Lookup(
-      id: id ?? this.id,
-      version: version ?? this.version,
-    );
+  Lookup copyWith({String? id, String? version}) {
+    return Lookup(id: id ?? this.id, version: version ?? this.version);
   }
 
   @override

@@ -1,5 +1,6 @@
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 /// Helper class for WebView navigation operations
 class WebViewNavigationHelper {
@@ -23,9 +24,6 @@ class WebViewNavigationHelper {
             }
             return false;
           }
-          try {
-            window.fasihForm.event.emit('back-request');
-          } catch (e) {}
         }
 
         // 3. Look for prev/back navigation buttons in DOM
@@ -80,11 +78,11 @@ class WebViewNavigationHelper {
   /// Try to navigate back within the form sections/pages
   /// Returns true if navigation was handled, false if at first section
   static Future<bool> tryNavigateBackInForm(
-    InAppWebViewController controller,
+    WebViewController controller,
   ) async {
     try {
-      final result = await controller.evaluateJavascript(
-        source: _backNavigationScript,
+      final result = JSExecutorService.resultValue(
+        await controller.runJavaScriptReturningResult(_backNavigationScript),
       );
 
       // Parse result - could be bool, string, or null
@@ -104,7 +102,7 @@ class WebViewNavigationHelper {
       }
 
       return false;
-    } on Exception catch (e) {
+    } on Object catch (e) {
       FormGearLogger.webviewError('Error checking form back navigation: $e');
       return false;
     }
@@ -114,7 +112,14 @@ class WebViewNavigationHelper {
   static const String _mobileExitScript = '''
     (function() {
       try {
-        if (typeof window.mobileExit === 'function') {
+        // FasihForm: native FASIH saves on exit via trigger-save.
+        if (window.fasihForm && window.fasihForm.event) {
+          window.fasihForm.event.emit('trigger-save');
+        }
+        // FormGear: native FASIH calls mobileExitAndroid() on exit.
+        if (typeof window.mobileExitAndroid === 'function') {
+          window.mobileExitAndroid();
+        } else if (typeof window.mobileExit === 'function') {
           window.mobileExit();
         } else if (typeof Android !== 'undefined' &&
                    typeof Android.mobileExit === 'function') {
@@ -127,11 +132,11 @@ class WebViewNavigationHelper {
   ''';
 
   /// Call mobileExit() JavaScript function before closing
-  static Future<void> callMobileExit(InAppWebViewController controller) async {
+  static Future<void> callMobileExit(WebViewController controller) async {
     try {
-      await controller.evaluateJavascript(source: _mobileExitScript);
+      await controller.runJavaScript(_mobileExitScript);
       FormGearLogger.webview('Called mobileExit before closing form');
-    } on Exception catch (e) {
+    } on Object catch (e) {
       FormGearLogger.webviewError('Error calling mobileExit: $e');
     }
   }

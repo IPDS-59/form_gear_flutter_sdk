@@ -421,17 +421,11 @@ void main() {
       });
 
       test('should handle null error gracefully', () {
-        expect(
-          () => FormGearLogger.error('Error'),
-          returnsNormally,
-        );
+        expect(() => FormGearLogger.error('Error'), returnsNormally);
       });
 
       test('should handle null stack trace gracefully', () {
-        expect(
-          () => FormGearLogger.error('Error'),
-          returnsNormally,
-        );
+        expect(() => FormGearLogger.error('Error'), returnsNormally);
       });
     });
   });

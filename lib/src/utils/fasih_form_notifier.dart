@@ -1,40 +1,21 @@
-import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
-import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
+import 'dart:convert';
 
-/// Utility class for notifying FasihForm JavaScript of events
+import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
+
+/// Native -> FasihForm (engine 2) events. Payloads are JSON strings the
+/// engine `JSON.parse`s, matching the native FASIH app.
 class FasihFormNotifier {
   /// Notifies FasihForm JavaScript of file selection
   static Future<void> notifyFileSelection({
     required String dataKey,
     required String filePath,
     required String fileName,
-  }) async {
-    try {
-      final jsExecutor = JSExecutorService();
-      if (!jsExecutor.isRegistered) {
-        FormGearLogger.webview(
-          'No JavaScript executor available, skipping file notification',
-        );
-        return;
-      }
-
-      final jsCommand =
-          '''
-javascript:fasihForm.event.emit(
-  "file-selected",
-  "$dataKey",
-  '[{ "filename": "$fileName", "uri": "file://$filePath" }]'
-)
-''';
-
-      FormGearLogger.webview('Executing file-selected JS callback: $jsCommand');
-      await jsExecutor.executeJavaScript(jsCommand);
-    } on Exception catch (e) {
-      FormGearLogger.webviewError(
-        'Failed to notify FasihForm of file selection: $e',
-      );
-    }
-  }
+  }) => JSExecutorService().emitFasihFormEvent('file-selected', [
+    dataKey,
+    jsonEncode([
+      {'filename': fileName, 'uri': 'file://$filePath'},
+    ]),
+  ]);
 
   /// Notifies FasihForm JavaScript of location acquisition
   static Future<void> notifyLocation({
@@ -42,31 +23,29 @@ javascript:fasihForm.event.emit(
     required double latitude,
     required double longitude,
     required double accuracy,
-  }) async {
-    try {
-      final jsExecutor = JSExecutorService();
-      if (!jsExecutor.isRegistered) {
-        FormGearLogger.webview(
-          'No JavaScript executor available, skipping location notification',
-        );
-        return;
-      }
+  }) => JSExecutorService().emitFasihFormEvent('geolocation-acquired', [
+    dataKey,
+    jsonEncode({
+      'latitude': latitude,
+      'longitude': longitude,
+      'accuracy': accuracy,
+    }),
+  ]);
 
-      final jsCommand =
-          '''
-javascript:fasihForm.event.emit(
-  "geolocation-acquired",
-  "$dataKey",
-  '{"latitude": $latitude, "longitude": $longitude, "accuracy": $accuracy}'
-)
-''';
+  /// Native FASIH `finalize()` (approval button): FasihForm validates and
+  /// submits via `saveOrSubmitFasihForm`.
+  static Future<void> triggerFinalize() =>
+      JSExecutorService().emitFasihFormEvent('trigger-finalize');
 
-      FormGearLogger.webview('Executing geolocation JS callback: $jsCommand');
-      await jsExecutor.executeJavaScript(jsCommand);
-    } on Exception catch (e) {
-      FormGearLogger.webviewError(
-        'Failed to notify FasihForm of location: $e',
-      );
-    }
-  }
+  /// Tells FasihForm a `FILE_UPLOAD` finished; without it the field stays
+  /// in its uploading state.
+  static Future<void> notifyUploadFinished({
+    required String dataKey,
+    required String fileName,
+    required String fileUri,
+    String? url,
+  }) => JSExecutorService().emitFasihFormEvent('upload-finished', [
+    dataKey,
+    jsonEncode({'filename': fileName, 'uri': fileUri, 'url': url}),
+  ]);
 }

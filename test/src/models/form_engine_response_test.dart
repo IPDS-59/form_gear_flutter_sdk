@@ -7,10 +7,7 @@ void main() {
   group('FormEngineResponse Tests', () {
     group('Construction', () {
       test('should create response with all parameters', () {
-        const entity = FormEngineEntity(
-          formEngineId: 1,
-          version: '1.0.0',
-        );
+        const entity = FormEngineEntity(formEngineId: 1, version: '1.0.0');
 
         const response = FormEngineResponse(
           success: true,
@@ -257,10 +254,7 @@ void main() {
           isForce: false,
         );
 
-        final copy = original.copyWith(
-          version: '2.0.0',
-          isForce: true,
-        );
+        final copy = original.copyWith(version: '2.0.0', isForce: true);
 
         expect(copy.formEngineId, equals(original.formEngineId));
         expect(copy.version, equals('2.0.0'));
@@ -303,14 +297,8 @@ void main() {
 
     group('Equality', () {
       test('should be equal when all properties match', () {
-        const entity1 = FormEngineEntity(
-          formEngineId: 1,
-          version: '1.0.0',
-        );
-        const entity2 = FormEngineEntity(
-          formEngineId: 1,
-          version: '1.0.0',
-        );
+        const entity1 = FormEngineEntity(formEngineId: 1, version: '1.0.0');
+        const entity2 = FormEngineEntity(formEngineId: 1, version: '1.0.0');
 
         expect(entity1, equals(entity2));
       });
@@ -323,14 +311,8 @@ void main() {
       });
 
       test('should not be equal when version differs', () {
-        const entity1 = FormEngineEntity(
-          formEngineId: 1,
-          version: '1.0.0',
-        );
-        const entity2 = FormEngineEntity(
-          formEngineId: 1,
-          version: '2.0.0',
-        );
+        const entity1 = FormEngineEntity(formEngineId: 1, version: '1.0.0');
+        const entity2 = FormEngineEntity(formEngineId: 1, version: '2.0.0');
 
         expect(entity1, isNot(equals(entity2)));
       });

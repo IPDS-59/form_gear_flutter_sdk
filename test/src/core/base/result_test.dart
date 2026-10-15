@@ -24,10 +24,7 @@ void main() {
       test('should be callable with fold', () {
         const result = Success<int>(100);
 
-        final value = result.fold(
-          (error) => -1,
-          (data) => data * 2,
-        );
+        final value = result.fold((error) => -1, (data) => data * 2);
 
         expect(value, equals(200));
       });
@@ -66,10 +63,7 @@ void main() {
         final error = Exception('Test error');
         final result = Failure<int>(error);
 
-        final value = result.fold(
-          (error) => -1,
-          (data) => data * 2,
-        );
+        final value = result.fold((error) => -1, (data) => data * 2);
 
         expect(value, equals(-1));
       });
@@ -151,10 +145,7 @@ void main() {
       });
 
       test('should work with complex types', () {
-        const data = <String, dynamic>{
-          'key': 'value',
-          'number': 123,
-        };
+        const data = <String, dynamic>{'key': 'value', 'number': 123};
         const result = Success<Map<String, dynamic>>(data);
 
         expect(result.data['key'], equals('value'));
@@ -398,10 +389,7 @@ void main() {
             .map((data) => data * 2)
             .onSuccess((data) => {})
             .flatMap((data) => Success(data + 5))
-            .fold(
-              (error) => 'Failed',
-              (data) => 'Result is $data',
-            );
+            .fold((error) => 'Failed', (data) => 'Result is $data');
 
         expect(output, equals('Result is 25'));
       });
@@ -439,10 +427,7 @@ void main() {
 
         final userName = apiResult
             .map((data) => data['name'] as String?)
-            .fold(
-              (error) => 'Unknown User',
-              (name) => name ?? 'No Name',
-            );
+            .fold((error) => 'Unknown User', (name) => name ?? 'No Name');
 
         expect(userName, equals('John Doe'));
       });

@@ -18,11 +18,11 @@ class LocationActionHandler with ActionHandlerContract {
   ) async {
     switch (action) {
       case 'CAMERA_GPS':
-        return _handleCameraGPS(dataKey, data);
+        return await _handleCameraGPS(dataKey, data);
       case 'LOCATION':
-        return _handleLocation(dataKey, data);
+        return await _handleLocation(dataKey, data);
       case 'OPEN_MAPS':
-        return _handleOpenMaps(dataKey, data);
+        return await _handleOpenMaps(dataKey, data);
       default:
         return ActionInfoJs(
           success: false,

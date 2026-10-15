@@ -2,10 +2,7 @@ import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
 
 /// Generic response for success/failure operations
 class GenericInfoJs extends JsonCodable {
-  GenericInfoJs({
-    required this.success,
-    this.message,
-  });
+  GenericInfoJs({required this.success, this.message});
 
   factory GenericInfoJs.fromJson(Map<String, dynamic> json) {
     return GenericInfoJs(
@@ -21,20 +18,13 @@ class GenericInfoJs extends JsonCodable {
 
   @override
   Map<String, dynamic> toJson() {
-    return {
-      'success': success,
-      if (message != null) 'message': message,
-    };
+    return {'success': success, if (message != null) 'message': message};
   }
 }
 
 /// Response for string values (like getUserName)
 class StringInfoJs extends JsonCodable {
-  StringInfoJs({
-    required this.success,
-    this.value,
-    this.error,
-  });
+  StringInfoJs({required this.success, this.value, this.error});
 
   factory StringInfoJs.fromJson(Map<String, dynamic> json) {
     return StringInfoJs(
@@ -62,11 +52,7 @@ class StringInfoJs extends JsonCodable {
 
 /// Response for JSON data (like getTemplate, getPreset)
 class JsonInfoJs extends JsonCodable {
-  JsonInfoJs({
-    required this.success,
-    this.data,
-    this.error,
-  });
+  JsonInfoJs({required this.success, this.data, this.error});
 
   factory JsonInfoJs.fromJson(Map<String, dynamic> json) {
     return JsonInfoJs(
@@ -94,11 +80,7 @@ class JsonInfoJs extends JsonCodable {
 
 /// Response for list/array data (like getPrincipalCollection)
 class ListInfoJs extends JsonCodable {
-  ListInfoJs({
-    required this.success,
-    this.data,
-    this.error,
-  });
+  ListInfoJs({required this.success, this.data, this.error});
 
   factory ListInfoJs.fromJson(Map<String, dynamic> json) {
     return ListInfoJs(
@@ -126,11 +108,7 @@ class ListInfoJs extends JsonCodable {
 
 /// Response for action operations (like camera, file upload)
 class ActionInfoJs extends JsonCodable {
-  ActionInfoJs({
-    required this.success,
-    this.result,
-    this.error,
-  });
+  ActionInfoJs({required this.success, this.result, this.error});
 
   factory ActionInfoJs.fromJson(Map<String, dynamic> json) {
     return ActionInfoJs(
@@ -158,11 +136,7 @@ class ActionInfoJs extends JsonCodable {
 
 /// Response for submission operations
 class SubmissionInfoJs extends JsonCodable {
-  SubmissionInfoJs({
-    required this.success,
-    this.submissionId,
-    this.error,
-  });
+  SubmissionInfoJs({required this.success, this.submissionId, this.error});
 
   factory SubmissionInfoJs.fromJson(Map<String, dynamic> json) {
     return SubmissionInfoJs(

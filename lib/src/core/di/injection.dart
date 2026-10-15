@@ -13,10 +13,7 @@ import 'package:injectable/injectable.dart';
 /// with client's GetIt
 final getIt = GetIt.asNewInstance();
 
-@InjectableInit(
-  initializerName: r'$initGetIt',
-  asExtension: false,
-)
+@InjectableInit(initializerName: r'$initGetIt', asExtension: false)
 Future<void> configureDependencies({
   FormGearApiConfig? apiConfig,
   FormGearConfig? formGearConfig,
@@ -88,19 +85,10 @@ abstract class RegisterModule {
     interceptors.add(const GeneralFasihHeaderInterceptor());
 
     // Add auth interceptor with ConfigProvider for real-time config access
-    interceptors.add(
-      AuthInterceptor(
-        configProvider: configProvider,
-      ),
-    );
+    interceptors.add(AuthInterceptor(configProvider: configProvider));
 
     // Add logging in debug mode
-    interceptors.add(
-      LogInterceptor(
-        requestBody: true,
-        responseBody: true,
-      ),
-    );
+    interceptors.add(LogInterceptor(requestBody: true, responseBody: true));
 
     // Process additional interceptors if they were registered
     if (getIt.isRegistered<List<Interceptor>>()) {

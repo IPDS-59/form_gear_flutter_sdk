@@ -11,9 +11,8 @@ import 'package:path/path.dart' as path;
 @LazySingleton(as: VersionRepository)
 /// Implementation of VersionRepository for version file management
 class VersionRepositoryImpl implements VersionRepository {
-  const VersionRepositoryImpl({
-    required FileRepository fileRepository,
-  }) : _fileRepository = fileRepository;
+  const VersionRepositoryImpl({required FileRepository fileRepository})
+    : _fileRepository = fileRepository;
 
   final FileRepository _fileRepository;
 

@@ -3,9 +3,7 @@ import 'package:form_gear_engine_sdk/src/core/config/config_provider.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
 
 class AuthInterceptor extends Interceptor {
-  const AuthInterceptor({
-    required this.configProvider,
-  });
+  const AuthInterceptor({required this.configProvider});
 
   final ConfigProvider configProvider;
 

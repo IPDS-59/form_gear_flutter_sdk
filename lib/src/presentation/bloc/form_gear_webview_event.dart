@@ -8,23 +8,12 @@ abstract class FormGearWebViewEvent extends Equatable {
 }
 
 class InitializeWebView extends FormGearWebViewEvent {
-  const InitializeWebView(this.controller, [this.htmlContent]);
+  const InitializeWebView(this.controller);
 
-  final InAppWebViewController controller;
-  final String? htmlContent;
-
-  @override
-  List<Object?> get props => [controller, htmlContent];
-}
-
-class InjectBridge extends FormGearWebViewEvent {
-  const InjectBridge(this.controller, {this.force = false});
-
-  final InAppWebViewController controller;
-  final bool force;
+  final WebViewController controller;
 
   @override
-  List<Object?> get props => [controller, force];
+  List<Object?> get props => [controller];
 }
 
 class UpdateLoadingProgress extends FormGearWebViewEvent {
@@ -37,49 +26,36 @@ class UpdateLoadingProgress extends FormGearWebViewEvent {
 }
 
 class WebViewLoadStart extends FormGearWebViewEvent {
-  const WebViewLoadStart(this.controller, this.url);
+  const WebViewLoadStart(this.url);
 
-  final InAppWebViewController controller;
   final String url;
 
   @override
-  List<Object?> get props => [controller, url];
+  List<Object?> get props => [url];
 }
 
 class WebViewLoadStop extends FormGearWebViewEvent {
-  const WebViewLoadStop(this.controller, this.url);
+  const WebViewLoadStop(this.url);
 
-  final InAppWebViewController controller;
   final String url;
 
   @override
-  List<Object?> get props => [controller, url];
+  List<Object?> get props => [url];
 }
 
 class WebViewLoadError extends FormGearWebViewEvent {
   const WebViewLoadError({
-    required this.controller,
     required this.url,
     required this.code,
     required this.message,
   });
 
-  final InAppWebViewController controller;
   final String url;
   final int code;
   final String message;
 
   @override
-  List<Object?> get props => [controller, url, code, message];
-}
-
-class VerifyBridgeInjection extends FormGearWebViewEvent {
-  const VerifyBridgeInjection(this.controller);
-
-  final InAppWebViewController controller;
-
-  @override
-  List<Object?> get props => [controller];
+  List<Object?> get props => [url, code, message];
 }
 
 class RetryInitialization extends FormGearWebViewEvent {

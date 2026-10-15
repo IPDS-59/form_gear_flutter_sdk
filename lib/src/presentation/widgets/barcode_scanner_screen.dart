@@ -7,10 +7,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 /// Refactored barcode scanner with BLoC and app lifecycle handling
 class BarcodeScannerScreen extends StatefulWidget {
-  const BarcodeScannerScreen({
-    required this.title,
-    super.key,
-  });
+  const BarcodeScannerScreen({required this.title, super.key});
 
   final String title;
 
@@ -73,16 +70,9 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
       vsync: this,
     )..repeat(reverse: true);
 
-    _scanLineAnimation =
-        Tween<double>(
-          begin: 0,
-          end: 1,
-        ).animate(
-          CurvedAnimation(
-            parent: _scanLineController,
-            curve: Curves.easeInOut,
-          ),
-        );
+    _scanLineAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _scanLineController, curve: Curves.easeInOut),
+    );
 
     // Detection highlight animation
     _detectionController = AnimationController(
@@ -90,27 +80,13 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
       vsync: this,
     );
 
-    _detectionScaleAnimation =
-        Tween<double>(
-          begin: 0.8,
-          end: 1,
-        ).animate(
-          CurvedAnimation(
-            parent: _detectionController,
-            curve: Curves.elasticOut,
-          ),
-        );
+    _detectionScaleAnimation = Tween<double>(begin: 0.8, end: 1).animate(
+      CurvedAnimation(parent: _detectionController, curve: Curves.elasticOut),
+    );
 
-    _detectionOpacityAnimation =
-        Tween<double>(
-          begin: 0,
-          end: 1,
-        ).animate(
-          CurvedAnimation(
-            parent: _detectionController,
-            curve: Curves.easeOut,
-          ),
-        );
+    _detectionOpacityAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _detectionController, curve: Curves.easeOut),
+    );
 
     // Pulse animation for detected codes
     _pulseController = AnimationController(
@@ -118,16 +94,9 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
       vsync: this,
     );
 
-    _pulseAnimation =
-        Tween<double>(
-          begin: 1,
-          end: 1.2,
-        ).animate(
-          CurvedAnimation(
-            parent: _pulseController,
-            curve: Curves.easeInOut,
-          ),
-        );
+    _pulseAnimation = Tween<double>(begin: 1, end: 1.2).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
     // Success check animation
     _successController = AnimationController(
@@ -135,16 +104,9 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
       vsync: this,
     );
 
-    _successAnimation =
-        Tween<double>(
-          begin: 0,
-          end: 1,
-        ).animate(
-          CurvedAnimation(
-            parent: _successController,
-            curve: Curves.elasticOut,
-          ),
-        );
+    _successAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _successController, curve: Curves.elasticOut),
+    );
   }
 
   void _onToggleFlash() {
@@ -233,24 +195,20 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              color: Colors.red,
-              size: 64,
-            ),
+            const Icon(Icons.error_outline, color: Colors.red, size: 64),
             const SizedBox(height: 16),
             Text(
               'Scanner Error',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Colors.white,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(color: Colors.white),
             ),
             const SizedBox(height: 8),
             Text(
               errorMessage,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white70,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -280,16 +238,11 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(
-              color: Color(0xFF1E88E5),
-            ),
+            CircularProgressIndicator(color: Color(0xFF1E88E5)),
             SizedBox(height: 16),
             Text(
               'Initializing Scanner...',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: 16),
             ),
           ],
         ),
@@ -304,9 +257,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
       appBar: AppBar(
         title: Text(
           widget.title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
@@ -340,9 +291,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
       body: Stack(
         children: [
           // Camera view
-          Positioned.fill(
-            child: _buildCameraView(state),
-          ),
+          Positioned.fill(child: _buildCameraView(state)),
 
           // Scanning overlay with viewfinder
           Positioned.fill(

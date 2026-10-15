@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:form_gear_engine_sdk/src/models/models.dart';
 
 class UpdateVersionInfoWidget extends StatelessWidget {
-  const UpdateVersionInfoWidget({
-    required this.versionResult,
-    super.key,
-  });
+  const UpdateVersionInfoWidget({required this.versionResult, super.key});
 
   final VersionCheckResult versionResult;
 
@@ -78,9 +75,7 @@ class UpdateVersionInfoWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFE5E7EB),
-        ),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         children: [
@@ -93,10 +88,7 @@ class UpdateVersionInfoWidget extends StatelessWidget {
                 : const Color(0xFFEF4444),
           ),
           const SizedBox(height: 12),
-          Container(
-            height: 1,
-            color: const Color(0xFFE5E7EB),
-          ),
+          Container(height: 1, color: const Color(0xFFE5E7EB)),
           const SizedBox(height: 12),
           _buildVersionRow(
             'Latest Version',
@@ -123,11 +115,7 @@ class UpdateVersionInfoWidget extends StatelessWidget {
             color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 20,
-          ),
+          child: Icon(icon, color: color, size: 20),
         ),
         const SizedBox(width: 12),
         Expanded(

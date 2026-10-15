@@ -19,7 +19,7 @@ class BarcodeActionHandler with ActionHandlerContract {
     String dataKey,
     String data,
   ) async {
-    return _handleBarcode(dataKey, data);
+    return await _handleBarcode(dataKey, data);
   }
 
   /// Handle barcode/QR scan action using presentation layer widget
@@ -48,9 +48,7 @@ class BarcodeActionHandler with ActionHandlerContract {
           builder: (context) => BlocProvider(
             create: (context) =>
                 BarcodeScannerBloc()..add(const InitializeScanner()),
-            child: BarcodeScannerScreen(
-              title: 'Scan Barcode - $dataKey',
-            ),
+            child: BarcodeScannerScreen(title: 'Scan Barcode - $dataKey'),
           ),
         ),
       );

@@ -37,10 +37,7 @@ class AudioConfirmationWidget extends StatelessWidget {
                   color: const Color(0xFF10B981).withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Text(
-                  '✅',
-                  style: TextStyle(fontSize: 40),
-                ),
+                child: const Text('✅', style: TextStyle(fontSize: 40)),
               ),
               const SizedBox(height: 16),
               const Text(
@@ -54,10 +51,7 @@ class AudioConfirmationWidget extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 'Durasi: ${_formatDuration(state.duration)}',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
               ),
             ],
           ),
@@ -202,10 +196,7 @@ class AudioConfirmationWidget extends StatelessWidget {
                         ? 'Memutar ${_formatDuration(state.playbackPosition)} / ${_formatDuration(state.totalDuration!)}'
                         : 'Sedang memutar...')
                   : 'Tap untuk memutar',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -239,10 +230,7 @@ class AudioConfirmationWidget extends StatelessWidget {
                 SizedBox(width: 12),
                 Text(
                   'Simpan Rekaman',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -265,10 +253,7 @@ class AudioConfirmationWidget extends StatelessWidget {
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFF1E88E5),
-                    side: const BorderSide(
-                      color: Color(0xFF1E88E5),
-                      width: 2,
-                    ),
+                    side: const BorderSide(color: Color(0xFF1E88E5), width: 2),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -300,10 +285,7 @@ class AudioConfirmationWidget extends StatelessWidget {
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFFEF4444),
-                    side: const BorderSide(
-                      color: Color(0xFFEF4444),
-                      width: 2,
-                    ),
+                    side: const BorderSide(color: Color(0xFFEF4444), width: 2),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

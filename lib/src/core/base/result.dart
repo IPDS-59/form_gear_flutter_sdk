@@ -88,10 +88,7 @@ extension ResultExtension<T> on Result<T> {
   }
 
   /// Folds the result into a single value
-  R fold<R>(
-    R Function(Object error) onFailure,
-    R Function(T data) onSuccess,
-  ) {
+  R fold<R>(R Function(Object error) onFailure, R Function(T data) onSuccess) {
     return switch (this) {
       Success<T>(:final data) => onSuccess(data),
       Failure<T>(:final error) => onFailure(error),

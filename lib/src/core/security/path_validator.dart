@@ -347,10 +347,7 @@ class PathValidationResult {
 
   /// Creates a valid result with sanitized path.
   factory PathValidationResult.valid(String sanitizedPath) {
-    return PathValidationResult._(
-      isValid: true,
-      sanitizedPath: sanitizedPath,
-    );
+    return PathValidationResult._(isValid: true, sanitizedPath: sanitizedPath);
   }
 
   /// Creates an invalid result with error message.
@@ -412,11 +409,7 @@ extension PathValidationExtension on String {
     PathValidationType? type,
     bool checkExists = false,
   }) {
-    return PathValidator.validate(
-      this,
-      type: type,
-      checkExists: checkExists,
-    );
+    return PathValidator.validate(this, type: type, checkExists: checkExists);
   }
 
   /// Validates this string as a directory path.

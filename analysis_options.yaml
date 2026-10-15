@@ -9,6 +9,7 @@ analyzer:
     - "**/**.gm.dart"
     - "**/**.freezed.dart"
     - "**/**.g.dart"
+    - build/**
   errors:
     specify_nonobvious_property_types: ignore
     avoid_bool_literals_in_conditional_expressions: ignore

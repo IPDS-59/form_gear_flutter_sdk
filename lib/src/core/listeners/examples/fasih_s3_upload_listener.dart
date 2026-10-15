@@ -138,9 +138,7 @@ class FasihS3UploadListener implements FileUploadListener {
     // );
     // return response.presignedUrl;
 
-    throw UnimplementedError(
-      'Implement FASIH API call to get pre-signed URL',
-    );
+    throw UnimplementedError('Implement FASIH API call to get pre-signed URL');
   }
 
   /// Upload file to S3 using pre-signed URL
@@ -171,8 +169,6 @@ class FasihS3UploadListener implements FileUploadListener {
     // final uri = Uri.parse(presignedUrl);
     // return uri.replace(query: '').toString();
 
-    throw UnimplementedError(
-      'Implement S3 upload using pre-signed URL',
-    );
+    throw UnimplementedError('Implement S3 upload using pre-signed URL');
   }
 }

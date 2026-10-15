@@ -7,6 +7,7 @@ import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart
 import 'package:form_gear_engine_sdk/src/core/services/navigator_context_provider.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/audio_recorder_screen.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/video_recorder_screen.dart';
+import 'package:form_gear_engine_sdk/src/utils/fasih_form_notifier.dart';
 import 'package:form_gear_engine_sdk/src/utils/fasih_media_helper.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
 import 'package:image_picker/image_picker.dart';
@@ -30,13 +31,13 @@ class MediaActionHandler with ActionHandlerContract {
   ) async {
     switch (action) {
       case 'CAMERA':
-        return handleCamera(dataKey, data);
+        return await handleCamera(dataKey, data);
       case 'AUDIO':
-        return handleAudio(dataKey, data);
+        return await handleAudio(dataKey, data);
       case 'VIDEO':
-        return handleVideo(dataKey, data);
+        return await handleVideo(dataKey, data);
       case 'SIGNATURE':
-        return handleSignature(dataKey, data);
+        return await handleSignature(dataKey, data);
       default:
         return ActionInfoJs(
           success: false,
@@ -53,10 +54,7 @@ class MediaActionHandler with ActionHandlerContract {
       // Request camera permission first
       final cameraStatus = await Permission.camera.request();
       if (cameraStatus.isDenied) {
-        return ActionInfoJs(
-          success: false,
-          error: 'Camera permission denied',
-        );
+        return ActionInfoJs(success: false, error: 'Camera permission denied');
       }
 
       if (cameraStatus.isPermanentlyDenied) {
@@ -170,10 +168,7 @@ class MediaActionHandler with ActionHandlerContract {
           assignmentId: assignmentId,
         );
 
-        return ActionInfoJs(
-          success: true,
-          result: fileName,
-        );
+        return ActionInfoJs(success: true, result: fileName);
       } else {
         FormGearLogger.webview('Audio recording cancelled by user');
         return ActionInfoJs(
@@ -308,17 +303,11 @@ class MediaActionHandler with ActionHandlerContract {
 
       // Choose JavaScript command based on engine type
       if (jsExecutor.formEngineId == '2') {
-        // FasihForm engine (engine ID "2")
-        final jsCommand =
-            '''
-javascript:fasihForm.event.emit(
-  "file-selected",
-  "$dataKey",
-  '[{ "filename": "$fileName", "uri": "file://$filePath" }]'
-)
-''';
-        FormGearLogger.webview('Executing JS callback: $jsCommand');
-        await jsExecutor.executeJavaScript(jsCommand);
+        await FasihFormNotifier.notifyFileSelection(
+          dataKey: dataKey,
+          filePath: filePath,
+          fileName: fileName,
+        );
       } else {
         // FormGear engine (engine ID "1")
         // Pass file:// URL so webview can display the image

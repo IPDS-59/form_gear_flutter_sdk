@@ -33,6 +33,6 @@ class SaveFormEngineVersionUseCase
 
   @override
   Future<Result<void>> call(SaveFormEngineVersionParams params) async {
-    return repo.saveFormEngineVersion(params.engineId, params.version);
+    return await repo.saveFormEngineVersion(params.engineId, params.version);
   }
 }

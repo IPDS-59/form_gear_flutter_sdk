@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_bridge.dart';
 import 'package:form_gear_engine_sdk/src/core/services/navigator_context_provider.dart';
 import 'package:form_gear_engine_sdk/src/presentation/bloc/form_gear_webview_bloc.dart';
@@ -8,6 +7,9 @@ import 'package:form_gear_engine_sdk/src/presentation/widgets/exit_confirmation_
 import 'package:form_gear_engine_sdk/src/presentation/widgets/form_gear_loading_screen.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 import 'package:form_gear_engine_sdk/src/utils/webview_navigation_helper.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
+import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 /// FormGear WebView widget with JSHandler integration and BLoC pattern
 /// Follows the web_view pattern - simple parameters, external handler injection
@@ -23,31 +25,34 @@ class FormGearWebView extends StatelessWidget {
     this.onLoadStop,
     this.onLoadError,
     this.onConsoleMessage,
-    this.settings,
+    this.engineReadyCheck,
   });
 
+  /// Loaded when [htmlContent] is null (iOS local-server path).
   final String url;
   final String? htmlContent;
   final List<JSHandler<dynamic>> jsHandlers;
+
+  /// JS expression that is true once the form engine started. When it stays
+  /// false after load, an error with a retry action is shown instead of a
+  /// blank form.
+  final String? engineReadyCheck;
   final String title;
-  final void Function(InAppWebViewController controller)? onWebViewCreated;
-  final void Function(InAppWebViewController controller, String url)?
-  onLoadStart;
-  final void Function(InAppWebViewController controller, String url)?
-  onLoadStop;
+  final void Function(WebViewController controller)? onWebViewCreated;
+  final void Function(WebViewController controller, String url)? onLoadStart;
+  final void Function(WebViewController controller, String url)? onLoadStop;
   final void Function(
-    InAppWebViewController controller,
+    WebViewController controller,
     String url,
     int code,
     String message,
   )?
   onLoadError;
   final void Function(
-    InAppWebViewController controller,
-    ConsoleMessage consoleMessage,
+    WebViewController controller,
+    JavaScriptConsoleMessage consoleMessage,
   )?
   onConsoleMessage;
-  final InAppWebViewSettings? settings;
 
   @override
   Widget build(BuildContext context) {
@@ -55,56 +60,18 @@ class FormGearWebView extends StatelessWidget {
       create: (context) => FormGearWebViewBloc(
         jsHandlers: jsHandlers,
         initialHtml: htmlContent ?? '',
+        initialUrl: url,
+        engineReadyCheck: engineReadyCheck,
       ),
-      child: _FormGearWebViewContent(
-        url: url,
-        htmlContent: htmlContent,
-        title: title,
-        onWebViewCreated: onWebViewCreated,
-        onLoadStart: onLoadStart,
-        onLoadStop: onLoadStop,
-        onLoadError: onLoadError,
-        onConsoleMessage: onConsoleMessage,
-        settings: settings,
-      ),
+      child: _FormGearWebViewContent(widget: this),
     );
   }
 }
 
 class _FormGearWebViewContent extends StatefulWidget {
-  const _FormGearWebViewContent({
-    required this.url,
-    this.htmlContent,
-    this.title = 'FormGear',
-    this.onWebViewCreated,
-    this.onLoadStart,
-    this.onLoadStop,
-    this.onLoadError,
-    this.onConsoleMessage,
-    this.settings,
-  });
+  const _FormGearWebViewContent({required this.widget});
 
-  final String url;
-  final String? htmlContent;
-  final String title;
-  final void Function(InAppWebViewController controller)? onWebViewCreated;
-  final void Function(InAppWebViewController controller, String url)?
-  onLoadStart;
-  final void Function(InAppWebViewController controller, String url)?
-  onLoadStop;
-  final void Function(
-    InAppWebViewController controller,
-    String url,
-    int code,
-    String message,
-  )?
-  onLoadError;
-  final void Function(
-    InAppWebViewController controller,
-    ConsoleMessage consoleMessage,
-  )?
-  onConsoleMessage;
-  final InAppWebViewSettings? settings;
+  final FormGearWebView widget;
 
   @override
   State<_FormGearWebViewContent> createState() =>
@@ -112,16 +79,27 @@ class _FormGearWebViewContent extends StatefulWidget {
 }
 
 class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
-  late InAppWebViewSettings _webViewSettings;
+  late final WebViewController _controller =
+      WebViewController.fromPlatformCreationParams(
+        WebViewPlatform.instance is WebKitWebViewPlatform
+            ? WebKitWebViewControllerCreationParams(
+                allowsInlineMediaPlayback: true,
+                javaScriptCanOpenWindowsAutomatically: true,
+              )
+            : const PlatformWebViewControllerCreationParams(),
+        // Engines use camera/mic in-page (barcode, audio); the app holds the
+        // runtime permission.
+        onPermissionRequest: (request) => request.grant(),
+      );
+
+  FormGearWebView get _w => widget.widget;
+  FormGearWebViewBloc get _bloc => context.read<FormGearWebViewBloc>();
 
   @override
   void initState() {
     super.initState();
-    _initializeSettings();
-    // Register the navigator context for action handlers to use
-    NavigatorContextProvider.instance.register(
-      () => mounted ? context : null,
-    );
+    NavigatorContextProvider.instance.register(() => mounted ? context : null);
+    _start();
   }
 
   @override
@@ -130,50 +108,77 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
     super.dispose();
   }
 
-  void _initializeSettings() {
-    _webViewSettings =
-        widget.settings ??
-        InAppWebViewSettings(
-          allowFileAccessFromFileURLs: true,
-          allowUniversalAccessFromFileURLs: true,
-          mixedContentMode: MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
-          applicationNameForUserAgent: 'FormGear WebView',
-          useOnDownloadStart: true,
-          useShouldOverrideUrlLoading: true,
-          // iOS-specific settings for local server access
-          allowsBackForwardNavigationGestures: false,
-          allowsLinkPreview: false,
-          isFraudulentWebsiteWarningEnabled: false,
-          // Allow insecure content for local development
-          upgradeKnownHostsToHTTPS: false,
-          // iOS WKWebView specific settings for better JavaScript compatibility
-          javaScriptCanOpenWindowsAutomatically: true,
-          // iOS specific: Allow inline media playback
-          allowsInlineMediaPlayback: true,
-          // Remove WebView Asset Loader - using direct injection instead
-        );
+  /// Configures the controller, then lets the bloc wire the bridge and load.
+  Future<void> _start() async {
+    final c = _controller;
+    await c.setJavaScriptMode(JavaScriptMode.unrestricted);
+    await c.setOnConsoleMessage(_onConsoleMessage);
+    await c.setNavigationDelegate(
+      NavigationDelegate(
+        onPageStarted: (url) {
+          _w.onLoadStart?.call(c, url);
+          if (mounted) _bloc.add(WebViewLoadStart(url));
+        },
+        onPageFinished: (url) {
+          _w.onLoadStop?.call(c, url);
+          if (mounted) _bloc.add(WebViewLoadStop(url));
+        },
+        onProgress: (progress) {
+          if (mounted) _bloc.add(UpdateLoadingProgress(progress));
+        },
+        onWebResourceError: (error) {
+          // Sub-resource failures (an image, a lookup fetch) are not fatal.
+          if (error.isForMainFrame == false) return;
+          final url = error.url ?? '';
+          _w.onLoadError?.call(c, url, error.errorCode, error.description);
+          if (mounted) {
+            _bloc.add(
+              WebViewLoadError(
+                url: url,
+                code: error.errorCode,
+                message: error.description,
+              ),
+            );
+          }
+        },
+      ),
+    );
+
+    final platform = c.platform;
+    if (platform is AndroidWebViewController) {
+      // Page is loaded via loadDataWithBaseURL and talks to the local
+      // http lookup server / file:// media.
+      await platform.setMixedContentMode(MixedContentMode.alwaysAllow);
+      await platform.setAllowFileAccess(true);
+    } else if (platform is WebKitWebViewController) {
+      await platform.setAllowsBackForwardNavigationGestures(false);
+      await platform.setAllowsLinkPreview(false);
+    }
+    final userAgent = await c.getUserAgent();
+    await c.setUserAgent('${userAgent ?? ''} FormGear WebView'.trim());
+
+    _w.onWebViewCreated?.call(c);
+    if (mounted) _bloc.add(InitializeWebView(c));
+  }
+
+  void _onConsoleMessage(JavaScriptConsoleMessage message) {
+    // Always surface page errors; the host callback is optional and was the
+    // only sink before.
+    if (message.level == JavaScriptLogLevel.error) {
+      FormGearLogger.webviewError('JS: ${message.message}');
+    }
+    _w.onConsoleMessage?.call(_controller, message);
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<FormGearWebViewBloc, FormGearWebViewState>(
-      listener: (context, state) {
-        FormGearLogger.sdk(
-          'FormGearWebView BlocConsumer listener: '
-          'status=${state.status}, isLoading=${state.isLoading}',
-        );
-      },
+    return BlocBuilder<FormGearWebViewBloc, FormGearWebViewState>(
       builder: (context, state) {
-        FormGearLogger.sdk(
-          'FormGearWebView builder: status=${state.status}, '
-          'isLoading=${state.isLoading}',
-        );
         return PopScope(
           canPop: false, // Always handle pop manually
           onPopInvokedWithResult: (didPop, result) async {
             if (didPop) return; // Already popped, nothing to do
-
-            await _handleBackNavigation(state.controller);
+            await _handleBackNavigation();
           },
           child: Stack(
             children: [
@@ -184,101 +189,30 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
                       width: double.infinity,
                       color: Colors.red[100],
                       padding: const EdgeInsets.all(8),
-                      child: Text(
-                        'Error: ${state.errorMessage}',
-                        style: TextStyle(color: Colors.red[800]),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Error: ${state.errorMessage}',
+                              style: TextStyle(color: Colors.red[800]),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => context
+                                .read<FormGearWebViewBloc>()
+                                .add(const RetryInitialization()),
+                            child: const Text('Coba lagi'),
+                          ),
+                        ],
                       ),
                     ),
                   Expanded(
                     child: SafeArea(
-                      child: InAppWebView(
-                        initialSettings: _webViewSettings,
-                        initialUrlRequest: widget.htmlContent == null
-                            ? URLRequest(url: WebUri(widget.url))
-                            : null,
-                        // DON'T use initialData - loads before bridge
-                        // Instead, load HTML after bridge is ready
-                        onWebViewCreated: (controller) async {
-                          widget.onWebViewCreated?.call(controller);
-
-                          // Initialize WebView with BLoC
-                          context.read<FormGearWebViewBloc>().add(
-                            InitializeWebView(
-                              controller,
-                              widget.htmlContent,
-                            ),
-                          );
-                        },
-                        onLoadStart: (controller, url) {
-                          widget.onLoadStart?.call(
-                            controller,
-                            url?.toString() ?? '',
-                          );
-
-                          context.read<FormGearWebViewBloc>().add(
-                            WebViewLoadStart(controller, url?.toString() ?? ''),
-                          );
-                        },
-                        onProgressChanged: (controller, progress) {
-                          context.read<FormGearWebViewBloc>().add(
-                            UpdateLoadingProgress(progress),
-                          );
-                        },
-                        onLoadStop: (controller, url) async {
-                          widget.onLoadStop?.call(
-                            controller,
-                            url?.toString() ?? '',
-                          );
-
-                          context.read<FormGearWebViewBloc>().add(
-                            WebViewLoadStop(controller, url?.toString() ?? ''),
-                          );
-                        },
-                        onReceivedError: (controller, request, error) {
-                          final urlString = request.url.toString();
-                          final code = error.type.toNativeValue() ?? -1;
-                          final message = error.description;
-
-                          widget.onLoadError?.call(
-                            controller,
-                            urlString,
-                            code,
-                            message,
-                          );
-
-                          context.read<FormGearWebViewBloc>().add(
-                            WebViewLoadError(
-                              controller: controller,
-                              url: urlString,
-                              code: code,
-                              message: message,
-                            ),
-                          );
-                        },
-                        onConsoleMessage: (controller, consoleMessage) {
-                          widget.onConsoleMessage?.call(
-                            controller,
-                            consoleMessage,
-                          );
-                        },
-                        onPermissionRequest: (controller, request) async {
-                          return PermissionResponse(
-                            resources: request.resources,
-                            action: PermissionResponseAction.GRANT,
-                          );
-                        },
-                        shouldOverrideUrlLoading:
-                            (controller, navigationAction) async {
-                              // Allow all URL loading - required for iOS
-                              // when useShouldOverrideUrlLoading is true
-                              return NavigationActionPolicy.ALLOW;
-                            },
-                      ),
+                      child: WebViewWidget(controller: _controller),
                     ),
                   ),
                 ],
               ),
-              // Modern loading overlay with FormGear logo
               if (state.isLoading)
                 FormGearLoadingScreen(loadingProgress: state.loadingProgress),
             ],
@@ -290,82 +224,25 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
 
   /// Handle back navigation - navigate within form pages first,
   /// then show exit confirmation dialog when can't go back anymore
-  Future<void> _handleBackNavigation(InAppWebViewController? controller) async {
-    if (controller == null) {
-      // No WebView controller, allow normal back navigation
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
-      return;
-    }
-
-    // Try to navigate back within the form using JavaScript
-    // The form engines handle their own section/page navigation internally
-    final canGoBackInForm = await _tryNavigateBackInForm(controller);
+  Future<void> _handleBackNavigation() async {
+    final canGoBackInForm = await WebViewNavigationHelper.tryNavigateBackInForm(
+      _controller,
+    );
 
     if (canGoBackInForm) {
       FormGearLogger.webview('Navigated back within form sections');
-    } else {
-      // Can't go back anymore - show exit confirmation dialog
-      await _showExitConfirmationDialog(controller);
+      return;
     }
-  }
-
-  /// Try to navigate back within the form sections/pages
-  /// Returns true if navigation was handled, false if at first section
-  Future<bool> _tryNavigateBackInForm(InAppWebViewController controller) async {
-    return WebViewNavigationHelper.tryNavigateBackInForm(controller);
-  }
-
-  /// Show exit confirmation dialog before closing the form
-  Future<void> _showExitConfirmationDialog(
-    InAppWebViewController controller,
-  ) async {
     if (!mounted) return;
 
     final shouldExit = await ExitConfirmationDialog.show(context);
+    if (!shouldExit || !mounted) return;
 
-    if (shouldExit && mounted) {
-      await _callMobileExitAndClose(controller);
-    }
-  }
+    await WebViewNavigationHelper.callMobileExit(_controller);
+    // ponytail: fixed grace so the trigger-save bridge call reaches Dart
+    // before the WebView is torn down; await an explicit save ack if short.
+    await Future<void>.delayed(const Duration(milliseconds: 300));
 
-  /// Call mobileExit() JavaScript function and close the form
-  Future<void> _callMobileExitAndClose(
-    InAppWebViewController controller,
-  ) async {
-    await WebViewNavigationHelper.callMobileExit(controller);
-
-    if (mounted) {
-      Navigator.of(context).pop();
-    }
-  }
-
-  /// Get the WebView controller from BLoC state
-  InAppWebViewController? getController(BuildContext context) {
-    return context.read<FormGearWebViewBloc>().state.controller;
-  }
-
-  /// Execute JavaScript in the WebView
-  Future<dynamic> executeJavaScript(BuildContext context, String source) async {
-    final controller = getController(context);
-    if (controller == null) {
-      throw Exception('WebView not initialized');
-    }
-    return controller.evaluateJavascript(source: source);
-  }
-
-  /// Reload the WebView
-  Future<void> reload(BuildContext context) async {
-    final controller = getController(context);
-    if (controller == null) {
-      throw Exception('WebView not initialized');
-    }
-    await controller.reload();
-  }
-
-  /// Clear WebView cache
-  Future<void> clearCache() async {
-    await InAppWebViewController.clearAllCache();
+    if (mounted) Navigator.of(context).pop();
   }
 }

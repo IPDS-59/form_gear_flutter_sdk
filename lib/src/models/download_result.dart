@@ -6,11 +6,7 @@ part 'download_result.g.dart';
 /// Download result containing success status and optional error message
 @JsonSerializable()
 class DownloadResult extends Equatable {
-  const DownloadResult({
-    required this.success,
-    this.error,
-    this.localPath,
-  });
+  const DownloadResult({required this.success, this.error, this.localPath});
 
   factory DownloadResult.fromJson(Map<String, dynamic> json) =>
       _$DownloadResultFromJson(json);

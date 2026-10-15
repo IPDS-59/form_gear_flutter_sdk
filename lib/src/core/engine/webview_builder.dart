@@ -1,10 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:form_gear_engine_sdk/src/core/config/config.dart';
-import 'package:form_gear_engine_sdk/src/core/engine/handler_factory.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
-import 'package:form_gear_engine_sdk/src/core/listeners/form_data_listener.dart';
+import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
 import 'package:form_gear_engine_sdk/src/models/assignment_context.dart';
 import 'package:form_gear_engine_sdk/src/models/form_engine_type.dart';
 import 'package:form_gear_engine_sdk/src/models/prepared_engine.dart';
@@ -22,10 +20,7 @@ class WebViewBuilder {
     required AssignmentContext assignment,
     required PreparedEngine preparedEngine,
     required FormEngineType? currentEngineType,
-    required FormConfig? currentFormConfig,
-    required FormGearConfig? config,
-    required AssignmentContext? Function() getCurrentAssignment,
-    FormDataListener? formDataListener,
+    required List<JSHandler<dynamic>> jsHandlers,
   }) {
     // iOS: Use server URL if available (works around loadData() issues)
     // Android: Use HTML content directly with loadData()
@@ -47,13 +42,12 @@ class WebViewBuilder {
     return FormGearWebView(
       url: url,
       htmlContent: htmlContent,
-      jsHandlers: HandlerFactory.createAssignmentAwareHandlers(
-        assignment: assignment,
-        currentFormConfig: currentFormConfig,
-        config: config,
-        formDataListener: formDataListener,
-        getCurrentAssignment: getCurrentAssignment,
-      ),
+      jsHandlers: jsHandlers,
+      // FasihForm sets window.fasihForm synchronously on startup; if it is
+      // missing after load, the page script threw and the form is blank.
+      engineReadyCheck: currentEngineType == FormEngineType.fasihForm
+          ? "typeof window.fasihForm !== 'undefined'"
+          : null,
       onWebViewCreated: (controller) {
         FormGearLogger.sdk(
           'WebView created for assignment: ${assignment.assignmentId}',
@@ -72,10 +66,7 @@ class WebViewBuilder {
     required String title,
     required FormGearWebView webView,
   }) {
-    return FormGearEnginePage(
-      title: title,
-      webView: webView,
-    );
+    return FormGearEnginePage(title: title, webView: webView);
   }
 }
 
@@ -92,8 +83,6 @@ class FormGearEnginePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: webView,
-    );
+    return Scaffold(body: webView);
   }
 }

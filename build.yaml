@@ -1,0 +1,8 @@
+targets:
+  $default:
+    # Keep codegen off example/ (its ios/.symlinks breaks the build).
+    sources:
+      - lib/**
+      - test/**
+      - pubspec.yaml
+      - $package$

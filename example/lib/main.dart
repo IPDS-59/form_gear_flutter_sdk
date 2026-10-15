@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:alice/alice.dart';
-import 'package:alice/model/alice_configuration.dart';
 import 'package:alice_dio/alice_dio_adapter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,7 +17,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Alice for HTTP inspection
-  alice = Alice(configuration: AliceConfiguration(showNotification: true));
+  // SMOKE: integration runs can't dismiss the notification prompt.
+  alice = Alice(
+    configuration: AliceConfiguration(
+      showNotification: !const bool.fromEnvironment('SMOKE'),
+    ),
+  );
 
   dioAdapter = AliceDioAdapter();
 

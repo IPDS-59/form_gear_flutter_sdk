@@ -31,7 +31,7 @@ class MockFileUploadListener implements FileUploadListener {
   Future<FileUploadResult> onFileUpload(FileUploadData data) async {
     uploadCalls.add(data);
     if (_onFileUploadImpl != null) {
-      return _onFileUploadImpl(data);
+      return await _onFileUploadImpl(data);
     }
     return FileUploadResult.success(
       uploadedUrl: 'https://example.com/${data.fileName}',
@@ -40,11 +40,7 @@ class MockFileUploadListener implements FileUploadListener {
 
   @override
   void onUploadProgress(String fileName, int sent, int total) {
-    progressCalls.add({
-      'fileName': fileName,
-      'sent': sent,
-      'total': total,
-    });
+    progressCalls.add({'fileName': fileName, 'sent': sent, 'total': total});
     _onUploadProgressImpl?.call(fileName, sent, total);
   }
 
@@ -53,10 +49,7 @@ class MockFileUploadListener implements FileUploadListener {
     String fileName,
     FileUploadResult result,
   ) async {
-    completedCalls.add({
-      'fileName': fileName,
-      'result': result,
-    });
+    completedCalls.add({'fileName': fileName, 'result': result});
     await _onUploadCompletedImpl?.call(fileName, result);
   }
 
@@ -167,9 +160,7 @@ void main() {
       });
 
       test('should handle upload failure', () async {
-        const failureResult = FileUploadResult.failure(
-          error: 'Network error',
-        );
+        const failureResult = FileUploadResult.failure(error: 'Network error');
 
         final listener = MockFileUploadListener(
           onFileUpload: (_) async => failureResult,
@@ -185,7 +176,7 @@ void main() {
         final listener = MockFileUploadListener(
           onFileUpload: (data) async {
             // Simulate network delay
-            await Future.delayed(const Duration(milliseconds: 100));
+            await Future<void>.delayed(const Duration(milliseconds: 100));
             return FileUploadResult.success(
               uploadedUrl: 'https://example.com/${data.fileName}',
             );
@@ -287,7 +278,7 @@ void main() {
 
         final listener = MockFileUploadListener(
           onUploadCompleted: (fileName, result) async {
-            await Future.delayed(const Duration(milliseconds: 50));
+            await Future<void>.delayed(const Duration(milliseconds: 50));
             completionDelay = 50;
           },
         );
@@ -403,9 +394,7 @@ void main() {
 
         final listener = MockFileUploadListener(
           onFileUpload: (data) async {
-            return FileUploadResult.failure(
-              error: 'Upload failed: $error',
-            );
+            return FileUploadResult.failure(error: 'Upload failed: $error');
           },
           onUploadProgress: (fileName, sent, total) {
             progressUpdates.add(sent);

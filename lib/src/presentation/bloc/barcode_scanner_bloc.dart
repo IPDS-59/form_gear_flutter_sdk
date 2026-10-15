@@ -264,6 +264,6 @@ class BarcodeScannerBloc
   @override
   Future<void> close() async {
     await _controller?.dispose();
-    return super.close();
+    return await super.close();
   }
 }

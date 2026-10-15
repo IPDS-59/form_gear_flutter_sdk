@@ -1,13 +1,6 @@
 part of 'form_gear_webview_bloc.dart';
 
-enum WebViewStatus {
-  initial,
-  initializing,
-  ready,
-  loading,
-  loaded,
-  error,
-}
+enum WebViewStatus { initial, initializing, ready, loading, loaded, error }
 
 class FormGearWebViewState extends Equatable {
   const FormGearWebViewState({
@@ -15,19 +8,13 @@ class FormGearWebViewState extends Equatable {
     this.controller,
     this.currentUrl = '',
     this.loadingProgress = 0,
-    this.isBridgeInjected = false,
-    this.isBridgeInjecting = false,
-    this.isBridgeVerified = false,
     this.errorMessage,
   });
 
   final WebViewStatus status;
-  final InAppWebViewController? controller;
+  final WebViewController? controller;
   final String currentUrl;
   final int loadingProgress;
-  final bool isBridgeInjected;
-  final bool isBridgeInjecting;
-  final bool isBridgeVerified;
   final String? errorMessage;
 
   bool get isLoading => status == WebViewStatus.loading;
@@ -37,12 +24,9 @@ class FormGearWebViewState extends Equatable {
 
   FormGearWebViewState copyWith({
     WebViewStatus? status,
-    InAppWebViewController? controller,
+    WebViewController? controller,
     String? currentUrl,
     int? loadingProgress,
-    bool? isBridgeInjected,
-    bool? isBridgeInjecting,
-    bool? isBridgeVerified,
     String? errorMessage,
   }) {
     return FormGearWebViewState(
@@ -50,9 +34,6 @@ class FormGearWebViewState extends Equatable {
       controller: controller ?? this.controller,
       currentUrl: currentUrl ?? this.currentUrl,
       loadingProgress: loadingProgress ?? this.loadingProgress,
-      isBridgeInjected: isBridgeInjected ?? this.isBridgeInjected,
-      isBridgeInjecting: isBridgeInjecting ?? this.isBridgeInjecting,
-      isBridgeVerified: isBridgeVerified ?? this.isBridgeVerified,
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }
@@ -63,9 +44,6 @@ class FormGearWebViewState extends Equatable {
     controller,
     currentUrl,
     loadingProgress,
-    isBridgeInjected,
-    isBridgeInjecting,
-    isBridgeVerified,
     errorMessage,
   ];
 }

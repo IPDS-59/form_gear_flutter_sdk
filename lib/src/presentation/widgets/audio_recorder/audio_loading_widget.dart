@@ -23,19 +23,12 @@ class AudioLoadingWidget extends StatelessWidget {
                 ),
               ),
               SizedBox(width: 12),
-              Text(
-                '⏳',
-                style: TextStyle(fontSize: 24),
-              ),
+              Text('⏳', style: TextStyle(fontSize: 24)),
             ],
           ),
         ),
         SizedBox(height: 32),
-        Center(
-          child: CircularProgressIndicator(
-            color: Color(0xFF1E88E5),
-          ),
-        ),
+        Center(child: CircularProgressIndicator(color: Color(0xFF1E88E5))),
         SizedBox(height: 24),
         Text(
           'Memeriksa izin aplikasi...',

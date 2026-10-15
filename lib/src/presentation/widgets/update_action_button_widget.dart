@@ -79,60 +79,31 @@ class _UpdateActionButtonWidgetState extends State<UpdateActionButtonWidget>
       vsync: this,
     );
 
-    _buttonAnimation =
-        Tween<double>(
-          begin: 1,
-          end: 0.95,
-        ).animate(
-          CurvedAnimation(
-            parent: _buttonController,
-            curve: Curves.easeInOut,
-          ),
-        );
+    _buttonAnimation = Tween<double>(begin: 1, end: 0.95).animate(
+      CurvedAnimation(parent: _buttonController, curve: Curves.easeInOut),
+    );
 
-    _progressAnimation =
-        Tween<double>(
-          begin: 0,
-          end: 1,
-        ).animate(
-          CurvedAnimation(
-            parent: _progressController,
-            curve: Curves.easeInOut,
-          ),
-        );
+    _progressAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _progressController, curve: Curves.easeInOut),
+    );
 
-    _completionAnimation =
-        Tween<double>(
-          begin: 0,
-          end: 1,
-        ).animate(
-          CurvedAnimation(
-            parent: _completionController,
-            curve: Curves.easeOut,
-          ),
-        );
+    _completionAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _completionController, curve: Curves.easeOut),
+    );
 
-    _checkScaleAnimation =
-        Tween<double>(
-          begin: 0,
-          end: 1,
-        ).animate(
-          CurvedAnimation(
-            parent: _completionController,
-            curve: const Interval(0.2, 0.8, curve: Curves.elasticOut),
-          ),
-        );
+    _checkScaleAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _completionController,
+        curve: const Interval(0.2, 0.8, curve: Curves.elasticOut),
+      ),
+    );
 
-    _downloadArrowAnimation =
-        Tween<double>(
-          begin: -4,
-          end: 4,
-        ).animate(
-          CurvedAnimation(
-            parent: _downloadArrowController,
-            curve: Curves.easeInOut,
-          ),
-        );
+    _downloadArrowAnimation = Tween<double>(begin: -4, end: 4).animate(
+      CurvedAnimation(
+        parent: _downloadArrowController,
+        curve: Curves.easeInOut,
+      ),
+    );
   }
 
   @override

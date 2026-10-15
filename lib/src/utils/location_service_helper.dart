@@ -85,12 +85,12 @@ class LocationServiceHelper {
 
   /// Check location permission status without requesting
   static Future<LocationPermission> getPermissionStatus() async {
-    return Geolocator.checkPermission();
+    return await Geolocator.checkPermission();
   }
 
   /// Check if location services are enabled
   static Future<bool> areLocationServicesEnabled() async {
-    return Geolocator.isLocationServiceEnabled();
+    return await Geolocator.isLocationServiceEnabled();
   }
 
   /// Open device location settings
@@ -190,10 +190,7 @@ class LocationServiceHelper {
 /// Result of location service operations
 class LocationServiceResult {
   /// Create a LocationServiceResult with success status and optional error
-  const LocationServiceResult._({
-    required this.success,
-    this.errorMessage,
-  });
+  const LocationServiceResult._({required this.success, this.errorMessage});
 
   /// Create a successful result
   factory LocationServiceResult.success() {
@@ -202,10 +199,7 @@ class LocationServiceResult {
 
   /// Create a failure result with error message
   factory LocationServiceResult.failure(String errorMessage) {
-    return LocationServiceResult._(
-      success: false,
-      errorMessage: errorMessage,
-    );
+    return LocationServiceResult._(success: false, errorMessage: errorMessage);
   }
 
   final bool success;
@@ -230,18 +224,12 @@ class LocationResult {
 
   /// Create a successful result with position
   factory LocationResult.success(Position position) {
-    return LocationResult._(
-      success: true,
-      position: position,
-    );
+    return LocationResult._(success: true, position: position);
   }
 
   /// Create a failure result with error message
   factory LocationResult.failure(String errorMessage) {
-    return LocationResult._(
-      success: false,
-      errorMessage: errorMessage,
-    );
+    return LocationResult._(success: false, errorMessage: errorMessage);
   }
 
   final bool success;

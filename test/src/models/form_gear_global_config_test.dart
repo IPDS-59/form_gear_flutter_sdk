@@ -11,9 +11,7 @@ void main() {
   group('FormGearGlobalConfig Tests', () {
     group('Construction', () {
       test('should create config with all parameters', () {
-        const apiConfig = FormGearApiConfig(
-          baseUrl: 'https://api.example.com',
-        );
+        const apiConfig = FormGearApiConfig(baseUrl: 'https://api.example.com');
         const bpsUser = BpsUser(nipBaru: '123456789');
         final assignmentConfig = AssignmentConfig.capi();
 
@@ -38,9 +36,7 @@ void main() {
       });
 
       test('should create config with default values', () {
-        const config = FormGearGlobalConfig(
-          apiConfig: FormGearApiConfig(),
-        );
+        const config = FormGearGlobalConfig(apiConfig: FormGearApiConfig());
 
         expect(config.apiConfig, isNotNull);
         expect(config.bpsUser, isNull);
@@ -55,13 +51,8 @@ void main() {
 
     group('Factory Constructors', () {
       test('should create FASIH config with debug disabled', () {
-        const apiConfig = FormGearApiConfig(
-          baseUrl: 'https://fasih.bps.go.id',
-        );
-        const bpsUser = BpsUser(
-          nipBaru: '123456789',
-          jabatan: 'ENUMERATOR',
-        );
+        const apiConfig = FormGearApiConfig(baseUrl: 'https://fasih.bps.go.id');
+        const bpsUser = BpsUser(nipBaru: '123456789', jabatan: 'ENUMERATOR');
 
         final config = FormGearGlobalConfig.fasih(
           apiConfig: apiConfig,
@@ -81,9 +72,7 @@ void main() {
       });
 
       test('should create FASIH config with debug enabled', () {
-        const apiConfig = FormGearApiConfig(
-          baseUrl: 'https://fasih.bps.go.id',
-        );
+        const apiConfig = FormGearApiConfig(baseUrl: 'https://fasih.bps.go.id');
         const bpsUser = BpsUser(nipBaru: '123456789');
 
         final config = FormGearGlobalConfig.fasih(
@@ -97,9 +86,7 @@ void main() {
       });
 
       test('should create FASIH config with custom username', () {
-        const apiConfig = FormGearApiConfig(
-          baseUrl: 'https://fasih.bps.go.id',
-        );
+        const apiConfig = FormGearApiConfig(baseUrl: 'https://fasih.bps.go.id');
         const bpsUser = BpsUser(nipBaru: '123456789');
 
         final config = FormGearGlobalConfig.fasih(
@@ -126,9 +113,7 @@ void main() {
       });
 
       test('should create development config with custom values', () {
-        const apiConfig = FormGearApiConfig(
-          baseUrl: 'http://localhost:8080',
-        );
+        const apiConfig = FormGearApiConfig(baseUrl: 'http://localhost:8080');
         const bpsUser = BpsUser(nipBaru: 'DEV123');
 
         final config = FormGearGlobalConfig.development(
@@ -173,9 +158,7 @@ void main() {
       });
 
       test('should create copy with modified server settings', () {
-        const original = FormGearGlobalConfig(
-          apiConfig: FormGearApiConfig(),
-        );
+        const original = FormGearGlobalConfig(apiConfig: FormGearApiConfig());
 
         final copy = original.copyWith(
           autoStartServer: false,
@@ -187,9 +170,7 @@ void main() {
       });
 
       test('should keep original values when not specified', () {
-        const apiConfig = FormGearApiConfig(
-          baseUrl: 'https://api.example.com',
-        );
+        const apiConfig = FormGearApiConfig(baseUrl: 'https://api.example.com');
         const bpsUser = BpsUser(nipBaru: '123456789');
         final assignmentConfig = AssignmentConfig.capi();
 
@@ -215,9 +196,7 @@ void main() {
 
     group('toLegacyConfig', () {
       test('should convert to legacy config with default assignment', () {
-        const apiConfig = FormGearApiConfig(
-          baseUrl: 'https://api.example.com',
-        );
+        const apiConfig = FormGearApiConfig(baseUrl: 'https://api.example.com');
         const bpsUser = BpsUser(nipBaru: '123456789');
         final assignmentConfig = AssignmentConfig.capi();
 
@@ -277,9 +256,7 @@ void main() {
 
     group('Equality', () {
       test('should be equal when all properties match', () {
-        const apiConfig = FormGearApiConfig(
-          baseUrl: 'https://api.example.com',
-        );
+        const apiConfig = FormGearApiConfig(baseUrl: 'https://api.example.com');
         const bpsUser = BpsUser(nipBaru: '123456789');
 
         const config1 = FormGearGlobalConfig(
@@ -329,9 +306,7 @@ void main() {
 
     group('JSON Serialization', () {
       test('should serialize to JSON', () {
-        const apiConfig = FormGearApiConfig(
-          baseUrl: 'https://api.example.com',
-        );
+        const apiConfig = FormGearApiConfig(baseUrl: 'https://api.example.com');
         const bpsUser = BpsUser(nipBaru: '123456789');
 
         const config = FormGearGlobalConfig(
@@ -414,10 +389,7 @@ void main() {
           baseUrl: 'https://fasih-staging.bps.go.id',
           isProduction: false,
         );
-        const bpsUser = BpsUser(
-          nipBaru: 'DEV123',
-          jabatan: 'DEVELOPER',
-        );
+        const bpsUser = BpsUser(nipBaru: 'DEV123', jabatan: 'DEVELOPER');
 
         final config = FormGearGlobalConfig.fasih(
           apiConfig: apiConfig,
@@ -431,9 +403,7 @@ void main() {
       });
 
       test('should support local development without backend', () {
-        final config = FormGearGlobalConfig.development(
-          username: 'LocalDev',
-        );
+        final config = FormGearGlobalConfig.development(username: 'LocalDev');
 
         expect(config.apiConfig, isNull);
         expect(config.bpsUser, isNull);

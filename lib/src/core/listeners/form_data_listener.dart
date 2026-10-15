@@ -167,11 +167,11 @@ abstract class UnifiedFormDataListener extends BaseFormDataListener {
 
   @override
   Future<SaveSubmitResult> onSaveOrSubmit(SaveSubmitData data) async {
-    return handleSaveOrSubmit(data);
+    return await handleSaveOrSubmit(data);
   }
 
   @override
   Future<SaveSubmitResult> onSaveOrSubmitFasihForm(SaveSubmitData data) async {
-    return handleSaveOrSubmit(data);
+    return await handleSaveOrSubmit(data);
   }
 }

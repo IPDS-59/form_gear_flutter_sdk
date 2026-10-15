@@ -131,40 +131,22 @@ void main() {
       });
 
       test('should not be equal when bpsUserId differs', () {
-        const user1 = BpsUser(
-          bpsUserId: 12345,
-          nipBaru: '123456789',
-        );
-        const user2 = BpsUser(
-          bpsUserId: 54321,
-          nipBaru: '123456789',
-        );
+        const user1 = BpsUser(bpsUserId: 12345, nipBaru: '123456789');
+        const user2 = BpsUser(bpsUserId: 54321, nipBaru: '123456789');
 
         expect(user1, isNot(equals(user2)));
       });
 
       test('should not be equal when nipBaru differs', () {
-        const user1 = BpsUser(
-          bpsUserId: 12345,
-          nipBaru: '123456789',
-        );
-        const user2 = BpsUser(
-          bpsUserId: 12345,
-          nipBaru: '987654321',
-        );
+        const user1 = BpsUser(bpsUserId: 12345, nipBaru: '123456789');
+        const user2 = BpsUser(bpsUserId: 12345, nipBaru: '987654321');
 
         expect(user1, isNot(equals(user2)));
       });
 
       test('should not be equal when jabatan differs', () {
-        const user1 = BpsUser(
-          bpsUserId: 12345,
-          jabatan: 'ENUMERATOR',
-        );
-        const user2 = BpsUser(
-          bpsUserId: 12345,
-          jabatan: 'SUPERVISOR',
-        );
+        const user1 = BpsUser(bpsUserId: 12345, jabatan: 'ENUMERATOR');
+        const user2 = BpsUser(bpsUserId: 12345, jabatan: 'SUPERVISOR');
 
         expect(user1, isNot(equals(user2)));
       });
@@ -235,9 +217,7 @@ void main() {
       });
 
       test('should handle JSON field name mapping for id', () {
-        final json = <String, dynamic>{
-          'id': 12345,
-        };
+        final json = <String, dynamic>{'id': 12345};
 
         final user = BpsUser.fromJson(json);
 
@@ -246,9 +226,7 @@ void main() {
       });
 
       test('should handle JSON field name mapping for password', () {
-        final json = <String, dynamic>{
-          'password': 'secret',
-        };
+        final json = <String, dynamic>{'password': 'secret'};
 
         final user = BpsUser.fromJson(json);
 

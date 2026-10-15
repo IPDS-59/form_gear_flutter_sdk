@@ -103,9 +103,7 @@ class AudioContextInfoWidget extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.grey.withValues(alpha: 0.1),
-                ),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
               ),
               child: templateName != null && dataKey != null
                   ? AnimatedBuilder(
@@ -220,11 +218,7 @@ class AudioContextInfoWidget extends StatelessWidget {
             color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            icon,
-            size: 16,
-            color: color,
-          ),
+          child: Icon(icon, size: 16, color: color),
         ),
         const SizedBox(width: 12),
         Expanded(

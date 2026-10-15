@@ -152,9 +152,7 @@ class ZipHelper {
 
       return true;
     } on Exception catch (e) {
-      FormGearLogger.sdkError(
-        'Failed to extract ZIP file $zipFilePath: $e',
-      );
+      FormGearLogger.sdkError('Failed to extract ZIP file $zipFilePath: $e');
       return false;
     }
   }
@@ -266,9 +264,7 @@ class ZipHelper {
 
       return true;
     } on Exception catch (e) {
-      FormGearLogger.sdkError(
-        'Failed to extract ZIP from bytes: $e',
-      );
+      FormGearLogger.sdkError('Failed to extract ZIP from bytes: $e');
       return false;
     }
   }
@@ -376,9 +372,7 @@ class ZipHelper {
       FormGearLogger.sdk('ZIP created successfully: $outputZipPath');
       return true;
     } on Exception catch (e) {
-      FormGearLogger.sdkError(
-        'Failed to create ZIP: $e',
-      );
+      FormGearLogger.sdkError('Failed to create ZIP: $e');
       return false;
     }
   }

@@ -18,6 +18,6 @@ class GetLocalFormEngineVersionUseCase
 
   @override
   Future<Result<String?>> call(String engineId) async {
-    return repo.getLocalFormEngineVersion(engineId);
+    return await repo.getLocalFormEngineVersion(engineId);
   }
 }

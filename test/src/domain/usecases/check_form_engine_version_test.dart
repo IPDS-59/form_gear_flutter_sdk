@@ -128,10 +128,7 @@ void main() {
           ).thenThrow(Exception(errorMessage));
 
           // Act & Assert
-          expect(
-            () => useCase.call(engineId),
-            throwsA(isA<Exception>()),
-          );
+          expect(() => useCase.call(engineId), throwsA(isA<Exception>()));
           verify(
             () => mockRepository.checkFormEngineVersion(engineId),
           ).called(1);

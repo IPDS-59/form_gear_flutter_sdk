@@ -8,10 +8,7 @@ void main() {
   group('Lookup Tests', () {
     group('Construction', () {
       test('should create lookup with id and version', () {
-        const lookup = Lookup(
-          id: 'lookup_001',
-          version: '1.0.0',
-        );
+        const lookup = Lookup(id: 'lookup_001', version: '1.0.0');
 
         expect(lookup.id, equals('lookup_001'));
         expect(lookup.version, equals('1.0.0'));
@@ -302,15 +299,9 @@ void main() {
 
     group('Equality', () {
       test('should be equal when all properties match', () {
-        const response1 = CustomDataTemplate(
-          success: true,
-          message: 'Success',
-        );
+        const response1 = CustomDataTemplate(success: true, message: 'Success');
 
-        const response2 = CustomDataTemplate(
-          success: true,
-          message: 'Success',
-        );
+        const response2 = CustomDataTemplate(success: true, message: 'Success');
 
         expect(response1, equals(response2));
         expect(response1.hashCode, equals(response2.hashCode));
@@ -319,10 +310,7 @@ void main() {
 
     group('JSON Serialization', () {
       test('should serialize to JSON', () {
-        const response = CustomDataTemplate(
-          success: true,
-          message: 'Success',
-        );
+        const response = CustomDataTemplate(success: true, message: 'Success');
 
         final json = response.toJson();
         expect(json['success'], isTrue);

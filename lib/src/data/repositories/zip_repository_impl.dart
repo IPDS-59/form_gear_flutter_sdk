@@ -11,9 +11,8 @@ import 'package:path/path.dart' as path;
 @LazySingleton(as: ZipRepository)
 /// Implementation of ZipRepository for ZIP file operations
 class ZipRepositoryImpl implements ZipRepository {
-  const ZipRepositoryImpl({
-    required FileRepository fileRepository,
-  }) : _fileRepository = fileRepository;
+  const ZipRepositoryImpl({required FileRepository fileRepository})
+    : _fileRepository = fileRepository;
 
   final FileRepository _fileRepository;
 

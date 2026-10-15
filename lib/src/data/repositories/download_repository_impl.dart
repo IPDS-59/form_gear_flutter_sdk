@@ -91,10 +91,7 @@ class DownloadRepositoryImpl implements DownloadRepository {
           FormGearLogger.sdk('Download completed: $fullDestinationPath');
 
           return Success(
-            DownloadResult(
-              success: true,
-              localPath: fullDestinationPath,
-            ),
+            DownloadResult(success: true, localPath: fullDestinationPath),
           );
         } else {
           throw DioException(
@@ -117,9 +114,7 @@ class DownloadRepositoryImpl implements DownloadRepository {
         // Wait before retry with exponential backoff
         await Future<void>.delayed(Duration(seconds: attempt * 2));
       } on Exception catch (e) {
-        FormGearLogger.sdkError(
-          'Download failed on attempt $attempt: $e',
-        );
+        FormGearLogger.sdkError('Download failed on attempt $attempt: $e');
         if (attempt == maxRetries) {
           return Success(
             DownloadResult(

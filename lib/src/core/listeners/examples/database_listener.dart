@@ -58,12 +58,12 @@ class DatabaseFormDataListener extends BaseFormDataListener {
 
   @override
   Future<SaveSubmitResult> onSaveOrSubmit(SaveSubmitData data) async {
-    return _handleSaveSubmit(data, isFormGear: true);
+    return await _handleSaveSubmit(data, isFormGear: true);
   }
 
   @override
   Future<SaveSubmitResult> onSaveOrSubmitFasihForm(SaveSubmitData data) async {
-    return _handleSaveSubmit(data, isFormGear: false);
+    return await _handleSaveSubmit(data, isFormGear: false);
   }
 
   @override
@@ -218,7 +218,7 @@ class DatabaseFormDataListener extends BaseFormDataListener {
     SaveSubmitData data,
     bool isFormGear,
   ) async {
-    return database.runInTransaction(() async {
+    return await database.runInTransaction(() async {
       // Update or insert assignment record
       final assignmentId = await database.upsertAssignment(
         assignmentId: data.assignmentId,
@@ -426,7 +426,7 @@ class DatabaseFormDataListener extends BaseFormDataListener {
   /// Gets statistics about stored form data
   Future<Map<String, dynamic>> getStorageStatistics() async {
     try {
-      return database.getStorageStatistics();
+      return await database.getStorageStatistics();
     } catch (e) {
       FormGearLogger.sdkError('Failed to get storage statistics: $e');
       return {'error': e.toString()};
@@ -438,7 +438,7 @@ class DatabaseFormDataListener extends BaseFormDataListener {
     String assignmentId,
   ) async {
     try {
-      return database.exportAssignment(assignmentId);
+      return await database.exportAssignment(assignmentId);
     } catch (e) {
       FormGearLogger.sdkError('Failed to export assignment $assignmentId: $e');
       return null;

@@ -93,14 +93,9 @@ void main() {
       });
 
       test('should create copy with modified formMode and isNew', () {
-        const original = FormConfig(
-          formId: 'form_001',
-        );
+        const original = FormConfig(formId: 'form_001');
 
-        final copy = original.copyWith(
-          formMode: 2,
-          isNew: 0,
-        );
+        final copy = original.copyWith(formMode: 2, isNew: 0);
 
         expect(copy.formMode, equals(2));
         expect(copy.isNew, equals(0));
@@ -168,13 +163,8 @@ void main() {
       });
 
       test('should not be equal when formMode differs', () {
-        const config1 = FormConfig(
-          formId: 'form_001',
-        );
-        const config2 = FormConfig(
-          formId: 'form_001',
-          formMode: 2,
-        );
+        const config1 = FormConfig(formId: 'form_001');
+        const config2 = FormConfig(formId: 'form_001', formMode: 2);
 
         expect(config1, isNot(equals(config2)));
       });
@@ -182,9 +172,7 @@ void main() {
 
     group('Form States', () {
       test('should represent new form state', () {
-        const config = FormConfig(
-          formId: 'form_001',
-        );
+        const config = FormConfig(formId: 'form_001');
 
         expect(config.isNew, equals(1));
         expect(config.formMode, equals(1));
@@ -239,12 +227,8 @@ void main() {
             'template_id': 'census_2024',
             'version': '1.0.0',
           },
-          validation: <String, dynamic>{
-            'rules': <dynamic>[],
-          },
-          reference: <String, dynamic>{
-            'lookup_data': <dynamic>[],
-          },
+          validation: <String, dynamic>{'rules': <dynamic>[]},
+          reference: <String, dynamic>{'lookup_data': <dynamic>[]},
         );
 
         expect(config.formId, equals('assignment_12345'));
@@ -282,16 +266,8 @@ void main() {
         const config = FormConfig(
           formId: 'assignment_12345',
           principals: <Map<String, dynamic>>[
-            {
-              'nip': '123456789',
-              'name': 'John Doe',
-              'role': 'ENUMERATOR',
-            },
-            {
-              'nip': '987654321',
-              'name': 'Jane Smith',
-              'role': 'SUPERVISOR',
-            },
+            {'nip': '123456789', 'name': 'John Doe', 'role': 'ENUMERATOR'},
+            {'nip': '987654321', 'name': 'Jane Smith', 'role': 'SUPERVISOR'},
           ],
           additionalData: <String, dynamic>{
             'survey_id': 'census_2024',
@@ -344,10 +320,7 @@ void main() {
             ],
           },
           response: <String, dynamic>{
-            'section1': {
-              'field1': 'Answer 1',
-              'field2': 42,
-            },
+            'section1': {'field1': 'Answer 1', 'field2': 42},
           },
         );
 

@@ -16,6 +16,6 @@ class CheckFormEngineVersionUseCase
   Future<Result<FormEngineResponse>> call([String? formEngineId]) async {
     // Default to FormGear engine if no ID provided
     final engineId = formEngineId ?? FormEngineType.formGear.id.toString();
-    return repo.checkFormEngineVersion(engineId);
+    return await repo.checkFormEngineVersion(engineId);
   }
 }

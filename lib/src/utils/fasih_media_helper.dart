@@ -93,10 +93,7 @@ class FasihMediaHelper {
         mediaData = jsonDecode(existingContent) as Map<String, dynamic>;
       } else {
         // Initialize with FASIH default structure
-        mediaData = {
-          'dataKey': '',
-          'media': <Map<String, dynamic>>[],
-        };
+        mediaData = {'dataKey': '', 'media': <Map<String, dynamic>>[]};
       }
 
       // Ensure media array exists

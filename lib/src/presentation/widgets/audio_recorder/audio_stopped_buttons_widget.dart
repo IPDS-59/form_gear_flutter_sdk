@@ -4,10 +4,7 @@ import 'package:form_gear_engine_sdk/src/presentation/bloc/audio_recorder_bloc.d
 
 /// Buttons shown when recording is stopped - save or discard
 class AudioStoppedButtonsWidget extends StatelessWidget {
-  const AudioStoppedButtonsWidget({
-    required this.filePath,
-    super.key,
-  });
+  const AudioStoppedButtonsWidget({required this.filePath, super.key});
 
   final String filePath;
 
@@ -15,23 +12,16 @@ class AudioStoppedButtonsWidget extends StatelessWidget {
   Widget build(BuildContext context) => ClipRect(
     child: AnimatedSwitcher(
       duration: const Duration(milliseconds: 400),
-      transitionBuilder: (Widget child, Animation<double> animation) =>
-          FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position:
-                  Tween<Offset>(
-                    begin: const Offset(0, 0.2),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeOutCubic,
-                    ),
-                  ),
-              child: child,
-            ),
-          ),
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero)
+              .animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+              ),
+          child: child,
+        ),
+      ),
       child: Column(
         key: const ValueKey('stopped'),
         children: [

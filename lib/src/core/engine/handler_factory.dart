@@ -40,10 +40,7 @@ class HandlerFactory {
       getCurrentAssignment: getCurrentAssignment,
       onGetReference: () async =>
           currentFormConfig?.reference ??
-          {
-            'details': <dynamic>[],
-            'sidebar': <dynamic>[],
-          },
+          {'details': <dynamic>[], 'sidebar': <dynamic>[]},
       onGetTemplate: () async =>
           currentFormConfig?.template ??
           {
@@ -62,10 +59,7 @@ class HandlerFactory {
             'details': {'answers': <dynamic>[]},
           },
       onGetValidation: () async =>
-          currentFormConfig?.validation ??
-          {
-            'testFunctions': <dynamic>[],
-          },
+          currentFormConfig?.validation ?? {'testFunctions': <dynamic>[]},
       onGetMedia: () async =>
           currentFormConfig?.media ??
           {
@@ -73,10 +67,7 @@ class HandlerFactory {
           },
       onGetRemark: () async =>
           currentFormConfig?.remark ??
-          {
-            'dataKey': 'default_remark',
-            'notes': <dynamic>[],
-          },
+          {'dataKey': 'default_remark', 'notes': <dynamic>[]},
       onGetUserName: () async => config?.username ?? 'Default User',
       onGetFormMode: () async => currentFormConfig?.formMode ?? 1,
       onGetIsNew: () async => currentFormConfig?.isNew ?? 1,
@@ -122,7 +113,7 @@ class HandlerFactory {
         FormGearLogger.webview('Camera captured: $fileName -> $result');
         return result;
       },
-      onFileUpload: (fileData, updateCallback, {required bool isReload}) async {
+      onFileUpload: (fileData, updateCallback, {required isReload}) async {
         FormGearLogger.webview('File upload: $fileData (reload: $isReload)');
         return 'upload_completed';
       },
@@ -192,10 +183,7 @@ class HandlerFactory {
       getCurrentAssignment: getCurrentAssignment,
       onGetReference: () async =>
           currentFormConfig?.reference ??
-          {
-            'details': <dynamic>[],
-            'sidebar': <dynamic>[],
-          },
+          {'details': <dynamic>[], 'sidebar': <dynamic>[]},
       onGetTemplate: () async =>
           currentFormConfig?.template ??
           {
@@ -214,10 +202,7 @@ class HandlerFactory {
             'details': {'answers': <dynamic>[]},
           },
       onGetValidation: () async =>
-          currentFormConfig?.validation ??
-          {
-            'testFunctions': <dynamic>[],
-          },
+          currentFormConfig?.validation ?? {'testFunctions': <dynamic>[]},
       onGetMedia: () async =>
           currentFormConfig?.media ??
           {
@@ -225,10 +210,7 @@ class HandlerFactory {
           },
       onGetRemark: () async =>
           currentFormConfig?.remark ??
-          {
-            'dataKey': 'default_remark',
-            'notes': <dynamic>[],
-          },
+          {'dataKey': 'default_remark', 'notes': <dynamic>[]},
       onGetUserName: () async => config?.username ?? 'Default User',
       onGetFormMode: () async => currentFormConfig?.formMode ?? 1,
       onGetIsNew: () async => currentFormConfig?.isNew ?? 1,
@@ -287,7 +269,7 @@ class HandlerFactory {
         );
         return result;
       },
-      onFileUpload: (fileData, updateCallback, {required bool isReload}) async {
+      onFileUpload: (fileData, updateCallback, {required isReload}) async {
         FormGearLogger.webview(
           'File upload for ${assignment.assignmentId}: '
           '$fileData (reload: $isReload)',

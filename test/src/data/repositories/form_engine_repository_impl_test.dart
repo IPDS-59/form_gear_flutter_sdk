@@ -76,49 +76,43 @@ void main() {
           },
         );
 
-        test(
-          'it should handle FasihForm engine ID (2)',
-          () async {
-            // Arrange
-            const engineId = '2';
-            when(
-              () => mockRemoteDataSource.checkFormEngineVersion(engineId),
-            ).thenAnswer((_) async => Success(responseData));
+        test('it should handle FasihForm engine ID (2)', () async {
+          // Arrange
+          const engineId = '2';
+          when(
+            () => mockRemoteDataSource.checkFormEngineVersion(engineId),
+          ).thenAnswer((_) async => Success(responseData));
 
-            // Act
-            final result = await repository.checkFormEngineVersion(engineId);
+          // Act
+          final result = await repository.checkFormEngineVersion(engineId);
 
-            // Assert
-            expect(result, isA<Success<FormEngineResponse>>());
-            verify(
-              () => mockRemoteDataSource.checkFormEngineVersion(engineId),
-            ).called(1);
-          },
-        );
+          // Assert
+          expect(result, isA<Success<FormEngineResponse>>());
+          verify(
+            () => mockRemoteDataSource.checkFormEngineVersion(engineId),
+          ).called(1);
+        });
       });
 
       group('when remote data source returns failure', () {
-        test(
-          'it should return Failure when repository fails',
-          () async {
-            // Arrange
-            const engineId = '1';
-            const error = 'Network error';
-            when(
-              () => mockRemoteDataSource.checkFormEngineVersion(engineId),
-            ).thenAnswer((_) async => const Failure<FormEngineResponse>(error));
+        test('it should return Failure when repository fails', () async {
+          // Arrange
+          const engineId = '1';
+          const error = 'Network error';
+          when(
+            () => mockRemoteDataSource.checkFormEngineVersion(engineId),
+          ).thenAnswer((_) async => const Failure<FormEngineResponse>(error));
 
-            // Act
-            final result = await repository.checkFormEngineVersion(engineId);
+          // Act
+          final result = await repository.checkFormEngineVersion(engineId);
 
-            // Assert
-            expect(result, isA<Failure<FormEngineResponse>>());
-            expect((result as Failure).error, equals(error));
-            verify(
-              () => mockRemoteDataSource.checkFormEngineVersion(engineId),
-            ).called(1);
-          },
-        );
+          // Assert
+          expect(result, isA<Failure<FormEngineResponse>>());
+          expect((result as Failure).error, equals(error));
+          verify(
+            () => mockRemoteDataSource.checkFormEngineVersion(engineId),
+          ).called(1);
+        });
       });
     });
 
@@ -181,51 +175,43 @@ void main() {
         },
       );
 
-      test(
-        'should return false when version file does not exist',
-        () async {
-          // Arrange
-          const engineId = '2';
-          final testDir = Directory.systemTemp.createTempSync('test_engine_');
-          final engineDir = Directory(
-            '${testDir.path}/BPS/formengine/$engineId',
-          );
-          await engineDir.create(recursive: true);
+      test('should return false when version file does not exist', () async {
+        // Arrange
+        const engineId = '2';
+        final testDir = Directory.systemTemp.createTempSync('test_engine_');
+        final engineDir = Directory('${testDir.path}/BPS/formengine/$engineId');
+        await engineDir.create(recursive: true);
 
-          // Override getApplicationDocumentsDirectory
-          PathProviderPlatform.instance = TestPathProviderPlatform(
-            applicationDocumentsPath: testDir.path,
-          );
+        // Override getApplicationDocumentsDirectory
+        PathProviderPlatform.instance = TestPathProviderPlatform(
+          applicationDocumentsPath: testDir.path,
+        );
 
-          // Act
-          final result = await repository.isFormEngineDownloaded(engineId);
+        // Act
+        final result = await repository.isFormEngineDownloaded(engineId);
 
-          // Assert
-          expect(result, isFalse);
+        // Assert
+        expect(result, isFalse);
 
-          // Cleanup
-          await testDir.delete(recursive: true);
-        },
-      );
+        // Cleanup
+        await testDir.delete(recursive: true);
+      });
 
-      test(
-        'should return false when an error occurs',
-        () async {
-          // Arrange
-          const engineId = '1';
+      test('should return false when an error occurs', () async {
+        // Arrange
+        const engineId = '1';
 
-          // Set invalid path to force an error
-          PathProviderPlatform.instance = TestPathProviderPlatform(
-            applicationDocumentsPath: '',
-          );
+        // Set invalid path to force an error
+        PathProviderPlatform.instance = TestPathProviderPlatform(
+          applicationDocumentsPath: '',
+        );
 
-          // Act
-          final result = await repository.isFormEngineDownloaded(engineId);
+        // Act
+        final result = await repository.isFormEngineDownloaded(engineId);
 
-          // Assert
-          expect(result, isFalse);
-        },
-      );
+        // Assert
+        expect(result, isFalse);
+      });
     });
   });
 }

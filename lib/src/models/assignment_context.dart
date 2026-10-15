@@ -276,6 +276,23 @@ class AssignmentData extends Equatable {
   /// Convert to JSON
   Map<String, dynamic> toJson() => _$AssignmentDataToJson(this);
 
+  /// Whether [template] has the non-empty `components` both engines index
+  /// into on startup (`components[0]`). Without it the engine throws before
+  /// rendering and the user sees a blank form.
+  bool get hasRenderableTemplate {
+    final components = template['components'];
+    if (components is! List || components.isEmpty) return false;
+    final first = components.first;
+    return first is! List || first.isNotEmpty;
+  }
+
+  /// Copy whose [validation] always has the `testFunctions` list the engines
+  /// iterate without a null check (a missing or corrupt validation file
+  /// would otherwise crash engine startup).
+  AssignmentData normalizedForEngine() => validation['testFunctions'] is List
+      ? this
+      : copyWith(validation: {...validation, 'testFunctions': <dynamic>[]});
+
   /// Create a copy with updated values
   AssignmentData copyWith({
     Map<String, dynamic>? template,

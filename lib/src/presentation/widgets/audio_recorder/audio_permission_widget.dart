@@ -28,10 +28,7 @@ class AudioPermissionWidget extends StatelessWidget {
                 ),
               ),
               SizedBox(width: 12),
-              Text(
-                '🔒',
-                style: TextStyle(fontSize: 24),
-              ),
+              Text('🔒', style: TextStyle(fontSize: 24)),
             ],
           ),
         ),

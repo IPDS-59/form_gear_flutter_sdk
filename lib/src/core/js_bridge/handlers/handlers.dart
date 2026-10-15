@@ -5,7 +5,6 @@ export 'android_data_handler.dart';
 export 'barcode_action_handler.dart';
 export 'client_action_handler.dart';
 export 'execute_handler.dart';
-export 'fasih_data_handler.dart';
 export 'file_action_handler.dart';
 export 'location_action_handler.dart';
 export 'lookup_action_handler.dart';

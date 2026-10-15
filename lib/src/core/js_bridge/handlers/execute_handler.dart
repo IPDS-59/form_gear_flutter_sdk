@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
-import 'package:form_gear_engine_sdk/src/core/security/path_validator.dart';
+import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/file_action_handler.dart';
 import 'package:form_gear_engine_sdk/src/utils/fasih_form_notifier.dart';
 import 'package:form_gear_engine_sdk/src/utils/fasih_media_helper.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
@@ -68,10 +68,7 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
       // Request camera permission first
       final cameraStatus = await Permission.camera.request();
       if (cameraStatus.isDenied) {
-        return ActionInfoJs(
-          success: false,
-          error: 'Camera permission denied',
-        );
+        return ActionInfoJs(success: false, error: 'Camera permission denied');
       }
 
       if (cameraStatus.isPermanentlyDenied) {
@@ -126,10 +123,7 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
         fileInfo = jsonDecode(data) as Map<String, dynamic>;
       } on Exception catch (e) {
         FormGearLogger.webviewError('Failed to parse file data: $e');
-        return ActionInfoJs(
-          success: false,
-          error: 'Invalid file data format',
-        );
+        return ActionInfoJs(success: false, error: 'Invalid file data format');
       }
 
       // Extract file information
@@ -143,47 +137,19 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
         );
       }
 
-      FormGearLogger.webview(
-        'File upload: fileName=$fileName, uri=$fileUri',
+      // Same path checks + FileUploadListener as engine 1; native FASIH
+      // likewise uploads before emitting upload-finished.
+      final result = await FileActionHandler().handleFileUpload(dataKey, data);
+      if (!result.success) return result;
+
+      final uploaded = jsonDecode(result.result!) as Map<String, dynamic>;
+      await FasihFormNotifier.notifyUploadFinished(
+        dataKey: dataKey,
+        fileName: fileName,
+        fileUri: fileUri,
+        url: uploaded['uploaded'] == true ? uploaded['uri'] as String? : null,
       );
-
-      // File is already selected from previous file-open event
-      // Just verify it exists and return success
-      final filePath = fileUri.replaceFirst('file://', '');
-
-      // Validate file path for security
-      final validationResult = PathValidator.validate(
-        filePath,
-        type: PathValidationType.media,
-        checkExists: true,
-      );
-
-      if (!validationResult.isValid) {
-        FormGearLogger.webviewError(
-          'Invalid file path: ${validationResult.error}',
-        );
-        return ActionInfoJs(
-          success: false,
-          error: 'Invalid file path: ${validationResult.error}',
-        );
-      }
-
-      final file = File(validationResult.sanitizedPath);
-
-      // In a real implementation, this would upload to server
-      // For now, we just confirm the file exists and is ready
-      FormGearLogger.webview('File upload completed: $fileName');
-
-      return ActionInfoJs(
-        success: true,
-        result: jsonEncode({
-          'filename': fileName,
-          'uri': fileUri,
-          'size': file.lengthSync(),
-          'uploaded': true,
-          'message': 'File upload completed successfully',
-        }),
-      );
+      return result;
     } on Exception catch (e) {
       FormGearLogger.webviewError('Execute file upload error: $e');
       return ActionInfoJs(
@@ -289,28 +255,24 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
       }
 
       // Open file picker with appropriate type
-      FilePickerResult? result;
-      if (acceptType != null) {
-        // Handle specific file types
-        if (acceptType.contains('csv')) {
-          result = await FilePicker.platform.pickFiles(
-            type: FileType.custom,
-            allowedExtensions: ['csv'],
-          );
-        } else if (acceptType.contains('video')) {
-          result = await FilePicker.platform.pickFiles(type: FileType.video);
-        } else if (acceptType.contains('audio')) {
-          result = await FilePicker.platform.pickFiles(type: FileType.audio);
-        } else {
-          result = await FilePicker.platform.pickFiles();
-        }
-      } else {
-        result = await FilePicker.platform.pickFiles();
-      }
+      final accept = acceptType ?? '';
+      final picked = accept.contains('csv')
+          ? await FilePicker.pickFile(
+              type: FileType.custom,
+              allowedExtensions: ['csv'],
+            )
+          : await FilePicker.pickFile(
+              type: accept.contains('video')
+                  ? FileType.video
+                  : accept.contains('audio')
+                  ? FileType.audio
+                  : FileType.any,
+            );
 
-      if (result != null && result.files.single.path != null) {
-        final originalPath = result.files.single.path!;
-        final originalName = result.files.single.name;
+      final pickedPath = picked?.path;
+      if (picked != null && pickedPath != null) {
+        final originalPath = pickedPath;
+        final originalName = picked.name;
 
         // Generate FASIH-compatible filename and save to media directory
         final extension = originalPath.split('.').last.toLowerCase();
@@ -329,10 +291,7 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
         );
 
         if (!success) {
-          return ActionInfoJs(
-            success: false,
-            error: 'Failed to save file',
-          );
+          return ActionInfoJs(success: false, error: 'Failed to save file');
         }
 
         // Get the full path in media directory for the URI

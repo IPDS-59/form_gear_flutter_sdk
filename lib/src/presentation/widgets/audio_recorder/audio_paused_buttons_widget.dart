@@ -10,19 +10,15 @@ class AudioPausedButtonsWidget extends StatelessWidget {
   Widget build(BuildContext context) => ClipRect(
     child: AnimatedSwitcher(
       duration: const Duration(milliseconds: 400),
-      transitionBuilder: (Widget child, Animation<double> animation) =>
-          FadeTransition(
-            opacity: animation,
-            child: ScaleTransition(
-              scale: Tween<double>(begin: 0.8, end: 1).animate(
-                CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutBack,
-                ),
-              ),
-              child: child,
-            ),
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: ScaleTransition(
+          scale: Tween<double>(begin: 0.8, end: 1).animate(
+            CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
           ),
+          child: child,
+        ),
+      ),
       child: const Row(
         key: ValueKey('paused'),
         children: [

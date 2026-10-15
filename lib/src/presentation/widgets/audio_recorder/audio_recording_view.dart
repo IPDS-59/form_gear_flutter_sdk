@@ -106,10 +106,7 @@ class _AudioGreetingSection extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Text(
-            _getRecordingEmoji(),
-            style: const TextStyle(fontSize: 22),
-          ),
+          Text(_getRecordingEmoji(), style: const TextStyle(fontSize: 22)),
         ],
       ),
     );
@@ -208,7 +205,7 @@ class _AudioWaveformSection extends StatelessWidget {
         duration: const Duration(milliseconds: 400),
         switchInCurve: Curves.easeInOut,
         switchOutCurve: Curves.easeInOut,
-        transitionBuilder: (Widget child, Animation<double> animation) {
+        transitionBuilder: (child, animation) {
           return FadeTransition(
             opacity: animation,
             child: SlideTransition(

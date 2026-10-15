@@ -19,6 +19,6 @@ class GetLocalTemplateVersionUseCase
 
   @override
   Future<Result<String?>> call(String templateId) async {
-    return repo.getLocalTemplateVersion(templateId);
+    return await repo.getLocalTemplateVersion(templateId);
   }
 }

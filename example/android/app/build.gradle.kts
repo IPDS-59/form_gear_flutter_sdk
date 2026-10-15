@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "id.go.bps.form_gear_demo"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 37 // permission_handler 13 requires it
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

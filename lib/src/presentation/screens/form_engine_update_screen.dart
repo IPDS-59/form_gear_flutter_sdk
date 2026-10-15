@@ -10,10 +10,7 @@ import 'package:form_gear_engine_sdk/src/presentation/widgets/update_skip_button
 import 'package:form_gear_engine_sdk/src/presentation/widgets/update_version_info_widget.dart';
 
 class FormEngineUpdateScreen extends StatelessWidget {
-  const FormEngineUpdateScreen({
-    required this.versionResult,
-    super.key,
-  });
+  const FormEngineUpdateScreen({required this.versionResult, super.key});
 
   final VersionCheckResult versionResult;
 
@@ -36,9 +33,7 @@ class FormEngineUpdateScreen extends StatelessWidget {
       MaterialPageRoute<void>(
         builder: (context) => BlocProvider.value(
           value: bloc,
-          child: FormEngineUpdateScreen(
-            versionResult: versionResult,
-          ),
+          child: FormEngineUpdateScreen(versionResult: versionResult),
         ),
         fullscreenDialog: true,
         settings: RouteSettings(

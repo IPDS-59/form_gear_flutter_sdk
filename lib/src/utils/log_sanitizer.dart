@@ -13,14 +13,10 @@ class LogSanitizer {
     'nik': RegExp(r'\b\d{16}\b'),
 
     // Phone numbers (various formats)
-    'phone': RegExp(
-      r'\b(?:\+62|62|0)(?:\d{2,3})[-\s]?\d{3,4}[-\s]?\d{3,4}\b',
-    ),
+    'phone': RegExp(r'\b(?:\+62|62|0)(?:\d{2,3})[-\s]?\d{3,4}[-\s]?\d{3,4}\b'),
 
     // Email addresses
-    'email': RegExp(
-      r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
-    ),
+    'email': RegExp(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'),
 
     // Credit card numbers (basic pattern)
     'creditCard': RegExp(r'\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b'),
@@ -32,9 +28,7 @@ class LogSanitizer {
     'ip': RegExp(r'\b(?:\d{1,3}\.){3}\d{1,3}\b'),
 
     // JWT tokens (basic pattern)
-    'jwt': RegExp(
-      r'eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+',
-    ),
+    'jwt': RegExp(r'eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+'),
 
     // API keys (common patterns)
     'apiKey': RegExp(r'\b[A-Za-z0-9]{32,}\b'),
@@ -183,13 +177,10 @@ class LogSanitizer {
   /// Checks if currently running in debug mode.
   static bool _isDebugMode() {
     var isDebug = false;
-    assert(
-      () {
-        isDebug = true;
-        return true;
-      }(),
-      'Debug mode detection',
-    );
+    assert(() {
+      isDebug = true;
+      return true;
+    }(), 'Debug mode detection');
     return isDebug;
   }
 
@@ -300,10 +291,7 @@ class LogSanitizer {
 
 /// Result of error sanitization containing sanitized message and stack trace.
 class SanitizedError {
-  const SanitizedError({
-    required this.message,
-    this.stackTrace,
-  });
+  const SanitizedError({required this.message, this.stackTrace});
 
   final String message;
   final String? stackTrace;

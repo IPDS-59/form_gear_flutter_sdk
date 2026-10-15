@@ -16,6 +16,4 @@ abstract class JSHandler<T extends JsonCodable> {
 
 /// Typedef for handler callback function
 typedef JSHandlerCallbackAlias =
-    Future<JsonCodable> Function(
-      List<dynamic> arguments,
-    );
+    Future<JsonCodable> Function(List<dynamic> arguments);

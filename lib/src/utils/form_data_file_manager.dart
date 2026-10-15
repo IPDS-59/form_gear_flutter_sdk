@@ -70,24 +70,30 @@ class FormDataFileManager {
     }
   }
 
-  /// Write file content safely with directory creation
-  static Future<bool> writeFileContent(
-    String filePath,
-    String content,
-  ) async {
+  /// Write file content safely with directory creation (atomically).
+  static Future<bool> writeFileContent(String filePath, String content) async {
     try {
-      final file = File(filePath);
-
-      // Create parent directory if it doesn't exist
-      final parentDir = file.parent;
-      if (!parentDir.existsSync()) {
-        parentDir.createSync(recursive: true);
-      }
-
-      await file.writeAsString(content);
+      await writeAtomically(filePath, content);
       return true;
     } on Exception {
       return false;
+    }
+  }
+
+  static int _tmpSeq = 0;
+
+  /// Writes [content] to a temp file, flushes it, then renames it over
+  /// [filePath]. Readers see the old file or the new one, never a torn mix,
+  /// even if the process dies mid-write or two writes overlap.
+  static Future<void> writeAtomically(String filePath, String content) async {
+    final file = File(filePath);
+    await file.parent.create(recursive: true);
+    final tmp = File('$filePath.${pid}_${_tmpSeq++}.tmp');
+    try {
+      await tmp.writeAsString(content, flush: true);
+      await tmp.rename(filePath);
+    } finally {
+      if (tmp.existsSync()) await tmp.delete();
     }
   }
 

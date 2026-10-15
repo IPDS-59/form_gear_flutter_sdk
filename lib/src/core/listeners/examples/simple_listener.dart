@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:form_gear_engine_sdk/src/core/listeners/form_data_listener.dart';
 import 'package:form_gear_engine_sdk/src/core/listeners/save_submit_data.dart';
 import 'package:form_gear_engine_sdk/src/core/listeners/save_submit_result.dart';
+import 'package:form_gear_engine_sdk/src/utils/form_data_file_manager.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 
 /// Simple example FormDataListener implementation for getting started
@@ -188,9 +189,7 @@ class SimpleFormDataListener extends UnifiedFormDataListener {
       FormGearLogger.sdk(
         '  - Reference: ${data.reference?.length ?? 0} characters',
       );
-      FormGearLogger.sdk(
-        '  - Media: ${data.media?.length ?? 0} characters',
-      );
+      FormGearLogger.sdk('  - Media: ${data.media?.length ?? 0} characters');
     }
 
     FormGearLogger.sdk('Configuration:');
@@ -198,9 +197,7 @@ class SimpleFormDataListener extends UnifiedFormDataListener {
     FormGearLogger.sdk('  - Form Mode: ${data.config.formMode.name}');
     FormGearLogger.sdk('  - Client Mode: ${data.config.clientMode.name}');
     FormGearLogger.sdk('  - Encrypted: ${data.config.isEncrypted}');
-    FormGearLogger.sdk(
-      '  - Offline Capable: ${data.config.offlineCapable}',
-    );
+    FormGearLogger.sdk('  - Offline Capable: ${data.config.offlineCapable}');
   }
 
   /// Saves data to a simple JSON file for inspection
@@ -249,11 +246,9 @@ class SimpleFormDataListener extends UnifiedFormDataListener {
 
       // Write to file with pretty formatting
       final prettyJson = const JsonEncoder.withIndent('  ').convert(jsonData);
-      await file.writeAsString(prettyJson);
+      await FormDataFileManager.writeAtomically(file.path, prettyJson);
 
-      FormGearLogger.sdk(
-        'SimpleFormDataListener: Saved data to ${file.path}',
-      );
+      FormGearLogger.sdk('SimpleFormDataListener: Saved data to ${file.path}');
     } catch (e) {
       FormGearLogger.sdkError(
         'SimpleFormDataListener: Failed to save to file: $e',

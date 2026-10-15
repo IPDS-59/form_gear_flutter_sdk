@@ -6,9 +6,7 @@ import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 /// This handler is called by FormGear JavaScript when performing
 /// offline lookup queries
 class OfflineSearchHandler extends JSHandler<ListInfoJs> {
-  OfflineSearchHandler({
-    this.onSearchOffline,
-  });
+  OfflineSearchHandler({this.onSearchOffline});
 
   /// Callback to perform the actual offline search
   /// Takes lookupId, version, and conditions as parameters
@@ -57,10 +55,7 @@ class OfflineSearchHandler extends JSHandler<ListInfoJs> {
         FormGearLogger.webviewError(
           'Invalid arguments for searchOffline: $arguments',
         );
-        return ListInfoJs(
-          success: false,
-          error: 'Invalid arguments',
-        );
+        return ListInfoJs(success: false, error: 'Invalid arguments');
       }
 
       FormGearLogger.webview(
@@ -83,10 +78,7 @@ class OfflineSearchHandler extends JSHandler<ListInfoJs> {
       return ListInfoJs(success: true, data: const <dynamic>[]);
     } on Exception catch (e, stackTrace) {
       FormGearLogger.webviewError('Offline search error: $e\n$stackTrace');
-      return ListInfoJs(
-        success: false,
-        error: 'Offline search failed: $e',
-      );
+      return ListInfoJs(success: false, error: 'Offline search failed: $e');
     }
   }
 }

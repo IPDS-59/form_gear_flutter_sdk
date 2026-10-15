@@ -184,10 +184,7 @@ class FormDataErrorHandler {
     Future<String> Function() operation, {
     Duration timeout = const Duration(minutes: 2),
   }) async {
-    return executeWithRetry(
-      data,
-      () => operation().timeout(timeout),
-    );
+    return await executeWithRetry(data, () => operation().timeout(timeout));
   }
 
   /// Categorizes errors to determine retry strategy and user messaging
@@ -322,10 +319,7 @@ class FormDataErrorHandler {
     int failureThreshold = 5,
     Duration timeout = const Duration(minutes: 1),
   }) {
-    return CircuitBreaker(
-      failureThreshold: failureThreshold,
-      timeout: timeout,
-    );
+    return CircuitBreaker(failureThreshold: failureThreshold, timeout: timeout);
   }
 }
 
@@ -358,10 +352,7 @@ enum ErrorCategory {
 
 /// Simple circuit breaker implementation to prevent cascade failures
 class CircuitBreaker {
-  CircuitBreaker({
-    required this.failureThreshold,
-    required this.timeout,
-  });
+  CircuitBreaker({required this.failureThreshold, required this.timeout});
 
   final int failureThreshold;
   final Duration timeout;

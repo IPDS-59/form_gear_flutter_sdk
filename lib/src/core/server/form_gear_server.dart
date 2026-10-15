@@ -9,10 +9,7 @@ import 'package:shelf_static/shelf_static.dart';
 
 /// HTTP server for serving FormGear assets and lookup data
 class FormGearServer {
-  FormGearServer({
-    this.port = 3310,
-    this.lookupAssetPath = 'assets/lookup',
-  });
+  FormGearServer({this.port = 3310, this.lookupAssetPath = 'assets/lookup'});
 
   HttpServer? _server;
   String? _baseUrl;
@@ -26,9 +23,7 @@ class FormGearServer {
   /// Sets the dynamic HTML content to be served at /formgear
   void setDynamicHtmlContent(String html) {
     _dynamicHtmlContent = html;
-    FormGearLogger.sdk(
-      'Dynamic HTML content set (${html.length} chars)',
-    );
+    FormGearLogger.sdk('Dynamic HTML content set (${html.length} chars)');
   }
 
   /// Clears the dynamic HTML content
@@ -56,9 +51,7 @@ class FormGearServer {
       final handler = const Pipeline()
           .addMiddleware(logRequests())
           .addMiddleware(_corsMiddleware())
-          .addHandler(
-            Cascade().add(staticHandler).add(_apiRouter).handler,
-          );
+          .addHandler(Cascade().add(staticHandler).add(_apiRouter).handler);
 
       // Try to start server with port fallback if port is in use
       var currentPort = port;
@@ -73,8 +66,8 @@ class FormGearServer {
           FormGearLogger.sdk('Serving static files from: ${dataDir.path}');
           return _baseUrl;
         } on SocketException catch (e) {
-          if (e.osError?.errorCode == 98 && attempt < maxRetries - 1) {
-            // EADDRINUSE
+          if (_addressInUse.contains(e.osError?.errorCode) &&
+              attempt < maxRetries - 1) {
             currentPort++;
             FormGearLogger.sdk(
               'Port ${currentPort - 1} in use, trying $currentPort',
@@ -93,6 +86,9 @@ class FormGearServer {
       return null;
     }
   }
+
+  /// EADDRINUSE on Linux/Android, Darwin/iOS and Windows.
+  static const _addressInUse = {98, 48, 10048};
 
   /// Stops the HTTP server
   Future<void> stop() async {
@@ -144,7 +140,7 @@ class FormGearServer {
 
     // Route lookup requests
     if (path == 'lookup' && method == 'GET') {
-      return _handleLookup(request);
+      return await _handleLookup(request);
     }
 
     return Response.notFound('API endpoint not found');
@@ -166,6 +162,7 @@ class FormGearServer {
 
     return Response.ok(
       _dynamicHtmlContent,
+      // Per-assignment page: a cached copy would open the previous form.
       headers: {'Content-Type': 'text/html; charset=utf-8'},
     );
   }
@@ -203,11 +200,10 @@ class FormGearServer {
         );
       }
 
-      // Load and parse lookup data
-      String? lookupData;
+      final Object? stored;
       try {
-        lookupData = await lookupFile.readAsString();
-      } on FileSystemException catch (e) {
+        stored = jsonDecode(await lookupFile.readAsString());
+      } on Exception catch (e) {
         FormGearLogger.serverError('Failed to read lookup file: $e');
         return Response.internalServerError(
           body: jsonEncode({'error': 'Failed to load local lookup data'}),
@@ -215,8 +211,13 @@ class FormGearServer {
         );
       }
 
+      // Same envelope as native FASIH's local server: the page reads
+      // result.data and ignores anything else.
       return Response.ok(
-        jsonEncode(lookupData),
+        jsonEncode({
+          'success': true,
+          'data': filterLookupRows(stored, conditions),
+        }),
         headers: {'Content-Type': 'application/json'},
       );
     } on Exception catch (e) {
@@ -226,6 +227,34 @@ class FormGearServer {
         headers: {'Content-Type': 'application/json'},
       );
     }
+  }
+
+  /// Rows of a stored lookup (a list, or `{data: [...]}`) matching every
+  /// `[{key, value}]` condition, like native FASIH's `WHERE key = value`.
+  /// Unrecognized shapes are passed through unfiltered.
+  static Object? filterLookupRows(Object? stored, String conditionsJson) {
+    final rows = stored is Map && stored['data'] is List
+        ? stored['data'] as List
+        : stored;
+    if (rows is! List) return rows;
+
+    final conditions = <String, String>{};
+    try {
+      for (final c in jsonDecode(conditionsJson) as List) {
+        if (c is Map && c['key'] != null) {
+          conditions['${c['key']}'] = '${c['value']}';
+        }
+      }
+    } on Object {
+      return rows; // no usable conditions
+    }
+    return rows
+        .where(
+          (row) =>
+              row is Map &&
+              conditions.entries.every((c) => '${row[c.key]}' == c.value),
+        )
+        .toList();
   }
 
   /// Gets the base URL of the server

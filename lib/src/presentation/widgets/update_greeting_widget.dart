@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 
 class UpdateGreetingWidget extends StatelessWidget {
-  const UpdateGreetingWidget({
-    required this.emoji,
-    super.key,
-  });
+  const UpdateGreetingWidget({required this.emoji, super.key});
 
   final String emoji;
 
@@ -22,10 +19,7 @@ class UpdateGreetingWidget extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Text(
-          emoji,
-          style: const TextStyle(fontSize: 24),
-        ),
+        Text(emoji, style: const TextStyle(fontSize: 24)),
       ],
     );
   }

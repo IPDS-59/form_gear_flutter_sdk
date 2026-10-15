@@ -21,9 +21,9 @@ class LookupActionHandler with ActionHandlerContract {
   ) async {
     switch (action) {
       case 'GET_ANSWER':
-        return _handleGetAnswer(dataKey, data);
+        return await _handleGetAnswer(dataKey, data);
       case 'LOOKUP':
-        return _handleLookup(dataKey, data);
+        return await _handleLookup(dataKey, data);
       default:
         return ActionInfoJs(
           success: false,

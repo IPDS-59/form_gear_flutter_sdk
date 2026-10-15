@@ -222,10 +222,7 @@ class DirectoryConstants {
   }
 
   /// Helper function to copy directory contents synchronously
-  static void _copyDirectorySync(
-    Directory source,
-    Directory destination,
-  ) {
+  static void _copyDirectorySync(Directory source, Directory destination) {
     if (!source.existsSync()) return;
 
     if (!destination.existsSync()) {

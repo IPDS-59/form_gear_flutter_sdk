@@ -34,7 +34,7 @@ class EngineAssetLoader {
     FormGearLogger.sdk(
       'Loading ${engineType.displayName} engine from bundle assets (fallback)',
     );
-    return _loadEngineFromAssets(engineType);
+    return await _loadEngineFromAssets(engineType);
   }
 
   /// Loads engine assets from local downloaded files using DirectoryConstants
@@ -185,19 +185,9 @@ class EngineAssetLoader {
   List<String> _getAlternativeJSFileNames(FormEngineType engineType) {
     switch (engineType) {
       case FormEngineType.formGear:
-        return [
-          'form-gear.es.js',
-          'formgear.js',
-          'main.js',
-          'index.js',
-        ];
+        return ['form-gear.es.js', 'formgear.js', 'main.js', 'index.js'];
       case FormEngineType.fasihForm:
-        return [
-          'fasih-form.es.js',
-          'fasihform.js',
-          'main.js',
-          'index.js',
-        ];
+        return ['fasih-form.es.js', 'fasihform.js', 'main.js', 'index.js'];
     }
   }
 
@@ -310,9 +300,7 @@ class EngineAssetLoader {
       try {
         const jqueryAssetPath =
             'packages/form_gear_engine_sdk/assets/vendor/jquery-3.5.1.js';
-        FormGearLogger.sdk(
-          'Attempting to load jQuery from: $jqueryAssetPath',
-        );
+        FormGearLogger.sdk('Attempting to load jQuery from: $jqueryAssetPath');
         final jqueryContent = await rootBundle.loadString(jqueryAssetPath);
         processedHtml = processedHtml.replaceAll(
           '/*JQUERY_CONTENT*/',

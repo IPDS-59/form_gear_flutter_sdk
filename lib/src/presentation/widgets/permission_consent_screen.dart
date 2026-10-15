@@ -113,10 +113,7 @@ class PermissionConsentScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            Text(
-                              emoji,
-                              style: const TextStyle(fontSize: 24),
-                            ),
+                            Text(emoji, style: const TextStyle(fontSize: 24)),
                           ],
                         ),
                       ),
@@ -183,9 +180,7 @@ class PermissionConsentScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: item.color.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: item.color.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: item.color.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -196,11 +191,7 @@ class PermissionConsentScreen extends StatelessWidget {
               color: item.color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              item.icon,
-              color: item.color,
-              size: 24,
-            ),
+            child: Icon(item.icon, color: item.color, size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -335,9 +326,8 @@ class PermissionConsentScreen extends StatelessWidget {
     final deniedPermissions = statuses.entries
         .where((entry) => !entry.value.isGranted)
         .map(
-          (entry) => permissions.firstWhere(
-            (item) => item.permission == entry.key,
-          ),
+          (entry) =>
+              permissions.firstWhere((item) => item.permission == entry.key),
         )
         .toList();
 

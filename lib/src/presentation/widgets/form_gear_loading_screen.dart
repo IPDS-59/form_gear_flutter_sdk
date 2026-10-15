@@ -5,10 +5,7 @@ import 'package:percent_indicator/percent_indicator.dart';
 
 /// A modern loading screen widget for FormGear with logo and animated progress
 class FormGearLoadingScreen extends StatefulWidget {
-  const FormGearLoadingScreen({
-    required this.loadingProgress,
-    super.key,
-  });
+  const FormGearLoadingScreen({required this.loadingProgress, super.key});
 
   /// The current loading progress (0-100)
   final int loadingProgress;
@@ -198,32 +195,18 @@ class _AnimatedLogoState extends State<_AnimatedLogo>
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    _pulseAnimation =
-        Tween<double>(
-          begin: 0.95,
-          end: 1.05,
-        ).animate(
-          CurvedAnimation(
-            parent: _pulseController,
-            curve: Curves.easeInOut,
-          ),
-        );
+    _pulseAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
     // Shimmer animation
     _shimmerController = AnimationController(
       duration: const Duration(milliseconds: 2500),
       vsync: this,
     );
-    _shimmerAnimation =
-        Tween<double>(
-          begin: 0,
-          end: 1,
-        ).animate(
-          CurvedAnimation(
-            parent: _shimmerController,
-            curve: Curves.linear,
-          ),
-        );
+    _shimmerAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _shimmerController, curve: Curves.linear),
+    );
 
     // Start continuous animations
     _pulseController.repeat(reverse: true);
@@ -297,9 +280,7 @@ class _AnimatedLogoState extends State<_AnimatedLogo>
 /// Linear progress bar widget with FormGear brand colors
 /// using percent_indicator
 class _LinearProgressBar extends StatelessWidget {
-  const _LinearProgressBar({
-    required this.loadingProgress,
-  });
+  const _LinearProgressBar({required this.loadingProgress});
 
   final int loadingProgress;
 
@@ -334,9 +315,7 @@ class _LinearProgressBar extends StatelessWidget {
 
 /// Progress percentage widget with FormGear brand colors
 class _ProgressPercentage extends StatelessWidget {
-  const _ProgressPercentage({
-    required this.loadingProgress,
-  });
+  const _ProgressPercentage({required this.loadingProgress});
 
   final int loadingProgress;
 

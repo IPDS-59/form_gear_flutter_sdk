@@ -50,12 +50,7 @@ class VersionCheckResult extends Equatable {
   Map<String, dynamic> toJson() => _$VersionCheckResultToJson(this);
 
   @override
-  List<Object?> get props => [
-    state,
-    formEngine,
-    localVersion,
-    remoteVersion,
-  ];
+  List<Object?> get props => [state, formEngine, localVersion, remoteVersion];
 
   /// Creates a copy with updated properties
   VersionCheckResult copyWith({

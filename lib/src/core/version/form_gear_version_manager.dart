@@ -49,7 +49,7 @@ class FormGearVersionManager {
           }
           return null;
         },
-        (FormEngineResponse response) async {
+        (response) async {
           final formEngine = response.data;
 
           if (formEngine == null) {

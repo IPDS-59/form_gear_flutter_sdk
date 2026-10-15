@@ -40,7 +40,7 @@ class ActionHandler extends JSHandler<ActionInfoJs> {
       // Find and delegate to the appropriate sub-handler
       for (final handler in _handlers) {
         if (handler.canHandle(action)) {
-          return handler.handle(action, dataKey, data);
+          return await handler.handle(action, dataKey, data);
         }
       }
 

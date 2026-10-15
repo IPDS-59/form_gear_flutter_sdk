@@ -668,14 +668,8 @@ void main() {
 
   group('SaveSubmitEngineType Tests', () {
     test('should have correct display names', () {
-      expect(
-        SaveSubmitEngineType.formGear.displayName,
-        'FormGear (ID: 1)',
-      );
-      expect(
-        SaveSubmitEngineType.fasihForm.displayName,
-        'FasihForm (ID: 2)',
-      );
+      expect(SaveSubmitEngineType.formGear.displayName, 'FormGear (ID: 1)');
+      expect(SaveSubmitEngineType.fasihForm.displayName, 'FasihForm (ID: 2)');
     });
 
     test('should have correct engine IDs', () {

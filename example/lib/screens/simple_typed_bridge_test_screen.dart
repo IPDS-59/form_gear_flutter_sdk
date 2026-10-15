@@ -44,7 +44,7 @@ class _SimpleTypedBridgeTestScreenState
         },
         onConsoleMessage: (controller, consoleMessage) {
           debugPrint(
-            'Console [${consoleMessage.messageLevel}]: '
+            'Console [${consoleMessage.level}]: '
             '${consoleMessage.message}',
           );
         },
