@@ -58,10 +58,10 @@ class JsBridge {
   /// Value the JS caller receives. Getters return the strings FormGear's
   /// `callAndroidFunction` parses; actions return the full JSON response.
   static Object? bridgeValue(String handlerName, Object? result) {
+    // Native returns a plain String for these, never a wrapper object.
+    if (result is StringInfoJs) return result.value ?? '';
     if (handlerName.startsWith('get') || handlerName.contains('Role')) {
       switch (result) {
-        case StringInfoJs(:final value):
-          return value ?? '';
         case JsonInfoJs(:final data):
           return jsonEncode(data ?? const <String, dynamic>{});
         case ListInfoJs(:final data):

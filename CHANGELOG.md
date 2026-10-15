@@ -5,6 +5,15 @@
 
 - Removed the internal `EncryptionService` (all-zero default key, zero IV) and `EncryptionUtils` (XOR). Neither was exported or called, and neither can read FASIH data. Encrypting answer files is the host's job, as in native FASIH (`AssignmentEncryptionHelper`: AES-GCM with the per-region `wrappedDatakey`, or legacy `Kripto`). Do it in your `FormDataListener`. The `crypto` and `encrypt` dependencies are gone.
 
+### ✨ Features
+
+- The four native `FormGearJsBridge` methods the SDK lacked are now served. Register a `FormEngineEventListener` with `FormGearSDK.instance.formEngineEventListener = ...`:
+  - `dispatchFinalResult(data, remark, principal, summary)` is FasihForm's answer to `finalizeForm()` (`trigger-finalize`). It goes to `onFinalResult`, with `hasErrors` = `summary.error` is non-empty, like native.
+  - `connectorApi(name, param)` goes to `onConnectorApi(name, {assignmentId, body})`. The host POSTs it to `/mobile/connector/api/hit/{name}`. The page gets the raw response string, or native's `{"success":false,"message":...}` on failure. It is a Promise; native returns synchronously.
+  - `sendEvent(param)` goes to `onSendEvent(assignmentId, param)` (assignment id `"0"` when none, like native).
+  - `s3refreshUrl(json)` is a no-op, like native 2.17.5.
+- Bridge results of type `StringInfoJs` now reach the page as a plain string for every handler, not only getters.
+
 ## [0.4.0] - 2026-10-15
 
 ### ⚠️ Breaking changes

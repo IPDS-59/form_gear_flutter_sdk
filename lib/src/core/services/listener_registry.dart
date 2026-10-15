@@ -8,6 +8,9 @@ class ListenerRegistry {
   FormDataListener? _formDataListener;
   FileUploadListener? _fileUploadListener;
 
+  /// Host side of `dispatchFinalResult`, `connectorApi` and `sendEvent`.
+  FormEngineEventListener? formEngineEventListener;
+
   /// Sets the FormDataListener for handling save/submit operations
   void setFormDataListener(FormDataListener? listener) {
     _formDataListener = listener;
@@ -56,5 +59,6 @@ class ListenerRegistry {
   void dispose() {
     _formDataListener = null;
     _fileUploadListener = null;
+    formEngineEventListener = null;
   }
 }

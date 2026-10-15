@@ -17,6 +17,7 @@ export 'examples/simple_listener.dart';
 // Core listener interfaces and base classes
 export 'file_upload_listener.dart';
 export 'form_data_listener.dart';
+export 'form_engine_event_listener.dart';
 // Data models for save/submit operations
 export 'save_submit_data.dart';
 export 'save_submit_result.dart';

@@ -182,6 +182,13 @@ class FormGearSDK {
   void removeFileUploadListener() =>
       _listenerRegistry.removeFileUploadListener();
 
+  /// Listener for `dispatchFinalResult`, `connectorApi` and `sendEvent`
+  /// (set `null` to remove it).
+  FormEngineEventListener? get formEngineEventListener =>
+      _listenerRegistry.formEngineEventListener;
+  set formEngineEventListener(FormEngineEventListener? listener) =>
+      _listenerRegistry.formEngineEventListener = listener;
+
   /// Opens form with assignment context (new assignment-based method)
   /// This method uses dynamic configuration based on assignment context
   ///
@@ -499,6 +506,7 @@ class FormGearSDK {
   /// Finalizes the open form, like native FASIH's approval button. FasihForm
   /// (engine 2) gets `trigger-finalize`; FormGear (engine 1) has no in-page
   /// finalize (native shows its own approval dialog), so returns false.
+  /// The page answers via [FormEngineEventListener.onFinalResult].
   Future<bool> finalizeForm() async {
     final engineId = JSExecutorService().formEngineId;
     if (engineId != FormEngineType.fasihForm.id.toString()) {

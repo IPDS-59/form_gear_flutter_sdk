@@ -10,3 +10,4 @@ export 'location_action_handler.dart';
 export 'lookup_action_handler.dart';
 export 'media_action_handler.dart';
 export 'mobile_exit_handler.dart';
+export 'native_bridge_handlers.dart';

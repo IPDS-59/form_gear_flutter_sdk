@@ -6,6 +6,7 @@ import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/android_data_ha
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/client_action_handler.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/execute_handler.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/mobile_exit_handler.dart';
+import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/native_bridge_handlers.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/offline_search_handler.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
 import 'package:form_gear_engine_sdk/src/core/listeners/form_data_listener.dart';
@@ -162,6 +163,7 @@ class HandlerFactory {
       offlineSearchHandler, // Offline lookup search handler
       ...clientActionHandler.createHandlers(), // Client action handlers
       ...saveSubmitHandlers,
+      ...createNativeBridgeHandlers(),
     ];
   }
 
@@ -330,6 +332,7 @@ class HandlerFactory {
       offlineSearchHandler, // Offline lookup search handler
       ...clientActionHandler.createHandlers(),
       ...saveSubmitHandlers,
+      ...createNativeBridgeHandlers(),
     ];
   }
 }
