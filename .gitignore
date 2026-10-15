@@ -39,3 +39,5 @@ FULL_LOG.txt
 
 # Claude Code
 .claude/
+# Local CodeGraph index
+.codegraph/
