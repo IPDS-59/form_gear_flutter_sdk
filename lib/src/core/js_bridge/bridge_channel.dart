@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/models/response_models.dart';
+import 'package:form_gear_engine_sdk/src/core/observability/form_gear_bridge_event.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 
 /// Serves `window.flutter_inappwebview.callHandler(...)` calls posted by
@@ -31,6 +32,11 @@ class JsBridge {
     final name = call['name'] as String? ?? '';
     final args = call['args'] as List<dynamic>? ?? const <dynamic>[];
 
+    final watch = FormGearBridgeObserver.instance.isObserving
+        ? (Stopwatch()..start())
+        : null;
+    Object? settledValue;
+    String? failure;
     List<Object?> settle;
     try {
       final handler = _handlers[name];
@@ -39,16 +45,37 @@ class JsBridge {
         () => handler.callback(args),
         zoneValues: {JSExecutorService.originKey: origin},
       );
-      settle = [id, true, bridgeValue(name, result)];
+      settledValue = bridgeValue(name, result);
+      settle = [id, true, settledValue];
     } on Object catch (e) {
       FormGearLogger.jsBridgeError('Handler $name failed: $e');
-      settle = [id, false, '$e'];
+      failure = '$e';
+      settle = [id, false, failure];
     }
+    FormGearBridgeObserver.instance.emit(
+      direction: FormGearBridgeDirection.jsToHost,
+      kind: FormGearBridgeKind.call,
+      channel: name,
+      method: name,
+      args: args,
+      result: settledValue,
+      error: failure,
+      durationMs: watch?.elapsedMilliseconds,
+    );
 
     try {
-      await runJavaScript(
-        JSExecutorService.jsCall('window.__fgBridgeResolve', settle),
+      final settleJs = JSExecutorService.jsCall(
+        'window.__fgBridgeResolve',
+        settle,
       );
+      FormGearBridgeObserver.instance.emit(
+        direction: FormGearBridgeDirection.hostToJs,
+        kind: FormGearBridgeKind.push,
+        channel: 'js',
+        method: '__fgBridgeResolve',
+        args: settleJs,
+      );
+      await runJavaScript(settleJs);
     } on Object catch (e) {
       // The page is gone (form closed); nothing left to resolve.
       FormGearLogger.webview('Could not settle $name call: $e');

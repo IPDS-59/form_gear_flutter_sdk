@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
+import 'package:form_gear_engine_sdk/src/core/ui/form_gear_ui_handler.dart';
 import 'package:form_gear_engine_sdk/src/models/assignment_context.dart';
 import 'package:form_gear_engine_sdk/src/models/form_engine_type.dart';
 import 'package:form_gear_engine_sdk/src/models/prepared_engine.dart';
@@ -21,6 +24,7 @@ class WebViewBuilder {
     required PreparedEngine preparedEngine,
     required FormEngineType? currentEngineType,
     required List<JSHandler<dynamic>> jsHandlers,
+    FormGearUiHandler? uiHandler,
   }) {
     // iOS: Use server URL if available (works around loadData() issues)
     // Android: Use HTML content directly with loadData()
@@ -40,6 +44,7 @@ class WebViewBuilder {
     }
 
     return FormGearWebView(
+      uiHandler: uiHandler,
       url: url,
       htmlContent: htmlContent,
       jsHandlers: jsHandlers,
@@ -65,24 +70,68 @@ class WebViewBuilder {
   static Widget createFormGearEnginePage({
     required String title,
     required FormGearWebView webView,
+    FormGearUiHandler? uiHandler,
   }) {
-    return FormGearEnginePage(title: title, webView: webView);
+    return FormGearEnginePage(
+      title: title,
+      webView: webView,
+      uiHandler: uiHandler,
+    );
   }
 }
 
-/// Internal page widget for displaying FormGear engine
-class FormGearEnginePage extends StatelessWidget {
+/// Internal page widget for displaying FormGear engine.
+///
+/// Draws edge to edge by default: transparent system bars under the page and
+/// the form kept inside the safe area, so nothing hides behind a bar. A
+/// [FormGearUiHandler] can turn this off or restyle the bars.
+class FormGearEnginePage extends StatefulWidget {
   const FormGearEnginePage({
     required this.title,
     required this.webView,
+    this.uiHandler,
     super.key,
   });
 
   final String title;
   final FormGearWebView webView;
+  final FormGearUiHandler? uiHandler;
+
+  @override
+  State<FormGearEnginePage> createState() => _FormGearEnginePageState();
+}
+
+class _FormGearEnginePageState extends State<FormGearEnginePage> {
+  bool get _edgeToEdge => widget.uiHandler?.edgeToEdge ?? true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_edgeToEdge) {
+      unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: webView);
+    final page = Scaffold(body: widget.webView);
+    if (!_edgeToEdge) return page;
+    final style =
+        widget.uiHandler?.systemOverlayStyle(context) ??
+        _transparentBars(Theme.of(context).brightness);
+    return AnnotatedRegion<SystemUiOverlayStyle>(value: style, child: page);
+  }
+
+  static SystemUiOverlayStyle _transparentBars(Brightness page) {
+    final icons = page == Brightness.dark ? Brightness.light : Brightness.dark;
+    return SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarContrastEnforced: false,
+      statusBarIconBrightness: icons,
+      systemNavigationBarIconBrightness: icons,
+      statusBarBrightness: page,
+    );
   }
 }
