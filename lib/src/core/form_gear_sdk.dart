@@ -197,6 +197,30 @@ class FormGearSDK {
   set formEngineUpdateHandler(FormEngineUpdateHandler? handler) =>
       _listenerRegistry.formEngineUpdateHandler = handler;
 
+  /// Every JS bridge event of the open form (calls from the page, JavaScript
+  /// run by the host, console, lifecycle). Broadcast; costs nothing while
+  /// nobody listens. For debuggers.
+  Stream<FormGearBridgeEvent> get bridgeEvents =>
+      FormGearBridgeObserver.instance.events;
+
+  /// Masks payloads before they are published (see
+  /// [FormGearBridgeObserver.redactSecrets]). Null publishes raw payloads.
+  FormGearBridgeRedactor? get bridgeRedactor =>
+      FormGearBridgeObserver.instance.redactor;
+  set bridgeRedactor(FormGearBridgeRedactor? redactor) =>
+      FormGearBridgeObserver.instance.redactor = redactor;
+
+  /// Runs [source] in the open form's WebView and returns the result as
+  /// text, or null when no form is open. For debuggers only.
+  Future<String?> evaluateJavascript(String source) =>
+      JSExecutorService().evaluate(source);
+
+  /// Host UI for the loader, exit dialog and errors around a form, and the
+  /// edge-to-edge setting. Null keeps the built-in UI.
+  FormGearUiHandler? get uiHandler => _listenerRegistry.uiHandler;
+  set uiHandler(FormGearUiHandler? handler) =>
+      _listenerRegistry.uiHandler = handler;
+
   /// Opens form with assignment context (new assignment-based method)
   /// This method uses dynamic configuration based on assignment context
   ///
@@ -322,11 +346,23 @@ class FormGearSDK {
       preparedEngine: engineToUse,
       currentEngineType: engineType,
       jsHandlers: jsHandlers,
+      uiHandler: _listenerRegistry.uiHandler,
     );
 
     try {
       // Check if context is still mounted before navigation
       if (!context.mounted) return;
+
+      final observer = FormGearBridgeObserver.instance
+        ..assignmentId = current.assignmentId
+        ..sessionId = DateTime.now().microsecondsSinceEpoch.toRadixString(36);
+      observer.emit(
+        direction: FormGearBridgeDirection.local,
+        kind: FormGearBridgeKind.lifecycle,
+        channel: 'lifecycle',
+        method: 'formOpened',
+        args: {'templateId': current.templateId, 'engineType': engineType.id},
+      );
 
       // Navigate to a full-screen page with the WebView
       await Navigator.of(context).push<void>(
@@ -334,10 +370,20 @@ class FormGearSDK {
           builder: (context) => WebViewBuilder.createFormGearEnginePage(
             title: title ?? 'FormGear - ${current.templateId}',
             webView: webView,
+            uiHandler: _listenerRegistry.uiHandler,
           ),
         ),
       );
     } finally {
+      FormGearBridgeObserver.instance.emit(
+        direction: FormGearBridgeDirection.local,
+        kind: FormGearBridgeKind.lifecycle,
+        channel: 'lifecycle',
+        method: 'formClosed',
+      );
+      FormGearBridgeObserver.instance
+        ..assignmentId = null
+        ..sessionId = null;
       // Clear assignment context and stop server when done
       _currentAssignment = null;
       if (_server != null && _server!.isRunning) {
@@ -497,6 +543,7 @@ class FormGearSDK {
       showNotifications: showNotifications,
       context: context,
       updateHandler: _listenerRegistry.formEngineUpdateHandler,
+      uiHandler: _listenerRegistry.uiHandler,
     );
   }
 

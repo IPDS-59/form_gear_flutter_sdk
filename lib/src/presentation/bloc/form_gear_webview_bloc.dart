@@ -6,6 +6,7 @@ import 'package:form_gear_engine_sdk/src/core/engine/page_prelude.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/bridge_channel.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
+import 'package:form_gear_engine_sdk/src/core/observability/form_gear_bridge_event.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -38,6 +39,16 @@ class FormGearWebViewBloc
   final String? engineReadyCheck;
   WebViewController? _controller;
   int _loadGeneration = 0;
+
+  void _lifecycle(String step, Object? details, {String? error}) =>
+      FormGearBridgeObserver.instance.emit(
+        direction: FormGearBridgeDirection.local,
+        kind: FormGearBridgeKind.lifecycle,
+        channel: 'lifecycle',
+        method: step,
+        args: details,
+        error: error,
+      );
 
   Future<void> _onInitializeWebView(
     InitializeWebView event,
@@ -88,6 +99,7 @@ class FormGearWebViewBloc
     Emitter<FormGearWebViewState> emit,
   ) {
     _loadGeneration++;
+    _lifecycle('pageStarted', {'url': event.url});
     emit(
       state.copyWith(
         status: WebViewStatus.loading,
@@ -101,6 +113,7 @@ class FormGearWebViewBloc
     WebViewLoadStop event,
     Emitter<FormGearWebViewState> emit,
   ) async {
+    _lifecycle('pageFinished', {'url': event.url});
     emit(state.copyWith(status: WebViewStatus.loaded, loadingProgress: 100));
 
     final controller = _controller;
@@ -122,6 +135,7 @@ class FormGearWebViewBloc
     WebViewLoadError event,
     Emitter<FormGearWebViewState> emit,
   ) {
+    _lifecycle('pageError', {'code': event.code}, error: event.message);
     emit(
       state.copyWith(
         status: WebViewStatus.error,
