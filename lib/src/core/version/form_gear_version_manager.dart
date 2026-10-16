@@ -1,18 +1,17 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:form_gear_engine_sdk/src/core/base/failure.dart';
 import 'package:form_gear_engine_sdk/src/core/base/result.dart';
-import 'package:form_gear_engine_sdk/src/core/constants/directory_constants.dart';
+import 'package:form_gear_engine_sdk/src/core/version/form_engine_update_handler.dart';
 import 'package:form_gear_engine_sdk/src/domain/usecases/check_form_engine_version_usecase.dart';
 import 'package:form_gear_engine_sdk/src/domain/usecases/get_local_form_engine_version_usecase.dart';
+import 'package:form_gear_engine_sdk/src/domain/usecases/install_form_engine_usecase.dart';
 import 'package:form_gear_engine_sdk/src/domain/usecases/is_form_engine_downloaded_usecase.dart';
 import 'package:form_gear_engine_sdk/src/models/models.dart';
 import 'package:form_gear_engine_sdk/src/presentation/screens/form_engine_update_screen.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
-import 'package:form_gear_engine_sdk/src/utils/zip_helper.dart';
 import 'package:injectable/injectable.dart';
-import 'package:path/path.dart' as path;
 
 /// Manages form engine version checking and download notifications
 @LazySingleton()
@@ -21,19 +20,20 @@ class FormGearVersionManager {
     this._checkFormEngineVersionUseCase,
     this._isFormEngineDownloadedUseCase,
     this._getLocalFormEngineVersionUseCase,
-    this._dio,
+    this._installFormEngineUseCase,
   );
 
   final CheckFormEngineVersionUseCase _checkFormEngineVersionUseCase;
   final IsFormEngineDownloadedUseCase _isFormEngineDownloadedUseCase;
   final GetLocalFormEngineVersionUseCase _getLocalFormEngineVersionUseCase;
-  final Dio _dio;
+  final InstallFormEngineUseCase _installFormEngineUseCase;
 
   /// Checks form engine version and returns result with state information
   Future<VersionCheckResult?> checkFormEngineVersion({
     String? engineId,
     bool showNotifications = true,
     BuildContext? context,
+    FormEngineUpdateHandler? updateHandler,
   }) async {
     try {
       final result = await _checkFormEngineVersionUseCase(engineId);
@@ -72,7 +72,7 @@ class FormGearVersionManager {
           if (versionResult.needsDownload &&
               (showNotifications || versionResult.isForced) &&
               context != null) {
-            _showVersionUpdateScreen(context, versionResult);
+            _showVersionUpdateScreen(context, versionResult, updateHandler);
           }
 
           return versionResult;
@@ -165,22 +165,66 @@ class FormGearVersionManager {
     );
   }
 
-  /// Shows version update screen instead of dialog
+  /// Downloads the engine described by [result]; no UI.
+  Future<Result<void>> _download(
+    VersionCheckResult result, {
+    void Function(int progress)? onProgress,
+  }) => _installFormEngineUseCase(
+    result.formEngine,
+    result.formEngine.formEngineId?.toString() ??
+        FormEngineType.formGear.id.toString(),
+    onProgress: onProgress,
+  );
+
+  /// Looks up engine [engineId] on the server, then downloads it; no UI.
+  Future<Result<void>> downloadFormEngine(
+    String engineId, {
+    void Function(int progress)? onProgress,
+  }) async {
+    final response = await _checkFormEngineVersionUseCase(engineId);
+    final formEngine = response.dataOrNull?.data;
+    if (formEngine == null) {
+      return Failure(
+        response.errorOrNull ??
+            const DataFailure('Form engine not found', 'engine_not_found'),
+      );
+    }
+    return await _installFormEngineUseCase(
+      formEngine,
+      engineId,
+      onProgress: onProgress,
+    );
+  }
+
+  /// Shows the host's [handler] UI, or the built-in update screen.
   void _showVersionUpdateScreen(
     BuildContext context,
     VersionCheckResult result,
+    FormEngineUpdateHandler? handler,
   ) {
+    if (handler != null) {
+      unawaited(
+        handler
+            .onUpdateRequired(
+              context,
+              result,
+              ({onProgress}) => _download(result, onProgress: onProgress),
+            )
+            .catchError(
+              (Object e) =>
+                  FormGearLogger.sdkError('Form engine update handler: $e'),
+            ),
+      );
+      return;
+    }
     unawaited(
       FormEngineUpdateScreen.show(
         context: context,
         versionResult: result,
-        onDownload: (onProgress) => _performFormEngineDownload(
-          context,
-          result.formEngine,
-          result.formEngine.formEngineId?.toString() ??
-              FormEngineType.formGear.id.toString(),
-          onProgress: onProgress,
-        ),
+        // Built-in screen reads progress only; failures are logged.
+        onDownload: (onProgress) async {
+          await _download(result, onProgress: onProgress);
+        },
       ),
     );
   }
@@ -202,192 +246,5 @@ class FormGearVersionManager {
         ),
       ),
     );
-  }
-
-  /// Performs the actual form engine download and ZIP extraction
-  /// Following FASIH's workflow: download ZIP -> extract -> save version
-  Future<void> _performFormEngineDownload(
-    BuildContext context,
-    FormEngineEntity formEngine,
-    String engineId, {
-    void Function(int progress)? onProgress,
-  }) async {
-    try {
-      FormGearLogger.sdk('Starting form engine download for ID: $engineId');
-
-      // Step 1: Download ZIP file with progress tracking
-      final zipFilePath = await _downloadFormEngineZip(
-        formEngine,
-        engineId,
-        onProgress: onProgress,
-      );
-      if (zipFilePath == null) {
-        _handleDownloadError(
-          context,
-          'Failed to download form engine ZIP file',
-        );
-        return;
-      }
-
-      // Step 2: Extract ZIP to form engine directory
-      final engineDir = await DirectoryConstants.getFormEngineDirectory(
-        engineId,
-      );
-      final extractSuccess = await ZipHelper.extractZip(
-        zipFilePath,
-        engineDir.path,
-        deleteZipAfterExtraction: true, // Clean up ZIP after extraction
-      );
-
-      if (!extractSuccess) {
-        _handleDownloadError(context, 'Failed to extract form engine files');
-        return;
-      }
-
-      // Step 3: Save version information
-      if (formEngine.version != null) {
-        await _saveFormEngineVersion(engineId, formEngine.version!);
-      }
-
-      // Step 4: Verify extraction success
-      final isNowDownloaded = await _isFormEngineDownloadedUseCase(engineId);
-
-      if (isNowDownloaded) {
-        _handleDownloadSuccess(context, formEngine);
-        FormGearLogger.sdk(
-          'Form engine $engineId downloaded and extracted successfully',
-        );
-      } else {
-        _handleDownloadError(
-          context,
-          'Download completed but verification failed',
-        );
-      }
-    } on Exception catch (e) {
-      FormGearLogger.sdkError('Form engine download failed: $e');
-      _handleDownloadError(context, 'Download failed: $e');
-    }
-  }
-
-  /// Downloads form engine ZIP file to temporary location
-  /// Returns the path to the downloaded ZIP file, or null if download failed
-  Future<String?> _downloadFormEngineZip(
-    FormEngineEntity formEngine,
-    String engineId, {
-    void Function(int progress)? onProgress,
-  }) async {
-    try {
-      final downloadUrl = formEngine.linkDownload;
-      if (downloadUrl == null || downloadUrl.isEmpty) {
-        FormGearLogger.sdkError(
-          'No download URL available for form engine $engineId',
-        );
-        return null;
-      }
-
-      FormGearLogger.sdk('Downloading from URL: $downloadUrl');
-
-      // Create temporary directory for ZIP download
-      final engineDir = await DirectoryConstants.getFormEngineDirectory(
-        engineId,
-      );
-      final zipFileName = '${engineId}_formengine.zip';
-      final zipFilePath = path.join(engineDir.path, zipFileName);
-
-      // Download the ZIP file using injected Dio with progress tracking
-      final response = await _dio.download(
-        downloadUrl,
-        zipFilePath,
-        options: Options(
-          responseType: ResponseType.bytes,
-          followRedirects: true,
-          validateStatus: (status) => status! < 500,
-        ),
-        onReceiveProgress: (received, total) {
-          if (onProgress != null && total > 0) {
-            final progress = ((received / total) * 100).round();
-            onProgress(progress);
-          }
-        },
-      );
-
-      if (response.statusCode == 200) {
-        FormGearLogger.sdk('ZIP file downloaded to: $zipFilePath');
-        return zipFilePath;
-      } else {
-        FormGearLogger.sdkError(
-          'HTTP ${response.statusCode}: Failed to download form engine ZIP',
-        );
-        return null;
-      }
-    } on Exception catch (e) {
-      FormGearLogger.sdkError('Error downloading form engine ZIP: $e');
-      return null;
-    }
-  }
-
-  /// Saves form engine version to version.json file
-  Future<void> _saveFormEngineVersion(String engineId, String version) async {
-    try {
-      final versionFile = await DirectoryConstants.getFormEngineVersionFile(
-        engineId,
-      );
-      final versionData = {'version': version};
-      final versionJson = _jsonEncode(versionData);
-
-      await versionFile.writeAsString(versionJson);
-      FormGearLogger.sdk('Saved version $version for engine $engineId');
-    } on Exception catch (e) {
-      FormGearLogger.sdkError(
-        'Failed to save version for engine $engineId: $e',
-      );
-    }
-  }
-
-  /// JSON encoder helper (avoiding dart:convert import for minimal
-  /// dependencies)
-  String _jsonEncode(Map<String, dynamic> data) {
-    final buffer = StringBuffer();
-    buffer.write('{');
-
-    final entries = data.entries.toList();
-    for (var i = 0; i < entries.length; i++) {
-      final entry = entries[i];
-      buffer.write('"${entry.key}":"${entry.value}"');
-      if (i < entries.length - 1) {
-        buffer.write(',');
-      }
-    }
-
-    buffer.write('}');
-    return buffer.toString();
-  }
-
-  /// Handles successful download completion
-  void _handleDownloadSuccess(
-    BuildContext context,
-    FormEngineEntity formEngine,
-  ) {
-    // Removed Navigator.pop() - let update screen handle its own UI state
-    // The update screen manages its own navigation and progress display
-
-    final engineName = formEngine.formEngineId == FormEngineType.formGear.id
-        ? 'FormGear'
-        : 'FasihForm';
-
-    // Success dialog removed - let calling code handle UI feedback
-    // The download/update screen and engine selection screen will handle
-    // showing appropriate success feedback to users
-    FormGearLogger.sdk(
-      '$engineName Engine has been downloaded and installed successfully!',
-    );
-  }
-
-  /// Handles download errors
-  /// Error display is handled by the update screen's BLoC state
-  void _handleDownloadError(BuildContext context, String error) {
-    FormGearLogger.sdkError('Download error: $error');
-    // Error is already propagated through BLoC state via onDownload callback
-    // The update screen will display error in modern UI
   }
 }

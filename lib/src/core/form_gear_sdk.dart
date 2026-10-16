@@ -189,6 +189,14 @@ class FormGearSDK {
   set formEngineEventListener(FormEngineEventListener? listener) =>
       _listenerRegistry.formEngineEventListener = listener;
 
+  /// Host UI for engine downloads and updates. When set,
+  /// [checkFormEngineVersion] calls it instead of showing the built-in update
+  /// screen, including for forced updates. `null` keeps the built-in screen.
+  FormEngineUpdateHandler? get formEngineUpdateHandler =>
+      _listenerRegistry.formEngineUpdateHandler;
+  set formEngineUpdateHandler(FormEngineUpdateHandler? handler) =>
+      _listenerRegistry.formEngineUpdateHandler = handler;
+
   /// Opens form with assignment context (new assignment-based method)
   /// This method uses dynamic configuration based on assignment context
   ///
@@ -488,7 +496,24 @@ class FormGearSDK {
       engineId: engineId,
       showNotifications: showNotifications,
       context: context,
+      updateHandler: _listenerRegistry.formEngineUpdateHandler,
     );
+  }
+
+  /// Downloads and installs a form engine without any UI.
+  ///
+  /// Looks up the engine on the server, then downloads, extracts and
+  /// verifies it. [onProgress] gets whole percents (0-100). Returns `Success`
+  /// when the engine is installed, otherwise a `Failure` holding an
+  /// `AppFailure`. Use it to build your own update screen.
+  Future<Result<void>> downloadFormEngine(
+    String engineId, {
+    void Function(int progress)? onProgress,
+  }) {
+    if (!_isInitialized) {
+      throw Exception('FormGear SDK not initialized. Call initialize() first.');
+    }
+    return _versionManager.downloadFormEngine(engineId, onProgress: onProgress);
   }
 
   /// Checks if form engine is downloaded locally

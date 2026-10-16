@@ -20,6 +20,8 @@ export 'src/core/listeners/form_data_listener.dart';
 export 'src/core/listeners/form_engine_event_listener.dart';
 export 'src/core/listeners/save_submit_data.dart';
 export 'src/core/listeners/save_submit_result.dart';
+// Custom UI for form engine downloads and updates
+export 'src/core/version/form_engine_update_handler.dart';
 // Assignment Context for Dynamic Configuration
 export 'src/models/assignment_context.dart';
 // User and Authentication
