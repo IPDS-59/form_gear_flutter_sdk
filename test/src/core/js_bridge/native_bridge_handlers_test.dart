@@ -20,10 +20,7 @@ class _Listener implements FormEngineEventListener {
   }) async => calls['final'] = [data, remark, principal, hasErrors];
 
   @override
-  Future<String?> onConnectorApi(
-    String name,
-    Map<String, dynamic> payload,
-  ) {
+  Future<String?> onConnectorApi(String name, Map<String, dynamic> payload) {
     calls['connector'] = [name, payload];
     return connectorResult();
   }
