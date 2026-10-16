@@ -1,4 +1,22 @@
 # Changelog
+## [0.5.1] - 2026-10-16
+
+### 🐛 Bug Fixes
+
+- fix(auth): never send a malformed Authorization header (#39) (f1ed89a)
+- fix(lint): keep the deprecation ignore valid on patch versions (754d8a8)
+- fix(lint): do not flag version-dependent ignores on patch releases (cd65cf7)
+
+### 🔧 Chores
+
+-  bump version to 0.6.0 for next development cycle (#37) (9bec9c9)
+-  bump version to 0.5.1 (fb66478)
+
+### 📝 Other Changes
+
+- Merge pull request #38 from IPDS-59/chore/back-merge-0.5.0 (5acc288)
+- Merge pull request #40 from IPDS-59/release/0.5.1 (dda0888)
+
 ## [0.5.0] - 2026-10-16
 
 ### ⚠️ BREAKING CHANGES
