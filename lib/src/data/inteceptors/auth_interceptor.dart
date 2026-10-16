@@ -16,20 +16,17 @@ class AuthInterceptor extends Interceptor {
         final formGearConfig = configProvider.formGearConfig;
 
         // Priority: API config auth token > BPS user session token
-        var authToken = apiConfig?.authToken;
+        final token =
+            _nonEmpty(apiConfig?.authToken) ??
+            _nonEmpty(formGearConfig?.bpsUser?.sessionToken) ??
+            _nonEmpty(formGearConfig?.bpsUser?.authToken);
 
-        // Fallback to BPS user session if no API token
-        if (authToken == null && formGearConfig != null) {
-          final token =
-              formGearConfig.bpsUser?.sessionToken ??
-              formGearConfig.bpsUser?.authToken;
-          authToken = 'Bearer $token';
-        }
-
-        if (authToken != null) {
-          // FASIH uses direct session string without Bearer prefix
-          // for most endpoints
-          options.headers['Authorization'] = 'Bearer $authToken';
+        // No token means no header, and a token that already carries the
+        // scheme is sent as is, never "Bearer Bearer ..." or "Bearer null".
+        if (token != null) {
+          options.headers['Authorization'] = token.startsWith('Bearer ')
+              ? token
+              : 'Bearer $token';
         }
       }
     } on Exception catch (e) {
@@ -38,4 +35,7 @@ class AuthInterceptor extends Interceptor {
 
     handler.next(options);
   }
+
+  static String? _nonEmpty(String? value) =>
+      value == null || value.trim().isEmpty ? null : value.trim();
 }
