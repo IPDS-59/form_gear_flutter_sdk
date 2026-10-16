@@ -417,6 +417,15 @@ class VersionCheckResult {
 }
 ```
 
+## Host UI, edge-to-edge and bridge events
+
+Extend `FormGearUiHandler` and set `FormGearSDK.instance.uiHandler` to draw the
+loader, the load error, the exit dialog and the version-check error in your
+own design system. Each method returns null (or false) to keep the built-in
+UI. The form page draws edge to edge by default; return `false` from
+`edgeToEdge` to opt out. `FormGearSDK.instance.bridgeEvents` streams every JS
+bridge event for debuggers. See `docs/adr/0001-host-ui-handler-and-bridge-events.md`.
+
 ## Security Features
 
 The SDK includes security best practices:

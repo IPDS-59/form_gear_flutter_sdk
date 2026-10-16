@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:form_gear_engine_sdk/src/core/base/failure.dart';
 import 'package:form_gear_engine_sdk/src/core/base/result.dart';
+import 'package:form_gear_engine_sdk/src/core/ui/form_gear_ui_handler.dart';
 import 'package:form_gear_engine_sdk/src/core/version/form_engine_update_handler.dart';
 import 'package:form_gear_engine_sdk/src/domain/usecases/check_form_engine_version_usecase.dart';
 import 'package:form_gear_engine_sdk/src/domain/usecases/get_local_form_engine_version_usecase.dart';
@@ -34,6 +35,7 @@ class FormGearVersionManager {
     bool showNotifications = true,
     BuildContext? context,
     FormEngineUpdateHandler? updateHandler,
+    FormGearUiHandler? uiHandler,
   }) async {
     try {
       final result = await _checkFormEngineVersionUseCase(engineId);
@@ -44,6 +46,7 @@ class FormGearVersionManager {
           if (showNotifications && context != null) {
             _showErrorNotification(
               context,
+              uiHandler,
               'Failed to check form engine version: $failure',
             );
           }
@@ -56,6 +59,7 @@ class FormGearVersionManager {
             if (showNotifications && context != null) {
               _showErrorNotification(
                 context,
+                uiHandler,
                 'Failed to check form engine version',
               );
             }
@@ -83,6 +87,7 @@ class FormGearVersionManager {
       if (showNotifications && context != null) {
         _showErrorNotification(
           context,
+          uiHandler,
           'Failed to check form engine version: $e',
         );
       }
@@ -230,7 +235,23 @@ class FormGearVersionManager {
   }
 
   /// Shows error notification
-  void _showErrorNotification(BuildContext context, String message) {
+  void _showErrorNotification(
+    BuildContext context,
+    FormGearUiHandler? uiHandler,
+    String message,
+  ) {
+    unawaited(_showError(context, uiHandler, message));
+  }
+
+  Future<void> _showError(
+    BuildContext context,
+    FormGearUiHandler? uiHandler,
+    String message,
+  ) async {
+    if (uiHandler != null && await uiHandler.showError(context, message)) {
+      return;
+    }
+    if (!context.mounted) return;
     unawaited(
       showDialog<void>(
         context: context,

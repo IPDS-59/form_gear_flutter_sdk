@@ -20,6 +20,10 @@ export 'src/core/listeners/form_data_listener.dart';
 export 'src/core/listeners/form_engine_event_listener.dart';
 export 'src/core/listeners/save_submit_data.dart';
 export 'src/core/listeners/save_submit_result.dart';
+// JS bridge observability (debugger)
+export 'src/core/observability/form_gear_bridge_event.dart';
+// Host UI for dialogs and the loader around a form
+export 'src/core/ui/form_gear_ui_handler.dart';
 // Custom UI for form engine downloads and updates
 export 'src/core/version/form_engine_update_handler.dart';
 // Assignment Context for Dynamic Configuration

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:form_gear_engine_sdk/src/core/observability/form_gear_bridge_event.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -60,10 +61,32 @@ class JSExecutorService {
 
     try {
       FormGearLogger.webview('Executing JavaScript: $javascript');
+      FormGearBridgeObserver.instance.emit(
+        direction: FormGearBridgeDirection.hostToJs,
+        kind: FormGearBridgeKind.push,
+        channel: 'js',
+        args: javascript,
+      );
       await controller.runJavaScript(javascript);
     } on Object catch (e) {
       FormGearLogger.webviewError('JavaScript execution failed: $e');
+      FormGearBridgeObserver.instance.emit(
+        direction: FormGearBridgeDirection.hostToJs,
+        kind: FormGearBridgeKind.push,
+        channel: 'js',
+        args: javascript,
+        error: '$e',
+      );
     }
+  }
+
+  /// Runs [source] in the open form's WebView and returns its result as
+  /// text, or null when no form is open. For debuggers; not for app logic.
+  Future<String?> evaluate(String source) async {
+    final controller = _controller;
+    if (controller == null) return null;
+    final result = await controller.runJavaScriptReturningResult(source);
+    return '${resultValue(result)}';
   }
 
   /// Emits a FasihForm (engine 2) event; logged in-page if the engine never

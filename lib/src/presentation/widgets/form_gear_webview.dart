@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_bridge.dart';
+import 'package:form_gear_engine_sdk/src/core/observability/form_gear_bridge_event.dart';
 import 'package:form_gear_engine_sdk/src/core/services/navigator_context_provider.dart';
+import 'package:form_gear_engine_sdk/src/core/ui/form_gear_ui_handler.dart';
 import 'package:form_gear_engine_sdk/src/presentation/bloc/form_gear_webview_bloc.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/exit_confirmation_dialog.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/form_gear_loading_screen.dart';
@@ -26,6 +28,7 @@ class FormGearWebView extends StatelessWidget {
     this.onLoadError,
     this.onConsoleMessage,
     this.engineReadyCheck,
+    this.uiHandler,
   });
 
   /// Loaded when [htmlContent] is null (iOS local-server path).
@@ -37,6 +40,9 @@ class FormGearWebView extends StatelessWidget {
   /// false after load, an error with a retry action is shown instead of a
   /// blank form.
   final String? engineReadyCheck;
+
+  /// Host UI for the loader, error and exit dialog; null keeps the built-in.
+  final FormGearUiHandler? uiHandler;
   final String title;
   final void Function(WebViewController controller)? onWebViewCreated;
   final void Function(WebViewController controller, String url)? onLoadStart;
@@ -167,6 +173,15 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
     if (message.level == JavaScriptLogLevel.error) {
       FormGearLogger.webviewError('JS: ${message.message}');
     }
+    FormGearBridgeObserver.instance.emit(
+      direction: FormGearBridgeDirection.local,
+      kind: message.level == JavaScriptLogLevel.error
+          ? FormGearBridgeKind.jsError
+          : FormGearBridgeKind.console,
+      channel: 'console',
+      method: message.level.name,
+      args: message.message,
+    );
     _w.onConsoleMessage?.call(_controller, message);
   }
 
@@ -185,27 +200,34 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
               Column(
                 children: [
                   if (state.hasError)
-                    Container(
-                      width: double.infinity,
-                      color: Colors.red[100],
-                      padding: const EdgeInsets.all(8),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Error: ${state.errorMessage}',
-                              style: TextStyle(color: Colors.red[800]),
-                            ),
+                    _w.uiHandler?.buildError(
+                          context,
+                          state.errorMessage ?? '',
+                          () => context.read<FormGearWebViewBloc>().add(
+                            const RetryInitialization(),
                           ),
-                          TextButton(
-                            onPressed: () => context
-                                .read<FormGearWebViewBloc>()
-                                .add(const RetryInitialization()),
-                            child: const Text('Coba lagi'),
+                        ) ??
+                        Container(
+                          width: double.infinity,
+                          color: Colors.red[100],
+                          padding: const EdgeInsets.all(8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Error: ${state.errorMessage}',
+                                  style: TextStyle(color: Colors.red[800]),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () => context
+                                    .read<FormGearWebViewBloc>()
+                                    .add(const RetryInitialization()),
+                                child: const Text('Coba lagi'),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
                   Expanded(
                     child: SafeArea(
                       child: WebViewWidget(controller: _controller),
@@ -214,7 +236,10 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
                 ],
               ),
               if (state.isLoading)
-                FormGearLoadingScreen(loadingProgress: state.loadingProgress),
+                _w.uiHandler?.buildLoading(context, state.loadingProgress) ??
+                    FormGearLoadingScreen(
+                      loadingProgress: state.loadingProgress,
+                    ),
             ],
           ),
         );
@@ -235,7 +260,9 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
     }
     if (!mounted) return;
 
-    final shouldExit = await ExitConfirmationDialog.show(context);
+    final hostAnswer = await _w.uiHandler?.confirmExit(context);
+    if (!mounted) return;
+    final shouldExit = hostAnswer ?? await ExitConfirmationDialog.show(context);
     if (!shouldExit || !mounted) return;
 
     await WebViewNavigationHelper.callMobileExit(_controller);

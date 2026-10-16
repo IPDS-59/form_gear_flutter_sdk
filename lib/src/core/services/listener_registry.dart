@@ -14,6 +14,9 @@ class ListenerRegistry {
   /// Host UI for engine downloads and updates, replacing the built-in screen.
   FormEngineUpdateHandler? formEngineUpdateHandler;
 
+  /// Host UI for the dialogs and loader around a form.
+  FormGearUiHandler? uiHandler;
+
   /// Sets the FormDataListener for handling save/submit operations
   void setFormDataListener(FormDataListener? listener) {
     _formDataListener = listener;
