@@ -58,6 +58,8 @@ import 'package:form_gear_engine_sdk/src/domain/usecases/get_local_form_engine_v
     as _i190;
 import 'package:form_gear_engine_sdk/src/domain/usecases/get_local_template_version_usecase.dart'
     as _i471;
+import 'package:form_gear_engine_sdk/src/domain/usecases/install_form_engine_usecase.dart'
+    as _i309;
 import 'package:form_gear_engine_sdk/src/domain/usecases/is_form_engine_downloaded_usecase.dart'
     as _i186;
 import 'package:form_gear_engine_sdk/src/domain/usecases/save_form_engine_version_usecase.dart'
@@ -137,12 +139,18 @@ _i174.GetIt $initGetIt(
   gh.lazySingleton<_i186.IsFormEngineDownloadedUseCase>(
     () => _i186.IsFormEngineDownloadedUseCase(gh<_i458.FormEngineRepository>()),
   );
+  gh.lazySingleton<_i309.InstallFormEngineUseCase>(
+    () => _i309.InstallFormEngineUseCase(
+      gh<_i361.Dio>(),
+      gh<_i186.IsFormEngineDownloadedUseCase>(),
+    ),
+  );
   gh.lazySingleton<_i772.FormGearVersionManager>(
     () => _i772.FormGearVersionManager(
       gh<_i876.CheckFormEngineVersionUseCase>(),
       gh<_i186.IsFormEngineDownloadedUseCase>(),
       gh<_i190.GetLocalFormEngineVersionUseCase>(),
-      gh<_i361.Dio>(),
+      gh<_i309.InstallFormEngineUseCase>(),
     ),
   );
   return getIt;

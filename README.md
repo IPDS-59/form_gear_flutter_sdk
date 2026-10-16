@@ -147,6 +147,39 @@ if (!isDownloaded) {
 }
 ```
 
+### 5. Custom Update UI
+
+By default, `checkFormEngineVersion` shows the SDK's own update screen when
+the engine is missing or outdated. To draw your own UI, register a
+`FormEngineUpdateHandler`. The SDK then calls it instead, including for
+forced updates (`result.isForced`), which must not be dismissible.
+
+```dart
+class MyUpdateHandler implements FormEngineUpdateHandler {
+  @override
+  Future<void> onUpdateRequired(
+    BuildContext context,
+    VersionCheckResult result,
+    FormEngineDownloader download,
+  ) async {
+    // Show your own sheet or page here, then:
+    final outcome = await download(
+      onProgress: (percent) => print('$percent%'), // 0-100
+    );
+    outcome.fold(
+      (error) => print('Download failed: $error'), // an AppFailure
+      (_) => print('Engine ready'),
+    );
+  }
+}
+
+FormGearSDK.instance.formEngineUpdateHandler = MyUpdateHandler();
+```
+
+Without a handler, nothing changes. To download with no UI at all, call
+`FormGearSDK.instance.downloadFormEngine('1', onProgress: ...)`. It returns
+a `Result<void>`.
+
 ## Public API Reference
 
 ### FormGearSDK
@@ -161,6 +194,8 @@ Main SDK entry point.
 | `openFormWithAssignment({BuildContext, AssignmentContext, ...})` | **Primary API** - Open form with assignment context |
 | `checkFormEngineVersion({BuildContext? context, String? engineId})` | Check for engine updates |
 | `isFormEngineDownloaded(String engineId)` | Check if engine exists locally |
+| `downloadFormEngine(String engineId, {onProgress})` | Download and install an engine with no UI |
+| `formEngineUpdateHandler` | Property: host UI for engine downloads and updates |
 | `setFormDataListener(FormDataListener listener)` | Register save/submit listener |
 | `setFileUploadListener(FileUploadListener listener)` | Register file upload listener |
 | `removeFormDataListener()` | Remove save/submit listener |
