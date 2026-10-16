@@ -11,6 +11,9 @@ class ListenerRegistry {
   /// Host side of `dispatchFinalResult`, `connectorApi` and `sendEvent`.
   FormEngineEventListener? formEngineEventListener;
 
+  /// Host UI for engine downloads and updates, replacing the built-in screen.
+  FormEngineUpdateHandler? formEngineUpdateHandler;
+
   /// Sets the FormDataListener for handling save/submit operations
   void setFormDataListener(FormDataListener? listener) {
     _formDataListener = listener;
