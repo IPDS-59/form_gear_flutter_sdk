@@ -17,6 +17,9 @@ analyzer:
     cascade_invocations: ignore
     use_build_context_synchronously: ignore
     discarded_futures: ignore
+    # The deprecation ignore in form_gear_sdk.dart is only needed on breaking
+    # versions (0.x.0), so on patch releases it would be flagged as unused.
+    unnecessary_ignore: ignore
 
 linter:
   rules:
