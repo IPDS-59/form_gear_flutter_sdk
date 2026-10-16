@@ -1,4 +1,33 @@
 # Changelog
+## [0.5.0] - 2026-10-16
+
+### ⚠️ BREAKING CHANGES
+
+- refactor!: remove placeholder EncryptionService and EncryptionUtils (bfadf86)
+
+### ✨ Features
+
+- feat(bridge): add dispatchFinalResult, connectorApi, sendEvent, s3refreshUrl (fe3e2b2)
+- feat(version): let hosts supply their own form engine update UI (#34) (6417fcb)
+
+### 🐛 Bug Fixes
+
+- fix(ci): pass release notes via env so backticks aren't shell-executed (538192a)
+
+### 👷 CI
+
+- ci(hardening): fail publish if tag isn't reachable from main (8928ad2)
+
+### 🔧 Chores
+
+-  add dependabot config, ignore local .codegraph index (d8eb7dd)
+- chore(deps): bump actions/checkout from 4 to 7 (#33) (7251fd5)
+-  bump version to 0.5.0 (2481417)
+
+### 📝 Other Changes
+
+- Merge pull request #36 from IPDS-59/release/0.5.0 (642206d)
+
 ## [Unreleased]
 
 ### ⚠️ Breaking changes
