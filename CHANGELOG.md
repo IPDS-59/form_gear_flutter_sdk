@@ -1,4 +1,19 @@
 # Changelog
+## [0.6.0] - 2026-10-16
+
+### ✨ Features
+
+- feat(ui): host UI handler, edge-to-edge form page and JS bridge events (#43) (c848fb5)
+
+### 🔧 Chores
+
+-  bump version to 0.6.0 for next development cycle (#42) (716bfd1)
+
+### 📝 Other Changes
+
+- Merge pull request #41 from IPDS-59/chore/back-merge-0.5.1 (8036779)
+- Merge pull request #44 from IPDS-59/release/0.6.0 (383e5ef)
+
 ## [0.5.1] - 2026-10-16
 
 ### 🐛 Bug Fixes
