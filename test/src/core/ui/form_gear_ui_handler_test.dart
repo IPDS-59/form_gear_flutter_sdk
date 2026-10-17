@@ -24,5 +24,6 @@ void main() {
     expect(await handler.showError(context, 'x'), isFalse);
     expect(handler.systemOverlayStyle(context), isNull);
     expect(handler.edgeToEdge, isTrue);
+    expect(handler.useSafeArea, isTrue);
   });
 }
