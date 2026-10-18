@@ -131,6 +131,8 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
         },
         onPageFinished: (url) {
           _insets = null; // a new page has no variables yet
+          final pad = _padding;
+          if (pad != null && mounted) _applyInsets(pad);
           _w.onLoadStop?.call(c, url);
           if (mounted) _bloc.add(WebViewLoadStop(url));
         },
@@ -191,6 +193,8 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
   }
 
   EdgeInsets? _insets;
+  EdgeInsets?
+  _padding; // latest insets the host wants applied (useSafeArea off)
 
   /// Hands the safe-area insets to the engine as CSS variables, and pads its
   /// page with them, once per change.
@@ -203,7 +207,10 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
   @override
   Widget build(BuildContext context) {
     final useSafeArea = _w.uiHandler?.useSafeArea ?? true;
-    if (!useSafeArea) _applyInsets(MediaQuery.paddingOf(context));
+    if (!useSafeArea) {
+      _padding = MediaQuery.paddingOf(context);
+      _applyInsets(_padding!);
+    }
     return BlocBuilder<FormGearWebViewBloc, FormGearWebViewState>(
       builder: (context, state) {
         return PopScope(
@@ -308,13 +315,12 @@ String buildSafeAreaScript(EdgeInsets i) =>
     '(document.head||r).appendChild(e);}'
     'e.textContent=`$safeAreaCss`;';
 
-/// Body padding keeps the engine header below the status bar and the footer
-/// above the gesture bar; sticky bottom bars keep their own offset plus the
-/// inset.
+/// Pads the engine's mount element (`#fasih-form`, which paints the engine
+/// background, so the inset area is not left white). `body` is not used: the
+/// page sets its padding inline and `#root` is a fixed `100svh`. `!important`
+/// beats the engine's own styles.
 @visibleForTesting
 const safeAreaCss =
-    'body{box-sizing:border-box;'
+    '#fasih-form{box-sizing:border-box!important;'
     'padding:var(--safe-area-inset-top) var(--safe-area-inset-right) '
-    'var(--safe-area-inset-bottom) var(--safe-area-inset-left)}'
-    '.sticky.bottom-0{bottom:var(--safe-area-inset-bottom)}'
-    '.sticky.bottom-4{bottom:calc(1rem + var(--safe-area-inset-bottom))}';
+    'var(--safe-area-inset-bottom) var(--safe-area-inset-left)!important}';
