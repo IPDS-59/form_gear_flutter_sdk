@@ -15,9 +15,10 @@ void main() {
     expect(js, contains(safeAreaCss));
   });
 
-  test('css pads the body and offsets sticky bottom bars', () {
+  test('css pads the engine mount element with !important', () {
+    expect(safeAreaCss, startsWith('#fasih-form{'));
     expect(safeAreaCss, contains('padding:var(--safe-area-inset-top)'));
-    expect(safeAreaCss, contains('.sticky.bottom-0{bottom:var('));
+    expect(safeAreaCss, endsWith('!important}'));
     expect(safeAreaCss, isNot(contains('`')));
   });
 }
