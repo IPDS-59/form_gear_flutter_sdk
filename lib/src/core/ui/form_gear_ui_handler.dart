@@ -38,6 +38,13 @@ abstract class FormGearUiHandler {
   /// Defaults to `true`; return `false` to keep the host's own system UI.
   bool get edgeToEdge => true;
 
+  /// Keeps the web view inside the safe area (the default). Return `false`
+  /// to let it fill the whole page: the engine then draws under the system
+  /// bars and the host owns the page colour. The insets reach the engine as the
+  /// CSS variables `--safe-area-inset-top|right|bottom|left` (in px) on
+  /// `<html>`, so its own header and footer can pad themselves.
+  bool get useSafeArea => true;
+
   /// The status and navigation bar style for the form page. Return `null` to
   /// pick transparent bars with icons that fit the page brightness.
   SystemUiOverlayStyle? systemOverlayStyle(BuildContext context) => null;
