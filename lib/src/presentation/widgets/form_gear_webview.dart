@@ -1,3 +1,5 @@
+// The injected JS and CSS strings are built from adjacent literals on purpose.
+// ignore_for_file: missing_whitespace_between_adjacent_strings
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -190,20 +192,12 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
 
   EdgeInsets? _insets;
 
-  /// Hands the safe-area insets to the engine as CSS variables, once per
-  /// change.
+  /// Hands the safe-area insets to the engine as CSS variables, and pads its
+  /// page with them, once per change.
   void _applyInsets(EdgeInsets i) {
     if (_insets == i) return;
     _insets = i;
-    unawaited(
-      _controller.runJavaScript(
-        'const s=document.documentElement.style;\n'
-        "s.setProperty('--safe-area-inset-top','${i.top}px');"
-        "s.setProperty('--safe-area-inset-right','${i.right}px');"
-        "s.setProperty('--safe-area-inset-bottom','${i.bottom}px');"
-        "s.setProperty('--safe-area-inset-left','${i.left}px');",
-      ),
-    );
+    unawaited(_controller.runJavaScript(buildSafeAreaScript(i)));
   }
 
   @override
@@ -298,3 +292,29 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
     if (mounted) Navigator.of(context).pop();
   }
 }
+
+/// Script that sets the `--safe-area-inset-*` variables and injects the
+/// `fg-safe-area` style, which pads the engine's page (the engine bundle does
+/// not read the variables itself). Idempotent: the style element is reused.
+@visibleForTesting
+String buildSafeAreaScript(EdgeInsets i) =>
+    'const r=document.documentElement,s=r.style;\n'
+    "s.setProperty('--safe-area-inset-top','${i.top}px');"
+    "s.setProperty('--safe-area-inset-right','${i.right}px');"
+    "s.setProperty('--safe-area-inset-bottom','${i.bottom}px');"
+    "s.setProperty('--safe-area-inset-left','${i.left}px');"
+    "let e=document.getElementById('fg-safe-area');"
+    "if(!e){e=document.createElement('style');e.id='fg-safe-area';"
+    '(document.head||r).appendChild(e);}'
+    'e.textContent=`$safeAreaCss`;';
+
+/// Body padding keeps the engine header below the status bar and the footer
+/// above the gesture bar; sticky bottom bars keep their own offset plus the
+/// inset.
+@visibleForTesting
+const safeAreaCss =
+    'body{box-sizing:border-box;'
+    'padding:var(--safe-area-inset-top) var(--safe-area-inset-right) '
+    'var(--safe-area-inset-bottom) var(--safe-area-inset-left)}'
+    '.sticky.bottom-0{bottom:var(--safe-area-inset-bottom)}'
+    '.sticky.bottom-4{bottom:calc(1rem + var(--safe-area-inset-bottom))}';

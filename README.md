@@ -425,7 +425,9 @@ own design system. Each method returns null (or false) to keep the built-in
 UI. The form page draws edge to edge by default; return `false` from
 `edgeToEdge` to opt out. The web view sits inside the safe area; return
 `false` from `useSafeArea` to let it fill the page (the insets reach the engine
-as the CSS variables `--safe-area-inset-top|right|bottom|left`). `FormGearSDK.instance.bridgeEvents` streams every JS
+as the CSS variables `--safe-area-inset-top|right|bottom|left`; the SDK also
+pads the engine page body with them and offsets its sticky bottom bars, so the
+header clears the status bar and the footer clears the gesture bar). `FormGearSDK.instance.bridgeEvents` streams every JS
 bridge event for debuggers. See `docs/adr/0001-host-ui-handler-and-bridge-events.md`.
 
 ## Security Features
