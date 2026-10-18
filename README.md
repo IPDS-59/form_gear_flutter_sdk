@@ -430,6 +430,19 @@ pads the engine's mount element (`#fasih-form`) with them, so the header clears
 the status bar and the footer clears the gesture bar). Override `processCapturedPhoto` to change a fresh camera photo before the SDK saves it (for example a time and place stamp; gallery picks skip it). Override `onMockLocation` to warn, or close the form, when a position comes from a mock provider (fake GPS); the position is still given to the form. `FormGearSDK.instance.bridgeEvents` streams every JS
 bridge event for debuggers. See `docs/adr/0001-host-ui-handler-and-bridge-events.md`.
 
+### Barcode and QR scanning
+
+The `BARCODE` and `QR_SCAN` form actions open a camera screen. The decoder is zxing-cpp (through `flutter_zxing`) on the `camera` image stream: frames are decoded in an isolate and dropped while one is still being decoded. It reads QR, Code 128, Code 39, EAN/UPC, DataMatrix, PDF417 and the other zxing symbologies, with no ML Kit model (about 2.2 MB less native code and 1.4 MB less Java per ABI than `mobile_scanner`).
+
+A host that wants another decoder, for example ML Kit through `mobile_scanner`, implements `BarcodeScannerEngine` and sets it once at startup:
+
+```dart
+FormGearScanner.engineBuilder = () => MyMlKitEngine();
+```
+
+The engine opens the camera in `initialize()` (throw `ScannerPermissionDenied` when it is refused), shows it in `buildPreview`, and emits the decoded codes on `codes` (an empty list for a frame with none). `mobile_scanner` is not a dependency of this package any more, so a host that uses it adds it to its own `pubspec.yaml`.
+
+
 ## Security Features
 
 The SDK includes security best practices:

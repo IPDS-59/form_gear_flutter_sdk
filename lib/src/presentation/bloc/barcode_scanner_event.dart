@@ -30,7 +30,7 @@ class SwitchCamera extends BarcodeScannerEvent {
 class BarcodeDetected extends BarcodeScannerEvent {
   const BarcodeDetected(this.barcodes);
 
-  final List<Barcode> barcodes;
+  final List<ScannedCode> barcodes;
 
   @override
   List<Object?> get props => [barcodes];
