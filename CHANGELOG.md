@@ -1,4 +1,20 @@
 # Changelog
+## [0.7.0] - 2026-10-18
+
+### ✨ Features
+
+- feat(ui): FormGearUiHandler.useSafeArea lets hosts drop the web view safe area; insets go to the engine as CSS variables (e227730)
+
+### 🔧 Chores
+
+-  bump version to 0.7.0 for next development cycle (#45) (15a5e14)
+
+### 📝 Other Changes
+
+- Merge pull request #46 from IPDS-59/chore/back-merge-0.6.0 (4bcad83)
+- Merge pull request #47 from IPDS-59/feat/ui-handler-safe-area-opt-out (2bacd97)
+- Merge pull request #48 from IPDS-59/release/0.7.0 (b9a4837)
+
 ## [0.6.0] - 2026-10-16
 
 ### ✨ Features
