@@ -1,4 +1,5 @@
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
+import 'package:form_gear_engine_sdk/src/utils/mock_location.dart';
 import 'package:geolocator/geolocator.dart';
 
 /// Helper class for managing location services and permissions
@@ -75,6 +76,7 @@ class LocationServiceHelper {
       FormGearLogger.webview(
         'Location acquired: ${position.latitude},${position.longitude}',
       );
+      reportMockLocation(isMocked: position.isMocked);
 
       return LocationResult.success(position);
     } on Exception catch (e) {
