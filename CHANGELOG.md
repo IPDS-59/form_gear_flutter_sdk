@@ -1,4 +1,16 @@
 # Changelog
+## [0.9.0] - 2026-10-18
+
+### ✨ Features
+
+- feat(ui): FormGearUiHandler.onMockLocation tells the host when a position comes from a mock provider (5e6dc9b)
+
+### 📝 Other Changes
+
+- Merge pull request #63 from IPDS-59/feat/mock-location-hook (98cb50c)
+- release: set pubspec version to 0.9.0 (a74d844)
+- Merge pull request #64 from IPDS-59/release/0.9.0 (8991562)
+
 ## [0.8.0] - 2026-10-18
 
 ### ✨ Features
