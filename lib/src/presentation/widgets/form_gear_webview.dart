@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_bridge.dart';
@@ -126,6 +128,7 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
           if (mounted) _bloc.add(WebViewLoadStart(url));
         },
         onPageFinished: (url) {
+          _insets = null; // a new page has no variables yet
           _w.onLoadStop?.call(c, url);
           if (mounted) _bloc.add(WebViewLoadStop(url));
         },
@@ -185,8 +188,28 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
     _w.onConsoleMessage?.call(_controller, message);
   }
 
+  EdgeInsets? _insets;
+
+  /// Hands the safe-area insets to the engine as CSS variables, once per
+  /// change.
+  void _applyInsets(EdgeInsets i) {
+    if (_insets == i) return;
+    _insets = i;
+    unawaited(
+      _controller.runJavaScript(
+        'const s=document.documentElement.style;\n'
+        "s.setProperty('--safe-area-inset-top','${i.top}px');"
+        "s.setProperty('--safe-area-inset-right','${i.right}px');"
+        "s.setProperty('--safe-area-inset-bottom','${i.bottom}px');"
+        "s.setProperty('--safe-area-inset-left','${i.left}px');",
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final useSafeArea = _w.uiHandler?.useSafeArea ?? true;
+    if (!useSafeArea) _applyInsets(MediaQuery.paddingOf(context));
     return BlocBuilder<FormGearWebViewBloc, FormGearWebViewState>(
       builder: (context, state) {
         return PopScope(
@@ -229,9 +252,11 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
                           ),
                         ),
                   Expanded(
-                    child: SafeArea(
-                      child: WebViewWidget(controller: _controller),
-                    ),
+                    child: useSafeArea
+                        ? SafeArea(
+                            child: WebViewWidget(controller: _controller),
+                          )
+                        : WebViewWidget(controller: _controller),
                   ),
                 ],
               ),
