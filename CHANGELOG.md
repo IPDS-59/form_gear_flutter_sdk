@@ -1,4 +1,36 @@
 # Changelog
+## [0.7.2] - 2026-10-18
+
+### ✨ Features
+
+- feat(ui): pad the engine page with the safe-area insets when useSafeArea is false (730e5fd)
+
+### 🐛 Bug Fixes
+
+- fix(ui): safe-area padding goes on the engine mount element and is re-applied after every page load (3a603c0)
+
+### 👷 CI
+
+- ci(release): tag releases with the v prefix so pub.dev automated publishing accepts them (0ce0d48)
+
+### 🔧 Chores
+
+-  bump version to 0.8.0 for next development cycle (464d9ba)
+-  document the analyzer ignore (e18e34b)
+-  document the analyzer ignore (16a7a70)
+-  back-merge 0.7.1 to develop (639e4ef)
+
+### 📝 Other Changes
+
+- Merge pull request #50 from IPDS-59/chore/back-merge-0.7.0 (4dcf81b)
+- Merge pull request #49 from IPDS-59/chore/bump-version-to-0.8.0-dev (6e23dd4)
+- Merge pull request #51 from IPDS-59/fix/release-tag-prefix (f48bc13)
+- Merge pull request #52 from IPDS-59/feat/ui-handler-safe-area-padding (2e4a0a9)
+- Merge pull request #54 from IPDS-59/chore/back-merge-0.7.1 (e26d538)
+- Merge pull request #55 from IPDS-59/fix/safe-area-padding (c70cb77)
+- release: 0.7.2 (a2ce4a7)
+- Merge pull request #56 from IPDS-59/release/0.7.2 (163be35)
+
 ## [0.7.1] - 2026-10-18
 
 ### 📝 Other Changes
