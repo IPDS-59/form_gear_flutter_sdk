@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_zxing/flutter_zxing.dart' hide ImageFormat;
 import 'package:form_gear_engine_sdk/src/presentation/scanner/barcode_scanner_engine.dart';
@@ -18,11 +19,23 @@ class ZxingScannerEngine implements BarcodeScannerEngine {
   bool _busy = false;
   bool _paused = false;
   bool _hadCode = false;
+  bool _processing = false;
   final _codes = StreamController<List<ScannedCode>>.broadcast();
 
   // The luminance plane is enough for every 1D and 2D symbology, and tryRotate
   // covers the sensor being turned against the screen.
   final _params = DecodeParams();
+
+  /// The decoder needs the frame's own size and pixel layout; without them
+  /// zxing-cpp rejects every frame ("Neither width nor height of ImageView can
+  /// be less or equal to 0") and nothing is ever read.
+  @visibleForTesting
+  static DecodeParams paramsFor(CameraImage image, DecodeParams base) =>
+      base.copyWith(
+        imageFormat: cameraImageFormat(image),
+        width: image.width,
+        height: image.height,
+      );
 
   @override
   Stream<List<ScannedCode>> get codes => _codes.stream;
@@ -34,6 +47,11 @@ class ZxingScannerEngine implements BarcodeScannerEngine {
 
   @override
   Future<void> initialize() async {
+    // flutter_zxing decodes in an isolate that must be running first; without
+    // it every frame fails with "Camera processing is not running" and the
+    // scanner never reads anything while still burning CPU.
+    await zx.startCameraProcessing();
+    _processing = true;
     try {
       _cameras = await availableCameras();
       if (_cameras.isEmpty) throw StateError('No camera on this device');
@@ -42,11 +60,21 @@ class ZxingScannerEngine implements BarcodeScannerEngine {
           .clamp(0, _cameras.length - 1);
       await _open();
     } on CameraException catch (e) {
+      _stopProcessing();
       if (e.code.startsWith('CameraAccess')) {
         throw const ScannerPermissionDenied();
       }
       rethrow;
+    } catch (_) {
+      _stopProcessing();
+      rethrow;
     }
+  }
+
+  void _stopProcessing() {
+    if (!_processing) return;
+    _processing = false;
+    zx.stopCameraProcessing();
   }
 
   Future<void> _open() async {
@@ -75,7 +103,7 @@ class ZxingScannerEngine implements BarcodeScannerEngine {
     if (_busy || _paused) return;
     _busy = true;
     zx
-        .processCameraImage(image, _params)
+        .processCameraImage(image, paramsFor(image, _params))
         .then((code) {
           final text = code.text ?? '';
           if (code.isValid && text.isNotEmpty) {
@@ -93,8 +121,9 @@ class ZxingScannerEngine implements BarcodeScannerEngine {
             _codes.add(const []);
           }
         })
-        .catchError((Object _) {
+        .catchError((Object e) {
           // A bad frame is skipped; the next one is tried.
+          if (kDebugMode) debugPrint('zxing frame skipped: $e');
         })
         .whenComplete(() => _busy = false);
   }
@@ -154,6 +183,7 @@ class ZxingScannerEngine implements BarcodeScannerEngine {
       await camera.stopImageStream();
     }
     await camera?.dispose();
+    _stopProcessing();
     await _codes.close();
   }
 }
