@@ -1,9 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/config/form_config.dart';
 import 'package:form_gear_engine_sdk/src/core/di/injection.dart';
@@ -397,11 +395,14 @@ class FormGearSDK {
     }
   }
 
-  /// Creates debug-only WebView for testing bridge functionality
-  /// **DEBUG/TESTING ONLY** - Not for production use
-  /// Use openFormWithAssignment for production forms
-  // ignore: remove_deprecations_in_breaking_versions -- debug-only API, kept on purpose
-  @Deprecated('Only for testing - use openFormWithAssignment for production')
+  /// Removed: the debug bridge test page no longer ships with the SDK.
+  ///
+  /// Always returns `null`. Use [openFormWithAssignment] instead.
+  // ignore: remove_deprecations_in_breaking_versions -- kept so hosts still compile
+  @Deprecated(
+    'The debug bridge test page was removed from the SDK and this always '
+    'returns null. Use openFormWithAssignment.',
+  )
   Future<FormGearWebView?> createDebugBridgeTest({
     List<JSHandler<dynamic>> customHandlers = const [],
     void Function(WebViewController controller)? onWebViewCreated,
@@ -420,62 +421,10 @@ class FormGearSDK {
     )?
     onConsoleMessage,
   }) async {
-    if (!kDebugMode) {
-      FormGearLogger.sdkError('Debug bridge test only available in DEBUG mode');
-      return null;
-    }
-
-    if (!_isInitialized) {
-      throw Exception('FormGear SDK not initialized. Call initialize() first.');
-    }
-
-    // Load the debug bridge test HTML from SDK assets
-    final bridgeTestHtml = await _loadDebugBridgeTestHtml();
-    if (bridgeTestHtml == null) {
-      FormGearLogger.sdkError('Could not load debug bridge test HTML');
-      return null;
-    }
-
-    return FormGearWebView(
-      url: 'about:blank',
-      htmlContent: PagePrelude.inject(bridgeTestHtml, [
-        PagePrelude.bridgePolyfill,
-        PagePrelude.errorForwarder,
-      ]),
-      jsHandlers: [
-        ...HandlerFactory.createRequiredHandlers(
-          currentFormConfig: _currentFormConfig,
-          config: _config,
-          getCurrentAssignment: () => _currentAssignment,
-          formDataListener: _listenerRegistry.formDataListener,
-        ),
-        ...customHandlers,
-      ],
-      onWebViewCreated: onWebViewCreated,
-      onLoadStart: onLoadStart,
-      onLoadStop: onLoadStop,
-      onLoadError: onLoadError,
-      onConsoleMessage: onConsoleMessage,
+    FormGearLogger.sdkError(
+      'createDebugBridgeTest was removed from the SDK and returns null',
     );
-  }
-
-  /// Loads the debug bridge test HTML from package assets (DEBUG MODE ONLY)
-  Future<String?> _loadDebugBridgeTestHtml() async {
-    if (!kDebugMode) {
-      return null;
-    }
-
-    try {
-      const assetPath =
-          'packages/form_gear_engine_sdk/assets/test/bridge_test.html';
-      final htmlContent = await rootBundle.loadString(assetPath);
-
-      // Process the HTML through vendor asset injection
-      return await _engineService.assetLoader.injectVendorAssets(htmlContent);
-    } on Exception catch (e) {
-      FormGearLogger.sdkError('Failed to load debug bridge test HTML: $e');
-      return null;
-    }
+    return null;
   }
 
   /// Determines the FormEngineType based on template ID
