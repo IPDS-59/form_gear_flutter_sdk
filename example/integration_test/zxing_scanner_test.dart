@@ -5,6 +5,7 @@
 // Run: flutter test integration_test/zxing_scanner_test.dart -d <device>
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
 import 'package:integration_test/integration_test.dart';
@@ -12,6 +13,7 @@ import 'package:integration_test/integration_test.dart';
 // The scanner engine is not exported (hosts only need the interface), so the
 // camera smoke test goes through the same public hook the SDK uses.
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
+import 'package:form_gear_engine_sdk/src/presentation/scanner/zxing_scanner_engine.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -73,5 +75,28 @@ void main() {
 
   testWidgets('the engine builder hook exists', (tester) async {
     expect(FormGearScanner.engineBuilder, isNull);
+  });
+
+  // Regression: the decoding isolate was never started, so every camera frame
+  // threw "Camera processing is not running" and nothing was ever read.
+  testWidgets('camera frames reach the decoder without errors', (tester) async {
+    final skipped = <String>[];
+    final original = debugPrint;
+    debugPrint = (message, {wrapWidth}) {
+      if (message != null && message.contains('zxing frame skipped')) {
+        skipped.add(message);
+      }
+    };
+    final engine = ZxingScannerEngine();
+    try {
+      await engine.initialize();
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(seconds: 3)),
+      );
+      expect(skipped, isEmpty);
+    } finally {
+      debugPrint = original;
+      await engine.dispose();
+    }
   });
 }
