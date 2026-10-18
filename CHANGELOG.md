@@ -1,4 +1,11 @@
 # Changelog
+## [0.7.1] - 2026-10-18
+
+### 📝 Other Changes
+
+- release: 0.7.1 (730042a)
+- Merge pull request #53 from IPDS-59/release/0.7.1 (d84d203)
+
 ## [0.7.0] - 2026-10-18
 
 ### ✨ Features
