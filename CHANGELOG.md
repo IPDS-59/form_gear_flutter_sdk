@@ -1,4 +1,28 @@
 # Changelog
+## [0.11.0] - 2026-10-18
+
+### ✨ Features
+
+- feat(ui): zxing-cpp barcode scanner behind BarcodeScannerEngine, replaces mobile_scanner and its bundled ML Kit model (7cc13d2)
+
+### 🐛 Bug Fixes
+
+- fix(ui): the zxing scanner starts its decoding isolate and gives every frame its size, so live codes are read (7d62e4d)
+
+### 🔧 Chores
+
+-  bump version to 0.10.0 for next development cycle (c015688)
+-  merge develop into the 0.10.0 bump (ee74fee)
+-  bump version to 0.11.0 (9a1dfea)
+
+### 📝 Other Changes
+
+- Merge pull request #66 from IPDS-59/chore/back-merge-0.9.0 (f3d01b1)
+- Merge pull request #65 from IPDS-59/chore/bump-version-to-0.10.0-dev (225369f)
+- Merge pull request #67 from IPDS-59/feat/zxing-scanner (2beaca1)
+- Merge pull request #68 from IPDS-59/fix/zxing-live-decode (605bac9)
+- Merge pull request #69 from IPDS-59/release/0.11.0 (0f8b285)
+
 ## [0.9.0] - 2026-10-18
 
 ### ✨ Features
