@@ -74,7 +74,7 @@ class DetectedBarcode extends Equatable {
 
   final List<Offset>? bounds;
   final String data;
-  final BarcodeType type;
+  final String type;
 
   @override
   List<Object?> get props => [bounds, data, type];
