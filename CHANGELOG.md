@@ -1,4 +1,21 @@
 # Changelog
+## [0.12.0] - 2026-10-18
+
+### ⚡ Performance
+
+-  ship the minified jQuery 3.5.1, remove the debug bridge test page, shrink the logo SVG (#72) (dd20584)
+
+### 🔧 Chores
+
+-  bump version to 0.12.0 for next development cycle (d7a46a6)
+-  merge develop into the 0.12.0 bump (056571a)
+
+### 📝 Other Changes
+
+- Merge pull request #71 from IPDS-59/chore/back-merge-0.11.0 (902949c)
+- Merge pull request #70 from IPDS-59/chore/bump-version-to-0.12.0-dev (9dcfdae)
+- Merge pull request #73 from IPDS-59/release/0.12.0 (b9ddfb7)
+
 ## [0.11.0] - 2026-10-18
 
 ### ✨ Features
