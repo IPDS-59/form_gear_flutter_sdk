@@ -1,3 +1,4 @@
+// The injected JS and CSS strings are built from adjacent literals on purpose.
 // ignore_for_file: missing_whitespace_between_adjacent_strings
 import 'dart:async';
 
