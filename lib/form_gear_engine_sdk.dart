@@ -40,3 +40,5 @@ export 'src/models/form_gear_global_config.dart';
 // Version Check Models
 export 'src/models/version_check_result.dart';
 export 'src/models/version_state.dart';
+// Barcode scanner engine (host can replace the default zxing engine)
+export 'src/presentation/scanner/barcode_scanner_engine.dart';

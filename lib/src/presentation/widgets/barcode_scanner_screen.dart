@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:form_gear_engine_sdk/src/presentation/bloc/barcode_scanner_bloc.dart';
 import 'package:form_gear_engine_sdk/src/presentation/painters/scanner_overlay_painter.dart'
     as painter;
-import 'package:mobile_scanner/mobile_scanner.dart';
 
 /// Refactored barcode scanner with BLoC and app lifecycle handling
 class BarcodeScannerScreen extends StatefulWidget {
@@ -118,31 +117,16 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
   }
 
   Widget _buildCameraView(BarcodeScannerState state) {
-    // Only show camera when scanner is ready and has controller
-    final controller = context.read<BarcodeScannerBloc>().controller;
+    final engine = context.read<BarcodeScannerBloc>().engine;
 
-    if (controller == null ||
+    if (engine == null ||
         state.status == BarcodeScannerStatus.disposed ||
         state.status == BarcodeScannerStatus.initializing ||
         state.status == BarcodeScannerStatus.error) {
       return Container(color: Colors.black);
     }
 
-    // MobileScanner widget with onDetect callback
-    // This ensures barcode detection works even after permission grant
-    return MobileScanner(
-      controller: controller,
-      onDetect: (capture) {
-        // Forward detected barcodes to BLoC
-        if (capture.barcodes.isNotEmpty) {
-          context.read<BarcodeScannerBloc>().add(
-            BarcodeDetected(capture.barcodes),
-          );
-        } else {
-          context.read<BarcodeScannerBloc>().add(const ClearDetection());
-        }
-      },
-    );
+    return engine.buildPreview(context);
   }
 
   @override

@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 
 /// Data class for detected barcode information
 class DetectedBarcode {
@@ -13,7 +12,7 @@ class DetectedBarcode {
 
   final List<Offset>? bounds;
   final String data;
-  final BarcodeType type;
+  final String type;
 }
 
 /// Custom painter for scanner overlay with animated detection borders

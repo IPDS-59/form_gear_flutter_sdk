@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:form_gear_engine_sdk/src/presentation/scanner/barcode_scanner_engine.dart';
+import 'package:form_gear_engine_sdk/src/presentation/scanner/zxing_scanner_engine.dart';
 
 part 'barcode_scanner_event.dart';
 part 'barcode_scanner_state.dart';
@@ -25,9 +25,10 @@ class BarcodeScannerBloc
     on<CheckFlashSupport>(_onCheckFlashSupport);
   }
 
-  MobileScannerController? _controller;
+  BarcodeScannerEngine? _engine;
+  StreamSubscription<List<ScannedCode>>? _codesSub;
 
-  MobileScannerController? get controller => _controller;
+  BarcodeScannerEngine? get engine => _engine;
 
   Future<void> _onInitializeScanner(
     InitializeScanner event,
@@ -35,51 +36,34 @@ class BarcodeScannerBloc
   ) async {
     try {
       emit(state.copyWith(status: BarcodeScannerStatus.initializing));
+      await _release();
 
-      // Dispose old controller if exists
-      await _controller?.dispose();
-      _controller = null;
-
-      // Create new controller with torch off (default)
-      // Let MobileScanner widget handle the start/stop lifecycle
-      _controller = MobileScannerController();
-
-      // Emit ready state with flash explicitly off
-      emit(
-        state.copyWith(
-          status: BarcodeScannerStatus.ready,
-          isFlashOn: false, // Reset flash state
-          hasFlash: false, // Will be updated after flash check
+      final engine =
+          (FormGearScanner.engineBuilder ?? ZxingScannerEngine.new)();
+      _engine = engine;
+      await engine.initialize();
+      _codesSub = engine.codes.listen(
+        (codes) => add(
+          codes.isEmpty ? const ClearDetection() : BarcodeDetected(codes),
         ),
       );
 
-      // Check flash support after a short delay (widget will start controller)
-      Future<void>.delayed(const Duration(milliseconds: 800), () {
-        if (!isClosed) {
-          add(const CheckFlashSupport());
-        }
-      });
-    } on MobileScannerException catch (e) {
-      // Handle permission denial specifically
-      if (e.errorCode == MobileScannerErrorCode.permissionDenied) {
-        emit(
-          state.copyWith(
-            status: BarcodeScannerStatus.error,
-            errorMessage:
-                'Camera permission denied. '
-                'Please enable camera access in settings.',
-          ),
-        );
-      } else {
-        emit(
-          state.copyWith(
-            status: BarcodeScannerStatus.error,
-            errorMessage:
-                'Failed to initialize scanner: '
-                '${e.errorDetails?.message ?? e.toString()}',
-          ),
-        );
-      }
+      emit(
+        state.copyWith(
+          status: BarcodeScannerStatus.ready,
+          isFlashOn: false,
+          hasFlash: engine.hasTorch,
+        ),
+      );
+    } on ScannerPermissionDenied {
+      emit(
+        state.copyWith(
+          status: BarcodeScannerStatus.error,
+          errorMessage:
+              'Camera permission denied. '
+              'Please enable camera access in settings.',
+        ),
+      );
     } on Exception catch (e) {
       emit(
         state.copyWith(
@@ -94,33 +78,14 @@ class BarcodeScannerBloc
     CheckFlashSupport event,
     Emitter<BarcodeScannerState> emit,
   ) async {
-    try {
-      // Check if torch is available without turning it on
-      final torchState = _controller?.value.torchState;
-
-      // Torch is available if state is not unavailable
-      final hasFlash =
-          torchState != null && torchState != TorchState.unavailable;
-
-      FormGearLogger.webview('Flash support: $hasFlash (state: $torchState)');
-
-      // Update state with flash support
-      emit(state.copyWith(hasFlash: hasFlash));
-    } on Exception catch (e) {
-      // Flash not supported or error occurred
-      FormGearLogger.webview('Flash check failed: $e');
-      emit(state.copyWith(hasFlash: false));
-    }
+    emit(state.copyWith(hasFlash: _engine?.hasTorch ?? false));
   }
 
   Future<void> _onStartScanning(
     StartScanning event,
     Emitter<BarcodeScannerState> emit,
   ) async {
-    if (_controller == null) return;
-
-    // Just update status to scanning
-    // MobileScanner widget's onDetect callback handles barcode detection
+    if (_engine == null) return;
     emit(state.copyWith(status: BarcodeScannerStatus.scanning));
   }
 
@@ -128,7 +93,6 @@ class BarcodeScannerBloc
     StopScanning event,
     Emitter<BarcodeScannerState> emit,
   ) async {
-    // MobileScanner widget handles the scanning lifecycle
     emit(
       state.copyWith(
         status: BarcodeScannerStatus.stopped,
@@ -143,7 +107,7 @@ class BarcodeScannerBloc
     Emitter<BarcodeScannerState> emit,
   ) async {
     try {
-      await _controller?.toggleTorch();
+      await _engine?.toggleTorch();
       emit(state.copyWith(isFlashOn: !state.isFlashOn));
     } on Exception catch (e) {
       emit(
@@ -160,7 +124,8 @@ class BarcodeScannerBloc
     Emitter<BarcodeScannerState> emit,
   ) async {
     try {
-      await _controller?.switchCamera();
+      await _engine?.switchCamera();
+      emit(state.copyWith(isFlashOn: false, hasFlash: _engine?.hasTorch));
     } on Exception catch (e) {
       emit(
         state.copyWith(
@@ -176,13 +141,7 @@ class BarcodeScannerBloc
     Emitter<BarcodeScannerState> emit,
   ) async {
     final detectedBarcodes = event.barcodes
-        .map(
-          (b) => DetectedBarcode(
-            bounds: b.corners,
-            data: b.rawValue ?? '',
-            type: b.type,
-          ),
-        )
+        .map((b) => DetectedBarcode(bounds: null, data: b.text, type: b.format))
         .toList();
 
     emit(
@@ -198,11 +157,11 @@ class BarcodeScannerBloc
       await Future<void>.delayed(const Duration(milliseconds: 2000));
 
       final firstValidBarcode = event.barcodes.firstWhere(
-        (b) => (b.rawValue ?? '').isNotEmpty,
+        (b) => b.text.isNotEmpty,
         orElse: () => event.barcodes.first,
       );
 
-      final scannedData = firstValidBarcode.rawValue ?? '';
+      final scannedData = firstValidBarcode.text;
       if (scannedData.isNotEmpty) {
         emit(
           state.copyWith(
@@ -233,7 +192,7 @@ class BarcodeScannerBloc
   ) async {
     // Handle different scenarios for resuming
     if (state.status == BarcodeScannerStatus.paused) {
-      await _controller?.start();
+      await _engine?.resume();
       add(const StartScanning());
     } else if (state.status == BarcodeScannerStatus.error) {
       // Re-initialize scanner if there was an error
@@ -246,7 +205,7 @@ class BarcodeScannerBloc
     PauseScanning event,
     Emitter<BarcodeScannerState> emit,
   ) async {
-    await _controller?.stop();
+    await _engine?.pause();
 
     emit(state.copyWith(status: BarcodeScannerStatus.paused));
   }
@@ -255,15 +214,21 @@ class BarcodeScannerBloc
     DisposeScanner event,
     Emitter<BarcodeScannerState> emit,
   ) async {
-    await _controller?.dispose();
-    _controller = null;
+    await _release();
 
     emit(state.copyWith(status: BarcodeScannerStatus.disposed));
   }
 
+  Future<void> _release() async {
+    await _codesSub?.cancel();
+    _codesSub = null;
+    await _engine?.dispose();
+    _engine = null;
+  }
+
   @override
   Future<void> close() async {
-    await _controller?.dispose();
+    await _release();
     return await super.close();
   }
 }
