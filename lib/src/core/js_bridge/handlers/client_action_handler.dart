@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/models/response_models.dart';
+import 'package:form_gear_engine_sdk/src/utils/captured_photo.dart';
 import 'package:form_gear_engine_sdk/src/utils/location_service_helper.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
 import 'package:image_picker/image_picker.dart';
@@ -69,9 +70,10 @@ class ClientActionHandler {
             final image = await picker.pickImage(source: ImageSource.camera);
 
             if (image != null) {
-              final result = await onCameraCapture?.call(fileName, image.path);
+              final photo = await processCapturedPhoto(image.path);
+              final result = await onCameraCapture?.call(fileName, photo.path);
               FormGearLogger.webview('Camera capture completed: $fileName');
-              return ActionInfoJs(success: true, result: result ?? image.path);
+              return ActionInfoJs(success: true, result: result ?? photo.path);
             } else {
               return ActionInfoJs(
                 success: false,
