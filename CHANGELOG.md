@@ -1,4 +1,15 @@
 # Changelog
+## [0.8.0] - 2026-10-18
+
+### ✨ Features
+
+- feat(ui): FormGearUiHandler.processCapturedPhoto lets the host change a camera photo before it is saved (253b2c5)
+
+### 📝 Other Changes
+
+- Merge pull request #58 from IPDS-59/feat/photo-capture-hook (a978e2c)
+- Merge pull request #59 from IPDS-59/release/0.8.0 (2cfe2a7)
+
 ## [0.7.2] - 2026-10-18
 
 ### ✨ Features
