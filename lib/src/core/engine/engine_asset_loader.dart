@@ -299,7 +299,7 @@ class EngineAssetLoader {
     if (processedHtml.contains('/*JQUERY_CONTENT*/')) {
       try {
         const jqueryAssetPath =
-            'packages/form_gear_engine_sdk/assets/vendor/jquery-3.5.1.js';
+            'packages/form_gear_engine_sdk/assets/vendor/jquery-3.5.1.min.js';
         FormGearLogger.sdk('Attempting to load jQuery from: $jqueryAssetPath');
         final jqueryContent = await rootBundle.loadString(jqueryAssetPath);
         processedHtml = processedHtml.replaceAll(
