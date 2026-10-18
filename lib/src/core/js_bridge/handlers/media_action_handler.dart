@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/action_handler_contract.dart';
@@ -7,6 +5,7 @@ import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart
 import 'package:form_gear_engine_sdk/src/core/services/navigator_context_provider.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/audio_recorder_screen.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/video_recorder_screen.dart';
+import 'package:form_gear_engine_sdk/src/utils/captured_photo.dart';
 import 'package:form_gear_engine_sdk/src/utils/fasih_form_notifier.dart';
 import 'package:form_gear_engine_sdk/src/utils/fasih_media_helper.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
@@ -87,7 +86,7 @@ class MediaActionHandler with ActionHandlerContract {
         // Save media file following FASIH pattern
         final success = await FasihMediaHelper.saveMediaFile(
           assignmentId: assignmentId,
-          sourceFile: File(image.path),
+          sourceFile: await processCapturedPhoto(image.path),
           fileName: fileName,
           mediaType: 'photo',
         );

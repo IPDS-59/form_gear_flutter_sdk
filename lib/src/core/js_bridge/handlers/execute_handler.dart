@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/file_action_handler.dart';
+import 'package:form_gear_engine_sdk/src/utils/captured_photo.dart';
 import 'package:form_gear_engine_sdk/src/utils/fasih_form_notifier.dart';
 import 'package:form_gear_engine_sdk/src/utils/fasih_media_helper.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
@@ -91,7 +92,8 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
 
       if (image != null) {
         FormGearLogger.webview('FasihForm camera executed: ${image.path}');
-        return ActionInfoJs(success: true, result: image.path);
+        final photo = await processCapturedPhoto(image.path);
+        return ActionInfoJs(success: true, result: photo.path);
       } else {
         FormGearLogger.webview('FasihForm camera cancelled by user');
         return ActionInfoJs(success: false, error: 'Camera cancelled by user');

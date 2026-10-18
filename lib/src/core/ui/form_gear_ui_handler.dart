@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -44,6 +46,12 @@ abstract class FormGearUiHandler {
   /// CSS variables `--safe-area-inset-top|right|bottom|left` (in px) on
   /// `<html>`, so its own header and footer can pad themselves.
   bool get useSafeArea => true;
+
+  /// Lets the host change a photo the user just took with the camera, for
+  /// example to stamp the time and place on it. Return the file to keep: the
+  /// same file or a new one. Gallery and file picks do not pass here. If this
+  /// throws, the SDK keeps the original photo.
+  Future<File> processCapturedPhoto(File photo) async => photo;
 
   /// The status and navigation bar style for the form page. Return `null` to
   /// pick transparent bars with icons that fit the page brightness.
