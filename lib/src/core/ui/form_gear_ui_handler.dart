@@ -53,6 +53,13 @@ abstract class FormGearUiHandler {
   /// throws, the SDK keeps the original photo.
   Future<File> processCapturedPhoto(File photo) async => photo;
 
+  /// Called when the device reports a location from a mock provider (a fake
+  /// GPS app) while the form asks for the position. The position is still
+  /// given to the form. Show a warning here, or close the form if the host
+  /// does not accept faked positions. [context] is the form page's. The
+  /// default does nothing.
+  Future<void> onMockLocation(BuildContext context) async {}
+
   /// The status and navigation bar style for the form page. Return `null` to
   /// pick transparent bars with icons that fit the page brightness.
   SystemUiOverlayStyle? systemOverlayStyle(BuildContext context) => null;

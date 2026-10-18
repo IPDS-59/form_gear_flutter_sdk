@@ -29,5 +29,6 @@ void main() {
     expect(handler.useSafeArea, isTrue);
     final photo = File('photo.jpg');
     expect(await handler.processCapturedPhoto(photo), same(photo));
+    await handler.onMockLocation(context);
   });
 }

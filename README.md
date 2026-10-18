@@ -427,7 +427,7 @@ UI. The form page draws edge to edge by default; return `false` from
 `false` from `useSafeArea` to let it fill the page (the insets reach the engine
 as the CSS variables `--safe-area-inset-top|right|bottom|left`; the SDK also
 pads the engine's mount element (`#fasih-form`) with them, so the header clears
-the status bar and the footer clears the gesture bar). Override `processCapturedPhoto` to change a fresh camera photo before the SDK saves it (for example a time and place stamp; gallery picks skip it). `FormGearSDK.instance.bridgeEvents` streams every JS
+the status bar and the footer clears the gesture bar). Override `processCapturedPhoto` to change a fresh camera photo before the SDK saves it (for example a time and place stamp; gallery picks skip it). Override `onMockLocation` to warn, or close the form, when a position comes from a mock provider (fake GPS); the position is still given to the form. `FormGearSDK.instance.bridgeEvents` streams every JS
 bridge event for debuggers. See `docs/adr/0001-host-ui-handler-and-bridge-events.md`.
 
 ## Security Features
