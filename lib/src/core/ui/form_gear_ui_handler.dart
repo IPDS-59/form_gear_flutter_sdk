@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:form_gear_engine_sdk/src/core/capabilities/capability_broker.dart';
 import 'package:form_gear_engine_sdk/src/core/ui/barcode_scan.dart';
 
 /// Lets the host draw the small pieces of UI the SDK shows around a form, so
@@ -76,10 +77,16 @@ abstract class FormGearUiHandler {
   /// returns the code, or [BarcodeScanResult.cancelled] when the user leaves.
   /// Return `null` (the default) when the host has no scanner: the form then
   /// shows that scanning is not available. [context] is the form page's.
+  ///
+  /// Deprecated: provide `FormGearCapabilities.scan` instead. The default now
+  /// forwards to it, so a host that moves the method keeps the same types.
+  // Kept through 0.x for hosts that still override it; 1.0.0 removes it.
+  // ignore: remove_deprecations_in_breaking_versions
+  @Deprecated('Provide FormGearCapabilities.scan instead')
   Future<BarcodeScanResult?> scanBarcode(
     BuildContext context,
     BarcodeScanRequest request,
-  ) async => null;
+  ) => CapabilityBroker.current.scan(context, request);
 
   /// The status and navigation bar style for the form page. Return `null` to
   /// pick transparent bars with icons that fit the page brightness.
