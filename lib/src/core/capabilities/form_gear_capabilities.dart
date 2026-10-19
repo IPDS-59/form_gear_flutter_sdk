@@ -112,6 +112,37 @@ class CapturePhotoRequest extends CapabilityRequest {
   final bool preferFront;
 }
 
+/// Record one audio clip. The host owns the whole flow: permission, recorder
+/// screen, preview playback. Null means the user cancelled.
+class RecordAudioRequest extends CapabilityRequest {
+  const RecordAudioRequest({
+    required super.context,
+    required super.dataKey,
+    required super.assignmentId,
+    required super.cancel,
+    required super.tempDir,
+    this.maxDuration,
+  });
+
+  /// Longest clip, when the form sets one; null means no limit.
+  final Duration? maxDuration;
+}
+
+/// Record one video clip, with the same rules as [RecordAudioRequest].
+class RecordVideoRequest extends CapabilityRequest {
+  const RecordVideoRequest({
+    required super.context,
+    required super.dataKey,
+    required super.assignmentId,
+    required super.cancel,
+    required super.tempDir,
+    this.maxDuration,
+  });
+
+  /// Longest clip, when the form sets one; null means no limit.
+  final Duration? maxDuration;
+}
+
 /// A photo or recording the host made.
 class CapturedMedia {
   const CapturedMedia({
@@ -176,6 +207,15 @@ abstract class FormGearCapabilities {
 
   Future<CapturedMedia?> capturePhoto(CapturePhotoRequest request) async =>
       throw const CapabilityException.unsupported(CapabilityKind.photo);
+
+  /// Records one audio clip (`audio/mp4` is the usual result).
+  Future<CapturedMedia?> recordAudio(RecordAudioRequest request) async =>
+      throw const CapabilityException.unsupported(CapabilityKind.audio);
+
+  /// Records one video clip (`video/mp4`). A host that does not provide it
+  /// leaves the SDK's built-in video recorder in charge (until 1.0.0).
+  Future<CapturedMedia?> recordVideo(RecordVideoRequest request) async =>
+      throw const CapabilityException.unsupported(CapabilityKind.video);
 
   Future<PickedFile?> pickFile(PickRequest request) async =>
       throw const CapabilityException.unsupported(CapabilityKind.pickFile);

@@ -168,6 +168,11 @@ class MediaActionHandler with ActionHandlerContract {
     try {
       FormGearLogger.webview('Audio action for dataKey: $dataKey');
 
+      final host = CapabilityBroker.current;
+      if (host.provides(CapabilityKind.audio)) {
+        return await _clipFromHost(host, dataKey, data, video: false);
+      }
+
       // Get current context for navigation
       final context = getCurrentContext();
       if (context == null) {
@@ -218,14 +223,54 @@ class MediaActionHandler with ActionHandlerContract {
       }
     } on Exception catch (e) {
       FormGearLogger.webviewError('Audio recording error: $e');
+      return CapabilityBroker.errorToJs(e, 'Audio recording');
+    }
+  }
+
+  /// The clip comes from the host's `recordAudio` or `recordVideo` (its own
+  /// recorder, preview and permissions); the engine only names, stores and
+  /// announces it.
+  Future<ActionInfoJs> _clipFromHost(
+    CapabilityBroker host,
+    String dataKey,
+    String data, {
+    required bool video,
+  }) async {
+    final kind = video ? 'video' : 'audio';
+    final assignmentId = data.isNotEmpty ? data : 'current_assignment';
+    final clip = video
+        ? await host.recordVideo(dataKey: dataKey, assignmentId: assignmentId)
+        : await host.recordAudio(dataKey: dataKey, assignmentId: assignmentId);
+    if (clip == null) {
       return ActionInfoJs(
         success: false,
-        error: ErrorSanitizer.sanitizeWithContext(
-          'Audio recording',
-          e.toString(),
-        ),
+        error: '${video ? 'Video' : 'Audio'} recording cancelled by user',
       );
     }
+    final dot = clip.file.path.lastIndexOf('.');
+    final fileName = FasihMediaHelper.generateFileName(
+      dataKey: dataKey,
+      mediaType: kind,
+      extension: dot < 0
+          ? (video ? 'mp4' : 'm4a')
+          : clip.file.path.substring(dot + 1),
+    );
+    final saved = await FasihMediaHelper.saveMediaFile(
+      assignmentId: assignmentId,
+      sourceFile: clip.file,
+      fileName: fileName,
+      mediaType: kind,
+    );
+    if (!saved) {
+      return ActionInfoJs(success: false, error: 'Failed to save $kind');
+    }
+    await notifyFormGearOfMediaSelection(
+      action: kind.toUpperCase(),
+      dataKey: dataKey,
+      fileName: fileName,
+      assignmentId: assignmentId,
+    );
+    return ActionInfoJs(success: true, result: fileName);
   }
 
   /// Handle video recording action using the in-app [VideoRecorderScreen].
@@ -235,6 +280,11 @@ class MediaActionHandler with ActionHandlerContract {
   Future<ActionInfoJs> handleVideo(String dataKey, String data) async {
     try {
       FormGearLogger.webview('Video action for dataKey: $dataKey');
+
+      final host = CapabilityBroker.current;
+      if (host.provides(CapabilityKind.video)) {
+        return await _clipFromHost(host, dataKey, data, video: true);
+      }
 
       final context = getCurrentContext();
       if (context == null) {
@@ -282,13 +332,7 @@ class MediaActionHandler with ActionHandlerContract {
       }
     } on Exception catch (e) {
       FormGearLogger.webviewError('Video recording error: $e');
-      return ActionInfoJs(
-        success: false,
-        error: ErrorSanitizer.sanitizeWithContext(
-          'Video recording',
-          e.toString(),
-        ),
-      );
+      return CapabilityBroker.errorToJs(e, 'Video recording');
     }
   }
 

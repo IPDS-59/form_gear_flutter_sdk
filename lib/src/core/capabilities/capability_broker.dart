@@ -52,6 +52,42 @@ class CapabilityBroker {
     return media;
   }
 
+  Future<CapturedMedia?> recordAudio({
+    required String dataKey,
+    required String assignmentId,
+    Duration? maxDuration,
+  }) async {
+    final clip = await _capabilities!.recordAudio(
+      RecordAudioRequest(
+        context: _requireContext(),
+        dataKey: dataKey,
+        assignmentId: assignmentId,
+        cancel: _cancel,
+        tempDir: await _tempDir(),
+        maxDuration: maxDuration,
+      ),
+    );
+    return clip;
+  }
+
+  Future<CapturedMedia?> recordVideo({
+    required String dataKey,
+    required String assignmentId,
+    Duration? maxDuration,
+  }) async {
+    final clip = await _capabilities!.recordVideo(
+      RecordVideoRequest(
+        context: _requireContext(),
+        dataKey: dataKey,
+        assignmentId: assignmentId,
+        cancel: _cancel,
+        tempDir: await _tempDir(),
+        maxDuration: maxDuration,
+      ),
+    );
+    return clip;
+  }
+
   Future<PickedFile?> pickFile({
     required String dataKey,
     required String assignmentId,
