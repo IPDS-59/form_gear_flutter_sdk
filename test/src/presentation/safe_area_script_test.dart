@@ -19,6 +19,16 @@ void main() {
     expect(safeAreaCss, startsWith('#fasih-form{'));
     expect(safeAreaCss, contains('padding:var(--safe-area-inset-top)'));
     expect(safeAreaCss, endsWith('!important}'));
+  });
+
+  test('css makes the section drawer and dialogs full-bleed', () {
+    expect(safeAreaCss, contains('@media (max-width:767.98px){.sidebar-span{'));
+    expect(safeAreaCss, contains('position:fixed!important'));
+    expect(
+      safeAreaCss,
+      contains('padding-top:calc(1.25rem + var(--safe-area-inset-top))'),
+    );
+    expect(safeAreaCss, contains('[role=dialog]{'));
     expect(safeAreaCss, isNot(contains('`')));
   });
 }
