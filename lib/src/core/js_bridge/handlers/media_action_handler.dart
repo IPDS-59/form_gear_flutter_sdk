@@ -193,6 +193,8 @@ class MediaActionHandler with ActionHandlerContract {
       // Navigate to audio recording screen from presentation layer
       final recordedAudioPath = await Navigator.of(context).push<String?>(
         MaterialPageRoute<String?>(
+          // Fallback for a host without recordAudio, until 1.0.0.
+          // ignore: deprecated_member_use_from_same_package
           builder: (context) => AudioRecorderScreen(
             title: 'Record Audio - $dataKey',
             assignmentId: assignmentId,
@@ -273,7 +275,7 @@ class MediaActionHandler with ActionHandlerContract {
     return ActionInfoJs(success: true, result: fileName);
   }
 
-  /// Handle video recording action using the in-app [VideoRecorderScreen].
+  /// Handle video recording action using the in-app `VideoRecorderScreen`.
   ///
   /// Uses the camera package directly instead of [ImagePicker.pickVideo] to
   /// avoid Android OEM camera apps returning null after stopping a recording.
@@ -303,6 +305,8 @@ class MediaActionHandler with ActionHandlerContract {
 
       final recordedVideoName = await Navigator.of(context).push<String?>(
         MaterialPageRoute<String?>(
+          // Fallback for a host without recordVideo, until 1.0.0.
+          // ignore: deprecated_member_use_from_same_package
           builder: (context) => VideoRecorderScreen(
             title: 'Record Video - $dataKey',
             assignmentId: assignmentId,

@@ -1,3 +1,7 @@
+// The built-in recorder is the deprecated fallback for a host without the
+// capability (removed in 1.0.0), so its own file may use and keep it.
+// ignore_for_file: deprecated_member_use_from_same_package, deprecated_consistency, remove_deprecations_in_breaking_versions
+
 import 'dart:async';
 import 'dart:io';
 
@@ -9,6 +13,9 @@ import 'package:form_gear_engine_sdk/src/utils/fasih_media_helper.dart';
 ///
 /// Uses [CameraController] instead of the system camera intent to avoid
 /// Android OEM camera apps returning null after stopping a recording.
+@Deprecated(
+  'Provide FormGearCapabilities.recordVideo instead; removed in 1.0.0.',
+)
 class VideoRecorderScreen extends StatefulWidget {
   const VideoRecorderScreen({
     required this.title,

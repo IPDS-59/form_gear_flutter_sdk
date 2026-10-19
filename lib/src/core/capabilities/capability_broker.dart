@@ -74,6 +74,7 @@ class CapabilityBroker {
     required String dataKey,
     required String assignmentId,
     Duration? maxDuration,
+    VideoQuality quality = VideoQuality.medium,
   }) async {
     final clip = await _capabilities!.recordVideo(
       RecordVideoRequest(
@@ -83,6 +84,7 @@ class CapabilityBroker {
         cancel: _cancel,
         tempDir: await _tempDir(),
         maxDuration: maxDuration,
+        quality: quality,
       ),
     );
     return clip;

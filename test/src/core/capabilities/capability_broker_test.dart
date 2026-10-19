@@ -288,6 +288,9 @@ void main() {
       expect(r.success, isTrue);
       expect(r.result, endsWith('.mp4'));
       expect(fake.calls, ['video:film:A1']);
+      final req = fake.lastRequest! as RecordVideoRequest;
+      expect(req.quality, VideoQuality.medium);
+      expect(req.maxDuration, isNull);
     });
 
     testWidgets('a cancelled host recording is not an error path', (t) async {

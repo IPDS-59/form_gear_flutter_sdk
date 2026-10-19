@@ -128,6 +128,9 @@ class RecordAudioRequest extends CapabilityRequest {
   final Duration? maxDuration;
 }
 
+/// How sharp a video the form wants; the host maps it to its camera.
+enum VideoQuality { low, medium, high }
+
 /// Record one video clip, with the same rules as [RecordAudioRequest].
 class RecordVideoRequest extends CapabilityRequest {
   const RecordVideoRequest({
@@ -137,10 +140,14 @@ class RecordVideoRequest extends CapabilityRequest {
     required super.cancel,
     required super.tempDir,
     this.maxDuration,
+    this.quality = VideoQuality.medium,
   });
 
   /// Longest clip, when the form sets one; null means no limit.
   final Duration? maxDuration;
+
+  /// Resolution hint; the host picks the closest its camera supports.
+  final VideoQuality quality;
 }
 
 /// A photo or recording the host made.
