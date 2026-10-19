@@ -1,4 +1,26 @@
 # Changelog
+## [0.16.0] - 2026-10-19
+
+### ✨ Features
+
+- feat(capabilities): audio and video recording as host capabilities with the built-in recorders as fallback (75bd10f)
+- feat(capabilities): video quality hint; the built-in audio and video recorders are deprecated fallbacks (de04f76)
+
+### 🔧 Chores
+
+-  bump version to 0.15.0 for next development cycle (f48fcd4)
+-  bump version to 0.16.0 for next development cycle (0f4c824)
+-  wrap the ignore headers to pass the line length lint (222a5a1)
+
+### 📝 Other Changes
+
+- Merge pull request #83 from IPDS-59/chore/bump-version-to-0.15.0-dev (477ca2d)
+- Merge pull request #84 from IPDS-59/chore/back-merge-0.14.0 (5971935)
+- Merge pull request #87 from IPDS-59/chore/back-merge-0.15.0 (c9698bf)
+- Merge pull request #86 from IPDS-59/chore/bump-version-to-0.16.0-dev (e4ce210)
+- Merge branch 'feat/capabilities-audio' into release/0.16.0 (611cbcd)
+- Merge pull request #90 from IPDS-59/release/0.16.0 (c54d89a)
+
 ## [0.15.0] - 2026-10-19
 
 ### ✨ Features
