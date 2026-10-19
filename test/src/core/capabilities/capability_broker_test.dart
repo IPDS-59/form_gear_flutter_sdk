@@ -15,9 +15,18 @@ import '../../../helpers/test_path_provider_platform.dart';
 
 /// A scripted host: one outcome per call.
 class FakeCapabilities extends FormGearCapabilities {
-  FakeCapabilities({this.photo, this.picked, this.error, this.kinds});
+  FakeCapabilities({
+    this.photo,
+    this.picked,
+    this.error,
+    this.kinds,
+    this.audio,
+    this.video,
+  });
 
   final CapturedMedia? photo;
+  final CapturedMedia? audio;
+  final CapturedMedia? video;
   final PickedFile? picked;
   final Object? error;
   final Set<CapabilityKind>? kinds;
@@ -36,6 +45,22 @@ class FakeCapabilities extends FormGearCapabilities {
     lastRequest = request;
     if (error != null) throw error!;
     return photo;
+  }
+
+  @override
+  Future<CapturedMedia?> recordAudio(RecordAudioRequest request) async {
+    calls.add('audio:${request.dataKey}:${request.assignmentId}');
+    lastRequest = request;
+    if (error != null) Error.throwWithStackTrace(error!, StackTrace.current);
+    return audio;
+  }
+
+  @override
+  Future<CapturedMedia?> recordVideo(RecordVideoRequest request) async {
+    calls.add('video:${request.dataKey}:${request.assignmentId}');
+    lastRequest = request;
+    if (error != null) Error.throwWithStackTrace(error!, StackTrace.current);
+    return video;
   }
 
   @override
@@ -169,6 +194,132 @@ void main() {
       ))!;
       expect(r.success, isFalse);
       expect(r.error, 'Formulir tidak sedang terbuka');
+    });
+  });
+
+  group('audio through the action route (AUDIO)', () {
+    late File m4a;
+    setUp(() => m4a = File('${tmp.path}/host.m4a')..writeAsBytesSync([9, 9]));
+
+    testWidgets('stores the host recording and answers with the name', (
+      t,
+    ) async {
+      await withContext(t);
+      final fake = FakeCapabilities(
+        audio: CapturedMedia(
+          file: m4a,
+          mime: 'audio/mp4',
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      FormGearSDK.instance.capabilities = fake;
+
+      final r = (await t.runAsync(
+        () => MediaActionHandler().handleAudio('rekam', 'A1'),
+      ))!;
+
+      expect(r.success, isTrue);
+      expect(r.result, endsWith('.m4a'));
+      expect(fake.calls, ['audio:rekam:A1']);
+      final stored = Directory(tmp.path)
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((f) => f.path.endsWith(r.result!));
+      expect(stored, isNotEmpty);
+    });
+
+    testWidgets('a cancelled recording is not an error path', (t) async {
+      await withContext(t);
+      FormGearSDK.instance.capabilities = FakeCapabilities();
+      final r = (await t.runAsync(
+        () => MediaActionHandler().handleAudio('rekam', 'A1'),
+      ))!;
+      expect(r.success, isFalse);
+      expect(r.error, 'Audio recording cancelled by user');
+    });
+
+    testWidgets('a denied microphone shows the host sentence', (t) async {
+      await withContext(t);
+      FormGearSDK.instance.capabilities = FakeCapabilities(
+        error: const CapabilityException.denied('Izinkan mikrofon dulu'),
+      );
+      final r = (await t.runAsync(
+        () => MediaActionHandler().handleAudio('rekam', 'A1'),
+      ))!;
+      expect(r.success, isFalse);
+      expect(r.error, 'Izinkan mikrofon dulu');
+    });
+
+    testWidgets('an unexpected failure is sanitized', (t) async {
+      await withContext(t);
+      FormGearSDK.instance.capabilities = FakeCapabilities(
+        error: Exception('boom at /data/user/0/secret/path'),
+      );
+      final r = (await t.runAsync(
+        () => MediaActionHandler().handleAudio('rekam', 'A1'),
+      ))!;
+      expect(r.success, isFalse);
+      expect(r.error, isNot(contains('/data/user/0')));
+    });
+
+    testWidgets('no open form is a friendly error', (t) async {
+      FormGearSDK.instance.capabilities = FakeCapabilities(
+        audio: CapturedMedia(file: m4a, mime: 'audio/mp4'),
+      );
+      final r = (await t.runAsync(
+        () => MediaActionHandler().handleAudio('rekam', 'A1'),
+      ))!;
+      expect(r.success, isFalse);
+      expect(r.error, 'Formulir tidak sedang terbuka');
+    });
+  });
+
+  group('video', () {
+    testWidgets('a host that records video stores its clip', (t) async {
+      await withContext(t);
+      final mp4 = File('${tmp.path}/host.mp4')..writeAsBytesSync([7]);
+      final fake = FakeCapabilities(
+        video: CapturedMedia(file: mp4, mime: 'video/mp4'),
+      );
+      FormGearSDK.instance.capabilities = fake;
+      final r = (await t.runAsync(
+        () => MediaActionHandler().handleVideo('film', 'A1'),
+      ))!;
+      expect(r.success, isTrue);
+      expect(r.result, endsWith('.mp4'));
+      expect(fake.calls, ['video:film:A1']);
+      final req = fake.lastRequest! as RecordVideoRequest;
+      expect(req.quality, VideoQuality.medium);
+      expect(req.maxDuration, isNull);
+    });
+
+    testWidgets('a cancelled host recording is not an error path', (t) async {
+      await withContext(t);
+      FormGearSDK.instance.capabilities = FakeCapabilities();
+      final r = (await t.runAsync(
+        () => MediaActionHandler().handleVideo('film', 'A1'),
+      ))!;
+      expect(r.error, 'Video recording cancelled by user');
+    });
+
+    testWidgets('a host without video keeps the built-in recorder', (t) async {
+      // No navigator context is registered, so the built-in path answers with
+      // its own "no context" error instead of the broker's.
+      FormGearSDK.instance.capabilities = FakeCapabilities(
+        kinds: {CapabilityKind.photo},
+      );
+      final r = (await t.runAsync(
+        () => MediaActionHandler().handleVideo('film', 'A1'),
+      ))!;
+      expect(r.success, isFalse);
+      expect(r.error, 'No valid context available for video recorder');
+    });
+
+    test('the default host does not provide video', () {
+      expect(
+        const _Defaults().support(CapabilityKind.video).supported,
+        isFalse,
+      );
     });
   });
 
