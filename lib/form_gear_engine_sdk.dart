@@ -23,6 +23,7 @@ export 'src/core/listeners/save_submit_result.dart';
 // JS bridge observability (debugger)
 export 'src/core/observability/form_gear_bridge_event.dart';
 // Host UI for dialogs and the loader around a form
+export 'src/core/ui/barcode_scan.dart';
 export 'src/core/ui/form_gear_ui_handler.dart';
 // Custom UI for form engine downloads and updates
 export 'src/core/version/form_engine_update_handler.dart';
@@ -40,5 +41,3 @@ export 'src/models/form_gear_global_config.dart';
 // Version Check Models
 export 'src/models/version_check_result.dart';
 export 'src/models/version_state.dart';
-// Barcode scanner engine (host can replace the default zxing engine)
-export 'src/presentation/scanner/barcode_scanner_engine.dart';

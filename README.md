@@ -432,46 +432,31 @@ bridge event for debuggers. See `docs/adr/0001-host-ui-handler-and-bridge-events
 
 ### Barcode and QR scanning
 
-The `BARCODE` and `QR_SCAN` form actions open a camera screen. The decoder is zxing-cpp (through `flutter_zxing`) on the `camera` image stream: frames are decoded in an isolate and dropped while one is still being decoded. It reads QR, Code 128, Code 39, EAN/UPC, DataMatrix, PDF417 and the other zxing symbologies, with no ML Kit model (about 2.2 MB less native code and 1.4 MB less Java per ABI than `mobile_scanner`).
-
-A host that wants another decoder, for example ML Kit through `mobile_scanner`, implements `BarcodeScannerEngine` and sets it once at startup:
+The SDK has no scanner of its own (it used to ship a zxing screen; that code
+and the `flutter_zxing` dependency are gone, so a host that scans owns the
+camera screen and its size). The `BARCODE` and `QR_SCAN` form actions call
+`FormGearUiHandler.scanBarcode(context, request)`. Open your scanner there and
+return the code:
 
 ```dart
-FormGearScanner.engineBuilder = () => MyMlKitEngine();
+class MyHandler extends FormGearUiHandler {
+  @override
+  Future<BarcodeScanResult?> scanBarcode(
+    BuildContext context,
+    BarcodeScanRequest request,
+  ) async {
+    final code = await myScanner(context); // your camera screen
+    return code == null
+        ? const BarcodeScanResult.cancelled()
+        : BarcodeScanResult(text: code.text, format: code.format);
+  }
+}
 ```
 
-The engine opens the camera in `initialize()` (throw `ScannerPermissionDenied` when it is refused), shows it in `buildPreview`, and emits the decoded codes on `codes` (an empty list for a frame with none). `mobile_scanner` is not a dependency of this package any more, so a host that uses it adds it to its own `pubspec.yaml`.
-
-
-## Security Features
-
-The SDK includes security best practices:
-
-- ✅ **Path validation** - Prevents path traversal attacks
-- ✅ **HTTPS enforcement** - Blocks insecure HTTP connections
-- ✅ **Log sanitization** - Redacts PII (NIK, phone, email, passwords)
-- ✅ **SSL pinning** - Certificate validation support
-- ✅ **Required encryption keys** - No hardcoded secrets
-
-## Example App
-
-See the [example](example/) directory for a complete implementation showing:
-- SDK initialization
-- Form engine selection
-- Version checking
-- SaveOrSubmit listener implementation
-- FileUpload listener implementation
-
-Run the example:
-```bash
-cd example
-flutter pub get
-flutter run
-```
-
-## Migration from Previous Versions
-
-If you're upgrading from an older version, note these breaking changes:
+The default returns `null`, and the form then shows that scanning is not
+available. **Migration from 0.11 to 0.13:** `BarcodeScannerEngine`,
+`ScannedCode`, `ScannerPermissionDenied` and `FormGearScanner.engineBuilder`
+are removed; move your engine into the `scanBarcode` screen.
 
 ### Removed APIs
 

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:form_gear_engine_sdk/src/core/ui/barcode_scan.dart';
 
 /// Lets the host draw the small pieces of UI the SDK shows around a form, so
 /// they match the host's design system. Every method has a default that
@@ -69,6 +70,16 @@ abstract class FormGearUiHandler {
   /// does not accept faked positions. [context] is the form page's. The
   /// default does nothing.
   Future<void> onMockLocation(BuildContext context) async {}
+
+  /// Scans one barcode or QR code for a `BARCODE` or `QR_SCAN` form field. The
+  /// SDK has no scanner of its own: the host opens its camera screen here and
+  /// returns the code, or [BarcodeScanResult.cancelled] when the user leaves.
+  /// Return `null` (the default) when the host has no scanner: the form then
+  /// shows that scanning is not available. [context] is the form page's.
+  Future<BarcodeScanResult?> scanBarcode(
+    BuildContext context,
+    BarcodeScanRequest request,
+  ) async => null;
 
   /// The status and navigation bar style for the form page. Return `null` to
   /// pick transparent bars with icons that fit the page brightness.

@@ -31,5 +31,21 @@ void main() {
     final photo = File('photo.jpg');
     expect(await handler.processCapturedPhoto(photo), same(photo));
     await handler.onMockLocation(context);
+    // No host scanner: the form shows that scanning is not available.
+    expect(
+      await handler.scanBarcode(
+        context,
+        const BarcodeScanRequest(dataKey: 'k', title: 't'),
+      ),
+      isNull,
+    );
+  });
+
+  test('a scan result without text is a cancel', () {
+    expect(const BarcodeScanResult.cancelled().cancelled, isTrue);
+    expect(const BarcodeScanResult(text: '').cancelled, isTrue);
+    const ok = BarcodeScanResult(text: 'A1', format: 'QRCode');
+    expect(ok.cancelled, isFalse);
+    expect(ok.format, 'QRCode');
   });
 }
