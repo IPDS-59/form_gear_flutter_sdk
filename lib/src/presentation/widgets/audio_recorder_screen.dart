@@ -1,3 +1,9 @@
+// The built-in recorder is the deprecated fallback for a host without the
+// capability (removed in 1.0.0), so its own file may use and keep it.
+// ignore_for_file: deprecated_member_use_from_same_package
+// ignore_for_file: deprecated_consistency
+// ignore_for_file: remove_deprecations_in_breaking_versions
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:form_gear_engine_sdk/src/presentation/bloc/audio_recorder_bloc.dart';
@@ -7,6 +13,9 @@ import 'package:permission_handler/permission_handler.dart';
 
 /// Audio recorder screen with BLoC state management and permissions
 /// Following FASIH patterns for media file management
+@Deprecated(
+  'Provide FormGearCapabilities.recordAudio instead; removed in 1.0.0.',
+)
 class AudioRecorderScreen extends StatelessWidget {
   const AudioRecorderScreen({
     required this.title,
