@@ -335,4 +335,18 @@ String buildSafeAreaScript(EdgeInsets i) =>
 const safeAreaCss =
     '#fasih-form{box-sizing:border-box!important;'
     'padding:var(--safe-area-inset-top) var(--safe-area-inset-right) '
-    'var(--safe-area-inset-bottom) var(--safe-area-inset-left)!important}';
+    'var(--safe-area-inset-bottom) var(--safe-area-inset-left)!important}'
+    // The off-canvas section drawer (`.sidebar-span`, `absolute` inside the
+    // padded mount below `md`) would show a gap above and below it. Pin it to
+    // the viewport so its background is full-bleed, and pad its content.
+    '@media (max-width:767.98px){.sidebar-span{position:fixed!important;'
+    'top:0!important;bottom:0!important;left:0!important;'
+    'max-height:none!important;box-sizing:border-box!important;'
+    'padding-top:calc(1.25rem + var(--safe-area-inset-top))!important;'
+    'padding-bottom:calc(1.25rem + var(--safe-area-inset-bottom))!important;'
+    'padding-left:calc(1.25rem + var(--safe-area-inset-left))!important}}'
+    // Modal dialogs and panels are `fixed inset-0` (already full-bleed): keep
+    // their content clear of the notch and the home indicator.
+    '[role=dialog]{box-sizing:border-box!important;'
+    'padding-top:var(--safe-area-inset-top)!important;'
+    'padding-bottom:var(--safe-area-inset-bottom)!important}';
