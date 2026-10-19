@@ -1,4 +1,20 @@
 # Changelog
+## [0.14.0] - 2026-10-19
+
+### ⚠️ BREAKING CHANGES
+
+- feat(ui)!: host-owned barcode scanner (FormGearUiHandler.scanBarcode); drop the built-in zxing screen and flutter_zxing (#81) (55b8e72)
+
+### 🔧 Chores
+
+-  bump version to 0.14.0 for next development cycle (9a3d1be)
+
+### 📝 Other Changes
+
+- Merge pull request #80 from IPDS-59/chore/back-merge-0.13.0 (21abf20)
+- Merge pull request #79 from IPDS-59/chore/bump-version-to-0.14.0-dev (4702ae1)
+- Merge pull request #82 from IPDS-59/release/0.14.0 (81d2b11)
+
 ## [0.13.0] - 2026-10-19
 
 ### ✨ Features
