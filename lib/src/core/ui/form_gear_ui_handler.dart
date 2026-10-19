@@ -80,6 +80,8 @@ abstract class FormGearUiHandler {
   ///
   /// Deprecated: provide `FormGearCapabilities.scan` instead. The default now
   /// forwards to it, so a host that moves the method keeps the same types.
+  // Kept through 0.x for hosts that still override it; 1.0.0 removes it.
+  // ignore: remove_deprecations_in_breaking_versions
   @Deprecated('Provide FormGearCapabilities.scan instead')
   Future<BarcodeScanResult?> scanBarcode(
     BuildContext context,

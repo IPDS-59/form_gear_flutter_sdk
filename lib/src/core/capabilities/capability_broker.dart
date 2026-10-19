@@ -16,6 +16,8 @@ class CapabilityBroker {
     : _context = context ?? (() => NavigatorContextProvider.instance.context);
 
   /// The broker for the SDK's current host.
+  // A getter on purpose: it reads the host registered right now.
+  // ignore: prefer_constructors_over_static_methods
   static CapabilityBroker get current =>
       CapabilityBroker(FormGearSDK.instance.capabilities);
 
@@ -37,40 +39,46 @@ class CapabilityBroker {
   Future<CapturedMedia?> capturePhoto({
     required String dataKey,
     required String assignmentId,
-  }) async => _capabilities!.capturePhoto(
-    CapturePhotoRequest(
-      context: _requireContext(),
-      dataKey: dataKey,
-      assignmentId: assignmentId,
-      cancel: _cancel,
-      tempDir: await _tempDir(),
-    ),
-  );
+  }) async {
+    final media = await _capabilities!.capturePhoto(
+      CapturePhotoRequest(
+        context: _requireContext(),
+        dataKey: dataKey,
+        assignmentId: assignmentId,
+        cancel: _cancel,
+        tempDir: await _tempDir(),
+      ),
+    );
+    return media;
+  }
 
   Future<PickedFile?> pickFile({
     required String dataKey,
     required String assignmentId,
     List<String> allowedExtensions = const [],
     bool imagesOnly = false,
-  }) async => _capabilities!.pickFile(
-    PickRequest(
-      context: _requireContext(),
-      dataKey: dataKey,
-      assignmentId: assignmentId,
-      cancel: _cancel,
-      tempDir: await _tempDir(),
-      allowedExtensions: allowedExtensions,
-      imagesOnly: imagesOnly,
-    ),
-  );
+  }) async {
+    final picked = await _capabilities!.pickFile(
+      PickRequest(
+        context: _requireContext(),
+        dataKey: dataKey,
+        assignmentId: assignmentId,
+        cancel: _cancel,
+        tempDir: await _tempDir(),
+        allowedExtensions: allowedExtensions,
+        imagesOnly: imagesOnly,
+      ),
+    );
+    return picked;
+  }
 
   /// The host scanner, or null when the host has none.
   Future<BarcodeScanResult?> scan(
     BuildContext context,
     BarcodeScanRequest request,
-  ) async => provides(CapabilityKind.scan)
+  ) => provides(CapabilityKind.scan)
       ? _capabilities!.scan(context, request)
-      : null;
+      : Future.value();
 
   BuildContext _requireContext() =>
       _context() ??

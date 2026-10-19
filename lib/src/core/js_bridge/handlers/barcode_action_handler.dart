@@ -6,7 +6,7 @@ import 'package:form_gear_engine_sdk/src/utils/utils.dart';
 /// Handler for barcode/QR scanning actions (BARCODE, QR_SCAN).
 ///
 /// The SDK has no scanner: it asks the host through
-/// [FormGearUiHandler.scanBarcode].
+/// `FormGearUiHandler.scanBarcode`.
 class BarcodeActionHandler with ActionHandlerContract {
   @override
   List<String> get supportedActions => ['BARCODE', 'QR_SCAN'];
