@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
+import 'package:form_gear_engine_sdk/src/core/capabilities/capability_broker.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/file_action_handler.dart';
 import 'package:form_gear_engine_sdk/src/utils/captured_photo.dart';
 import 'package:form_gear_engine_sdk/src/utils/fasih_form_notifier.dart';
@@ -66,6 +67,19 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
     try {
       FormGearLogger.webview('Executing camera for FasihForm: $dataKey');
 
+      final host = CapabilityBroker.current;
+      if (host.provides(CapabilityKind.photo)) {
+        final photo = await host.capturePhoto(
+          dataKey: dataKey,
+          assignmentId:
+              FormGearSDK.instance.currentAssignment?.assignmentId ??
+              'current_assignment',
+        );
+        return photo == null
+            ? ActionInfoJs(success: false, error: 'Camera cancelled by user')
+            : ActionInfoJs(success: true, result: photo.file.path);
+      }
+
       // Request camera permission first
       final cameraStatus = await Permission.camera.request();
       if (cameraStatus.isDenied) {
@@ -100,7 +114,9 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
       }
     } on Exception catch (e) {
       FormGearLogger.webviewError('Execute camera error: $e');
-      return ActionInfoJs(success: false, error: 'Execute camera error: $e');
+      return e is CapabilityException
+          ? CapabilityBroker.errorToJs(e, 'Camera')
+          : ActionInfoJs(success: false, error: 'Execute camera error: $e');
     }
   }
 
@@ -192,12 +208,20 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
         // ImagePicker handles it internally
         // Requesting Permission.photos on Android 13+
         // opens photo picker first!
-        final picker = ImagePicker();
-        final image = await picker.pickImage(source: ImageSource.gallery);
+        final host = CapabilityBroker.current;
+        final imagePath = host.provides(CapabilityKind.pickFile)
+            ? (await host.pickFile(
+                dataKey: dataKey,
+                assignmentId: assignmentId,
+                imagesOnly: true,
+              ))?.file.path
+            : (await ImagePicker().pickImage(
+                source: ImageSource.gallery,
+              ))?.path;
 
-        if (image != null) {
+        if (imagePath != null) {
           // Generate FASIH-compatible filename and save to media directory
-          final extension = image.path.split('.').last.toLowerCase();
+          final extension = imagePath.split('.').last.toLowerCase();
           final fileName = FasihMediaHelper.generateFileName(
             dataKey: dataKey,
             mediaType: 'photo',
@@ -207,7 +231,7 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
           // Save to media directory
           final success = await FasihMediaHelper.saveMediaFile(
             assignmentId: assignmentId,
-            sourceFile: File(image.path),
+            sourceFile: File(imagePath),
             fileName: fileName,
             mediaType: 'photo',
           );
@@ -246,35 +270,48 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
         }
       }
 
-      // For other file types, use FilePicker
-      // Request storage permission for non-image files
-      final storageStatus = await Permission.storage.request();
-      if (storageStatus.isDenied) {
-        // Storage permission is optional on newer Android versions
-        FormGearLogger.webview(
-          'Storage permission denied, but continuing with file picker',
+      // For other file types: the host picker, else FilePicker
+      final accept = acceptType ?? '';
+      final host = CapabilityBroker.current;
+      final String? pickedPath;
+      final String originalName;
+      if (host.provides(CapabilityKind.pickFile)) {
+        final picked = await host.pickFile(
+          dataKey: dataKey,
+          assignmentId: assignmentId,
+          allowedExtensions: accept.contains('csv') ? ['csv'] : const [],
         );
+        pickedPath = picked?.file.path;
+        originalName = picked?.name ?? '';
+      } else {
+        // Request storage permission for non-image files
+        final storageStatus = await Permission.storage.request();
+        if (storageStatus.isDenied) {
+          // Storage permission is optional on newer Android versions
+          FormGearLogger.webview(
+            'Storage permission denied, but continuing with file picker',
+          );
+        }
+
+        // Open file picker with appropriate type
+        final picked = accept.contains('csv')
+            ? await FilePicker.pickFile(
+                type: FileType.custom,
+                allowedExtensions: ['csv'],
+              )
+            : await FilePicker.pickFile(
+                type: accept.contains('video')
+                    ? FileType.video
+                    : accept.contains('audio')
+                    ? FileType.audio
+                    : FileType.any,
+              );
+        pickedPath = picked?.path;
+        originalName = picked?.name ?? '';
       }
 
-      // Open file picker with appropriate type
-      final accept = acceptType ?? '';
-      final picked = accept.contains('csv')
-          ? await FilePicker.pickFile(
-              type: FileType.custom,
-              allowedExtensions: ['csv'],
-            )
-          : await FilePicker.pickFile(
-              type: accept.contains('video')
-                  ? FileType.video
-                  : accept.contains('audio')
-                  ? FileType.audio
-                  : FileType.any,
-            );
-
-      final pickedPath = picked?.path;
-      if (picked != null && pickedPath != null) {
+      if (pickedPath != null) {
         final originalPath = pickedPath;
-        final originalName = picked.name;
 
         // Generate FASIH-compatible filename and save to media directory
         final extension = originalPath.split('.').last.toLowerCase();
@@ -324,10 +361,12 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
       }
     } on Exception catch (e) {
       FormGearLogger.webviewError('Execute file picker error: $e');
-      return ActionInfoJs(
-        success: false,
-        error: 'Execute file picker error: $e',
-      );
+      return e is CapabilityException
+          ? CapabilityBroker.errorToJs(e, 'File picker')
+          : ActionInfoJs(
+              success: false,
+              error: 'Execute file picker error: $e',
+            );
     }
   }
 

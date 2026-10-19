@@ -17,6 +17,9 @@ class ListenerRegistry {
   /// Host UI for the dialogs and loader around a form.
   FormGearUiHandler? uiHandler;
 
+  /// Host device capabilities: photo, file pick, scan.
+  FormGearCapabilities? capabilities;
+
   /// Sets the FormDataListener for handling save/submit operations
   void setFormDataListener(FormDataListener? listener) {
     _formDataListener = listener;

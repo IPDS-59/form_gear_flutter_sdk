@@ -31,6 +31,8 @@ class BarcodeActionHandler with ActionHandlerContract {
 
       final scan = handler == null
           ? null
+          // The SDK's own default forwards to the host capability.
+          // ignore: deprecated_member_use_from_same_package
           : await handler.scanBarcode(
               context,
               BarcodeScanRequest(
