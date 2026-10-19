@@ -207,8 +207,11 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
   @override
   Widget build(BuildContext context) {
     final useSafeArea = _w.uiHandler?.useSafeArea ?? true;
+    final header = _w.uiHandler?.buildHeader(context, _requestExit);
     if (!useSafeArea) {
-      _padding = MediaQuery.paddingOf(context);
+      // A host header owns the top inset; the engine starts below it.
+      final pad = MediaQuery.paddingOf(context);
+      _padding = header == null ? pad : pad.copyWith(top: 0);
       _applyInsets(_padding!);
     }
     return BlocBuilder<FormGearWebViewBloc, FormGearWebViewState>(
@@ -223,6 +226,7 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
             children: [
               Column(
                 children: [
+                  ?header,
                   if (state.hasError)
                     _w.uiHandler?.buildError(
                           context,
@@ -255,6 +259,7 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
                   Expanded(
                     child: useSafeArea
                         ? SafeArea(
+                            top: header == null,
                             child: WebViewWidget(controller: _controller),
                           )
                         : WebViewWidget(controller: _controller),
@@ -285,7 +290,14 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
       return;
     }
     if (!mounted) return;
+    await _requestExit();
+  }
 
+  /// Asks to leave the form (host dialog or the SDK's), saves it and closes
+  /// the page. Used by the system back once the first section is reached and
+  /// by a host header's close action.
+  Future<void> _requestExit() async {
+    if (!mounted) return;
     final hostAnswer = await _w.uiHandler?.confirmExit(context);
     if (!mounted) return;
     final shouldExit = hostAnswer ?? await ExitConfirmationDialog.show(context);

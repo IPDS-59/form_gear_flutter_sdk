@@ -19,6 +19,16 @@ abstract class FormGearUiHandler {
   /// `false` to stay, or `null` to show the SDK's own dialog.
   Future<bool?> confirmExit(BuildContext context) async => null;
 
+  /// A bar the host draws above the form, for a visible way out (iOS has no
+  /// system back button). Tapping its close action should call [requestExit],
+  /// which asks [confirmExit], saves the form and closes the page. The bar owns
+  /// the top safe area: with a bar the engine gets a top inset of 0. Return
+  /// `null` (the default) for no bar.
+  Widget? buildHeader(
+    BuildContext context,
+    Future<void> Function() requestExit,
+  ) => null;
+
   /// The full-screen loader drawn over the form while it loads. [progress]
   /// is 0-100. Return `null` to use the SDK's own loader.
   Widget? buildLoading(BuildContext context, int progress) => null;
