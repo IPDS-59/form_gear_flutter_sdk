@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:form_gear_engine_sdk/src/presentation/bloc/barcode_scanner_bloc.dart';
 import 'package:form_gear_engine_sdk/src/presentation/helpers/modern_dialog_helper.dart';
 import 'package:form_gear_engine_sdk/src/presentation/widgets/audio_recorder_screen.dart';
-import 'package:form_gear_engine_sdk/src/presentation/widgets/barcode_scanner_screen.dart';
 
 /// Demo screen for testing audio recording and barcode scanning widgets
 /// Following FormGear design system and FASIH patterns
@@ -31,7 +28,7 @@ class MediaDemoScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Test audio recording and barcode scanning capabilities',
+              'Test audio recording',
               style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
               textAlign: TextAlign.center,
             ),
@@ -44,17 +41,6 @@ class MediaDemoScreen extends StatelessWidget {
               icon: Icons.mic,
               color: Colors.red,
               onTap: () => _openAudioRecorder(context),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Barcode Scanner Card
-            _MediaCard(
-              title: 'Barcode Scanner',
-              subtitle: 'Scan QR codes and barcodes using camera',
-              icon: Icons.qr_code_scanner,
-              color: Colors.green,
-              onTap: () => _openBarcodeScanner(context),
             ),
 
             const Spacer(),
@@ -125,30 +111,6 @@ class MediaDemoScreen extends StatelessWidget {
               'File saved: $result',
               Icons.mic,
               Colors.red,
-            );
-          }
-        });
-  }
-
-  void _openBarcodeScanner(BuildContext context) {
-    Navigator.of(context)
-        .push<String?>(
-          MaterialPageRoute<String?>(
-            builder: (context) => BlocProvider(
-              create: (context) =>
-                  BarcodeScannerBloc()..add(const InitializeScanner()),
-              child: const BarcodeScannerScreen(title: 'Demo Barcode Scanner'),
-            ),
-          ),
-        )
-        .then((result) {
-          if (result != null) {
-            _showResultDialog(
-              context,
-              'Barcode Scanned',
-              'Result: $result',
-              Icons.qr_code,
-              Colors.green,
             );
           }
         });
