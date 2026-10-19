@@ -1,4 +1,18 @@
 # Changelog
+## [0.15.0] - 2026-10-19
+
+### ✨ Features
+
+- feat(capabilities): FormGearCapabilities core with photo and file pick; the action, execute and client routes use one broker; scanBarcode deprecated and forwards to scan (190422b)
+
+### 🐛 Bug Fixes
+
+- fix(capabilities): clear analyzer infos so CI passes (e52a59a)
+
+### 📝 Other Changes
+
+- Merge pull request #85 from IPDS-59/release/0.15.0 (398612a)
+
 ## [0.14.0] - 2026-10-19
 
 ### ⚠️ BREAKING CHANGES
