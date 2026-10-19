@@ -207,8 +207,11 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
   @override
   Widget build(BuildContext context) {
     final useSafeArea = _w.uiHandler?.useSafeArea ?? true;
+    final header = _w.uiHandler?.buildHeader(context, _requestExit);
     if (!useSafeArea) {
-      _padding = MediaQuery.paddingOf(context);
+      // A host header owns the top inset; the engine starts below it.
+      final pad = MediaQuery.paddingOf(context);
+      _padding = header == null ? pad : pad.copyWith(top: 0);
       _applyInsets(_padding!);
     }
     return BlocBuilder<FormGearWebViewBloc, FormGearWebViewState>(
@@ -223,6 +226,7 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
             children: [
               Column(
                 children: [
+                  ?header,
                   if (state.hasError)
                     _w.uiHandler?.buildError(
                           context,
@@ -255,6 +259,7 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
                   Expanded(
                     child: useSafeArea
                         ? SafeArea(
+                            top: header == null,
                             child: WebViewWidget(controller: _controller),
                           )
                         : WebViewWidget(controller: _controller),
@@ -285,7 +290,14 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
       return;
     }
     if (!mounted) return;
+    await _requestExit();
+  }
 
+  /// Asks to leave the form (host dialog or the SDK's), saves it and closes
+  /// the page. Used by the system back once the first section is reached and
+  /// by a host header's close action.
+  Future<void> _requestExit() async {
+    if (!mounted) return;
     final hostAnswer = await _w.uiHandler?.confirmExit(context);
     if (!mounted) return;
     final shouldExit = hostAnswer ?? await ExitConfirmationDialog.show(context);
@@ -323,4 +335,18 @@ String buildSafeAreaScript(EdgeInsets i) =>
 const safeAreaCss =
     '#fasih-form{box-sizing:border-box!important;'
     'padding:var(--safe-area-inset-top) var(--safe-area-inset-right) '
-    'var(--safe-area-inset-bottom) var(--safe-area-inset-left)!important}';
+    'var(--safe-area-inset-bottom) var(--safe-area-inset-left)!important}'
+    // The off-canvas section drawer (`.sidebar-span`, `absolute` inside the
+    // padded mount below `md`) would show a gap above and below it. Pin it to
+    // the viewport so its background is full-bleed, and pad its content.
+    '@media (max-width:767.98px){.sidebar-span{position:fixed!important;'
+    'top:0!important;bottom:0!important;left:0!important;'
+    'max-height:none!important;box-sizing:border-box!important;'
+    'padding-top:calc(1.25rem + var(--safe-area-inset-top))!important;'
+    'padding-bottom:calc(1.25rem + var(--safe-area-inset-bottom))!important;'
+    'padding-left:calc(1.25rem + var(--safe-area-inset-left))!important}}'
+    // Modal dialogs and panels are `fixed inset-0` (already full-bleed): keep
+    // their content clear of the notch and the home indicator.
+    '[role=dialog]{box-sizing:border-box!important;'
+    'padding-top:var(--safe-area-inset-top)!important;'
+    'padding-bottom:var(--safe-area-inset-bottom)!important}';

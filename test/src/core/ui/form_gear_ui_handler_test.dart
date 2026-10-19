@@ -22,6 +22,7 @@ void main() {
     const handler = _Defaults();
     expect(await handler.confirmExit(context), isNull);
     expect(handler.buildLoading(context, 10), isNull);
+    expect(handler.buildHeader(context, () async {}), isNull);
     expect(handler.buildError(context, 'x', () {}), isNull);
     expect(await handler.showError(context, 'x'), isFalse);
     expect(handler.systemOverlayStyle(context), isNull);
