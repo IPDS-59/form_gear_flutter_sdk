@@ -1,4 +1,20 @@
 # Changelog
+## [0.13.0] - 2026-10-19
+
+### ✨ Features
+
+- feat(ui): host header with requestExit + full-bleed drawer and dialogs under the safe area (#77) (e48f350)
+
+### 🔧 Chores
+
+-  bump version to 0.13.0 for next development cycle (b6a11b0)
+
+### 📝 Other Changes
+
+- Merge pull request #75 from IPDS-59/chore/back-merge-0.12.0 (05b5499)
+- Merge pull request #74 from IPDS-59/chore/bump-version-to-0.13.0-dev (f075141)
+- Merge pull request #78 from IPDS-59/release/0.13.0 (983e295)
+
 ## [0.12.0] - 2026-10-18
 
 ### ⚡ Performance
