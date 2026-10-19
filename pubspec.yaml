@@ -21,7 +21,6 @@ dependencies:
     sdk: flutter
   flutter_bloc: ^9.1.1
   flutter_svg: ^2.2.3
-  flutter_zxing: ^3.1.0
   geolocator: ^14.0.2
   get_it: ^9.2.1
   image_picker: ^1.2.1
