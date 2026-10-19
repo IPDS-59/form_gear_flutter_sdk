@@ -219,6 +219,12 @@ class FormGearSDK {
   set uiHandler(FormGearUiHandler? handler) =>
       _listenerRegistry.uiHandler = handler;
 
+  /// The host's device capabilities (photo, file pick, scan). Null keeps the
+  /// built-in camera and file picker while they exist.
+  FormGearCapabilities? get capabilities => _listenerRegistry.capabilities;
+  set capabilities(FormGearCapabilities? value) =>
+      _listenerRegistry.capabilities = value;
+
   /// Opens form with assignment context (new assignment-based method)
   /// This method uses dynamic configuration based on assignment context
   ///

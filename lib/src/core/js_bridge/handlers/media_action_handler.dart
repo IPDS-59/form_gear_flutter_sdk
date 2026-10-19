@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
+import 'package:form_gear_engine_sdk/src/core/capabilities/capability_broker.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/action_handler_contract.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_executor_service.dart';
 import 'package:form_gear_engine_sdk/src/core/services/navigator_context_provider.dart';
@@ -49,6 +50,11 @@ class MediaActionHandler with ActionHandlerContract {
   Future<ActionInfoJs> handleCamera(String dataKey, String data) async {
     try {
       FormGearLogger.webview('Opening camera for dataKey: $dataKey');
+
+      final host = CapabilityBroker.current;
+      if (host.provides(CapabilityKind.photo)) {
+        return await _cameraFromHost(host, dataKey, data);
+      }
 
       // Request camera permission first
       final cameraStatus = await Permission.camera.request();
@@ -115,11 +121,46 @@ class MediaActionHandler with ActionHandlerContract {
       }
     } on Exception catch (e) {
       FormGearLogger.webviewError('Camera error: $e');
-      return ActionInfoJs(
-        success: false,
-        error: ErrorSanitizer.sanitizeWithContext('Camera', e.toString()),
-      );
+      return CapabilityBroker.errorToJs(e, 'Camera');
     }
+  }
+
+  /// The photo comes from the host's `capturePhoto` (its own camera, stamp and
+  /// permissions); the engine only names, stores and announces the file.
+  Future<ActionInfoJs> _cameraFromHost(
+    CapabilityBroker host,
+    String dataKey,
+    String data,
+  ) async {
+    final assignmentId = data.isNotEmpty ? data : 'current_assignment';
+    final photo = await host.capturePhoto(
+      dataKey: dataKey,
+      assignmentId: assignmentId,
+    );
+    if (photo == null) {
+      return ActionInfoJs(success: false, error: 'Camera cancelled by user');
+    }
+    final fileName = FasihMediaHelper.generateFileName(
+      dataKey: dataKey,
+      mediaType: 'photo',
+      extension: 'jpg',
+    );
+    final saved = await FasihMediaHelper.saveMediaFile(
+      assignmentId: assignmentId,
+      sourceFile: photo.file,
+      fileName: fileName,
+      mediaType: 'photo',
+    );
+    if (!saved) {
+      return ActionInfoJs(success: false, error: 'Failed to save camera image');
+    }
+    await notifyFormGearOfMediaSelection(
+      action: 'CAMERA',
+      dataKey: dataKey,
+      fileName: fileName,
+      assignmentId: assignmentId,
+    );
+    return ActionInfoJs(success: true, result: fileName);
   }
 
   /// Handle audio recording action using presentation layer widget with FASIH

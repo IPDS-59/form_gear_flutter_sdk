@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
+import 'package:form_gear_engine_sdk/src/core/capabilities/capability_broker.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/action_handler_contract.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/media_action_handler.dart';
 import 'package:form_gear_engine_sdk/src/core/security/path_validator.dart';
@@ -225,19 +226,28 @@ class FileActionHandler with ActionHandlerContract {
     try {
       FormGearLogger.webview('Opening file picker for dataKey: $dataKey');
 
-      final storageStatus = await Permission.storage.request();
-      if (storageStatus.isDenied) {
-        final mediaStatus = await Permission.photos.request();
-        if (mediaStatus.isDenied) {
-          return ActionInfoJs(
-            success: false,
-            error: 'Storage permission denied',
-          );
+      final host = CapabilityBroker.current;
+      final String? filePath;
+      if (host.provides(CapabilityKind.pickFile)) {
+        // The host asks for its own permissions.
+        filePath = (await host.pickFile(
+          dataKey: dataKey,
+          assignmentId: data.isNotEmpty ? data : 'current_assignment',
+        ))?.file.path;
+      } else {
+        final storageStatus = await Permission.storage.request();
+        if (storageStatus.isDenied) {
+          final mediaStatus = await Permission.photos.request();
+          if (mediaStatus.isDenied) {
+            return ActionInfoJs(
+              success: false,
+              error: 'Storage permission denied',
+            );
+          }
         }
-      }
 
-      final picked = await FilePicker.pickFile();
-      final filePath = picked?.path;
+        filePath = (await FilePicker.pickFile())?.path;
+      }
 
       if (filePath != null) {
         // For system file picker, we only validate:
@@ -308,10 +318,7 @@ class FileActionHandler with ActionHandlerContract {
       }
     } on Exception catch (e) {
       FormGearLogger.webviewError('File picker error: $e');
-      return ActionInfoJs(
-        success: false,
-        error: ErrorSanitizer.sanitizeWithContext('File picker', e.toString()),
-      );
+      return CapabilityBroker.errorToJs(e, 'File picker');
     }
   }
 

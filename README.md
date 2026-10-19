@@ -458,6 +458,39 @@ available. **Migration from 0.11 to 0.13:** `BarcodeScannerEngine`,
 `ScannedCode`, `ScannerPermissionDenied` and `FormGearScanner.engineBuilder`
 are removed; move your engine into the `scanBarcode` screen.
 
+### Host capabilities (0.15)
+
+Device features come from the host through one class, `FormGearCapabilities`,
+set with `FormGearSDK.instance.capabilities = MyCapabilities()`. Every member
+defaults to "not provided". Phase 2 covers `capturePhoto`, `pickFile` and
+`scan`:
+
+```dart
+class MyCapabilities extends FormGearCapabilities {
+  @override
+  CapabilitySupport support(CapabilityKind kind) => switch (kind) {
+    CapabilityKind.photo || CapabilityKind.pickFile =>
+      const CapabilitySupport.supported(),
+    _ => const CapabilitySupport.unsupported(),
+  };
+
+  @override
+  Future<CapturedMedia?> capturePhoto(CapturePhotoRequest r) async {
+    final file = await myCamera(r.context); // your UI and permissions
+    return file == null ? null : CapturedMedia(file: file); // null = cancelled
+  }
+}
+```
+
+`null` means the user cancelled; a failure is a `CapabilityException` with a
+sentence for the user. The engine still names the file, stores it in the
+assignment media folder and updates `media.json`. All three bridge routes
+(`action`, `execute` and the client handlers) use the same call. While the SDK
+is 0.x, a kind the host does not provide keeps the built-in camera and picker
+(`image_picker`, `file_picker`); they go away in 1.0.0.
+`FormGearUiHandler.scanBarcode` is deprecated and forwards to
+`FormGearCapabilities.scan` (same types).
+
 ### Removed APIs
 
 The following internal APIs have been removed from the public surface:

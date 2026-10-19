@@ -4,6 +4,7 @@
 export 'src/core/base/failure.dart';
 export 'src/core/base/result.dart';
 // Core Configuration Models
+export 'src/core/capabilities/form_gear_capabilities.dart';
 export 'src/core/config/form_gear_api_config.dart';
 export 'src/core/config/form_gear_client_mode.dart';
 export 'src/core/config/form_gear_config.dart';

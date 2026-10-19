@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:form_gear_engine_sdk/src/core/capabilities/capability_broker.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_bridge.dart';
 import 'package:form_gear_engine_sdk/src/core/observability/form_gear_bridge_event.dart';
 import 'package:form_gear_engine_sdk/src/core/services/navigator_context_provider.dart';
@@ -115,6 +116,7 @@ class _FormGearWebViewContentState extends State<_FormGearWebViewContent> {
   @override
   void dispose() {
     NavigatorContextProvider.instance.unregister();
+    CapabilityBroker.cancelOpenCalls();
     super.dispose();
   }
 

@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:form_gear_engine_sdk/src/core/capabilities/capability_broker.dart';
+import 'package:form_gear_engine_sdk/src/core/capabilities/form_gear_capabilities.dart';
+import 'package:form_gear_engine_sdk/src/core/form_gear_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/models/response_models.dart';
 import 'package:form_gear_engine_sdk/src/utils/captured_photo.dart';
@@ -56,6 +59,29 @@ class ClientActionHandler {
           final fileName = args[1].toString();
 
           try {
+            final host = CapabilityBroker.current;
+            if (host.provides(CapabilityKind.photo)) {
+              final photo = await host.capturePhoto(
+                dataKey: fileName,
+                assignmentId:
+                    FormGearSDK.instance.currentAssignment?.assignmentId ?? '',
+              );
+              if (photo == null) {
+                return ActionInfoJs(
+                  success: false,
+                  error: 'Camera capture cancelled',
+                );
+              }
+              final result = await onCameraCapture?.call(
+                fileName,
+                photo.file.path,
+              );
+              return ActionInfoJs(
+                success: true,
+                result: result ?? photo.file.path,
+              );
+            }
+
             // Check camera permissions
             final cameraStatus = await Permission.camera.request();
             if (!cameraStatus.isGranted) {
@@ -82,7 +108,9 @@ class ClientActionHandler {
             }
           } on Exception catch (e) {
             FormGearLogger.webviewError('Camera handler error: $e');
-            return ActionInfoJs(success: false, error: e.toString());
+            return e is CapabilityException
+                ? CapabilityBroker.errorToJs(e, 'Camera')
+                : ActionInfoJs(success: false, error: e.toString());
           }
         }
         return ActionInfoJs(
