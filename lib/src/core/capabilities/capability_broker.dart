@@ -110,6 +110,23 @@ class CapabilityBroker {
     return picked;
   }
 
+  Future<LocationFix?> locate({
+    required String dataKey,
+    required String assignmentId,
+    LocateAccuracy accuracy = LocateAccuracy.high,
+    Duration timeout = const Duration(seconds: 10),
+  }) async => await _capabilities!.locate(
+    LocateRequest(
+      context: _requireContext(),
+      dataKey: dataKey,
+      assignmentId: assignmentId,
+      cancel: _cancel,
+      tempDir: await _tempDir(),
+      accuracy: accuracy,
+      timeout: timeout,
+    ),
+  );
+
   /// The host scanner, or null when the host has none.
   Future<BarcodeScanResult?> scan(
     BuildContext context,
