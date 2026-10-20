@@ -1,4 +1,20 @@
 # Changelog
+## [0.17.0] - 2026-10-20
+
+### ✨ Features
+
+- feat(capabilities): locate as a host capability; the location actions route through the broker and the built-in geolocator path is a deprecated fallback (8f222a9)
+
+### 🔧 Chores
+
+-  bump version to 0.17.0 for next development cycle (b739f6e)
+
+### 📝 Other Changes
+
+- Merge pull request #91 from IPDS-59/chore/bump-version-to-0.17.0-dev (eec0674)
+- Merge pull request #92 from IPDS-59/chore/back-merge-0.16.0 (8e02134)
+- Merge pull request #93 from IPDS-59/release/0.17.0 (7db3d50)
+
 ## [0.16.0] - 2026-10-19
 
 ### ✨ Features

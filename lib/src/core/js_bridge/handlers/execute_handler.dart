@@ -4,12 +4,12 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/capabilities/capability_broker.dart';
+import 'package:form_gear_engine_sdk/src/core/capabilities/location_resolver.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/file_action_handler.dart';
 import 'package:form_gear_engine_sdk/src/utils/captured_photo.dart';
 import 'package:form_gear_engine_sdk/src/utils/fasih_form_notifier.dart';
 import 'package:form_gear_engine_sdk/src/utils/fasih_media_helper.dart';
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
-import 'package:form_gear_engine_sdk/src/utils/location_service_helper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -375,30 +375,14 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
     try {
       FormGearLogger.webview('Executing location for FasihForm: $dataKey');
 
-      // Ensure location access using helper
-      // (automatically opens settings if disabled)
-      final accessResult = await LocationServiceHelper.ensureLocationAccess(
-        contextDescription: 'FasihForm location',
+      final position = await resolveLocation(
+        dataKey: dataKey,
+        purpose: 'FasihForm location',
       );
-      if (!accessResult.success) {
-        return ActionInfoJs(
-          success: false,
-          error: accessResult.errorMessage ?? 'Location access failed',
-        );
+      if (position == null) {
+        return ActionInfoJs(success: false, error: 'Location cancelled');
       }
 
-      // Get current location using helper
-      final locationResult = await LocationServiceHelper.getCurrentLocation(
-        timeLimit: const Duration(seconds: 10),
-      );
-      if (!locationResult.success) {
-        return ActionInfoJs(
-          success: false,
-          error: locationResult.errorMessage ?? 'Failed to get location',
-        );
-      }
-
-      final position = locationResult.position!;
       final locationData = '${position.latitude},${position.longitude}';
       FormGearLogger.webview('FasihForm location executed: $locationData');
 
@@ -407,10 +391,12 @@ class ExecuteHandler extends JSHandler<ActionInfoJs> {
         dataKey: dataKey,
         latitude: position.latitude,
         longitude: position.longitude,
-        accuracy: position.accuracy,
+        accuracy: position.accuracy ?? 0,
       );
 
       return ActionInfoJs(success: true, result: locationData);
+    } on CapabilityException catch (e) {
+      return CapabilityBroker.errorToJs(e, 'Location');
     } on Exception catch (e) {
       FormGearLogger.webviewError('Execute location error: $e');
       return ActionInfoJs(success: false, error: 'Execute location error: $e');

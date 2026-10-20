@@ -150,6 +150,51 @@ class RecordVideoRequest extends CapabilityRequest {
   final VideoQuality quality;
 }
 
+/// How exact a position the form needs; the host maps it to its provider.
+enum LocateAccuracy { low, balanced, high }
+
+/// Get the device position once.
+class LocateRequest extends CapabilityRequest {
+  const LocateRequest({
+    required super.context,
+    required super.dataKey,
+    required super.assignmentId,
+    required super.cancel,
+    required super.tempDir,
+    this.accuracy = LocateAccuracy.high,
+    this.timeout = const Duration(seconds: 10),
+  });
+
+  final LocateAccuracy accuracy;
+
+  /// How long the host may wait for a fix before it fails or gives up.
+  final Duration timeout;
+}
+
+/// One position fix from the host.
+class LocationFix {
+  const LocationFix({
+    required this.latitude,
+    required this.longitude,
+    this.accuracy,
+    this.provider = 'GPS',
+    this.timestamp,
+    this.isMock = false,
+  });
+
+  final double latitude;
+  final double longitude;
+
+  /// Metres, when the provider says.
+  final double? accuracy;
+  final String provider;
+  final DateTime? timestamp;
+
+  /// The position came from a mock provider ("manipulasi GPS"). The SDK then
+  /// calls `FormGearUiHandler.onMockLocation`; the fix is still returned.
+  final bool isMock;
+}
+
 /// A photo or recording the host made.
 class CapturedMedia {
   const CapturedMedia({
@@ -233,4 +278,10 @@ abstract class FormGearCapabilities {
     BuildContext context,
     BarcodeScanRequest request,
   ) async => throw const CapabilityException.unsupported(CapabilityKind.scan);
+
+  /// Gets one position fix. The host asks for the location permission, copes
+  /// with the system Location switch being off, and flags mock positions.
+  /// Without it the SDK uses its built-in geolocator path (until 1.0.0).
+  Future<LocationFix?> locate(LocateRequest request) async =>
+      throw const CapabilityException.unsupported(CapabilityKind.locate);
 }

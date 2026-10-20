@@ -1,8 +1,9 @@
 import 'dart:convert';
 
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
+import 'package:form_gear_engine_sdk/src/core/capabilities/capability_broker.dart';
+import 'package:form_gear_engine_sdk/src/core/capabilities/location_resolver.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/action_handler_contract.dart';
-import 'package:form_gear_engine_sdk/src/utils/location_service_helper.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
 
 /// Handler for location-related actions (LOCATION, CAMERA_GPS, OPEN_MAPS)
@@ -31,31 +32,18 @@ class LocationActionHandler with ActionHandlerContract {
     }
   }
 
+  Future<LocationFix?> _fix(String dataKey, String purpose) =>
+      resolveLocation(dataKey: dataKey, purpose: purpose);
+
   /// Handle camera with GPS action - returns location coordinates (no camera)
   Future<ActionInfoJs> _handleCameraGPS(String dataKey, String data) async {
     try {
       FormGearLogger.webview('Getting GPS location for dataKey: $dataKey');
 
-      final accessResult = await LocationServiceHelper.ensureLocationAccess(
-        contextDescription: 'camera GPS',
-      );
-
-      if (!accessResult.success) {
-        return ActionInfoJs(
-          success: false,
-          error: accessResult.errorMessage ?? 'Location access failed',
-        );
+      final position = await _fix(dataKey, 'camera GPS');
+      if (position == null) {
+        return ActionInfoJs(success: false, error: 'Location cancelled');
       }
-
-      final locationResult = await LocationServiceHelper.getCurrentLocation();
-      if (!locationResult.success) {
-        return ActionInfoJs(
-          success: false,
-          error: locationResult.errorMessage ?? 'Failed to get location',
-        );
-      }
-
-      final position = locationResult.position!;
 
       final result = {
         'success': true,
@@ -64,8 +52,8 @@ class LocationActionHandler with ActionHandlerContract {
           'longitude': position.longitude,
         },
         'accuracy': position.accuracy,
-        'provider': 'GPS',
-        'timestamp': DateTime.now().toIso8601String(),
+        'provider': position.provider,
+        'timestamp': (position.timestamp ?? DateTime.now()).toIso8601String(),
         'remark': 'GPS location acquired successfully',
       };
 
@@ -83,6 +71,8 @@ class LocationActionHandler with ActionHandlerContract {
       );
 
       return ActionInfoJs(success: true, result: resultJson);
+    } on CapabilityException catch (e) {
+      return CapabilityBroker.errorToJs(e, 'GPS');
     } on Exception catch (e) {
       FormGearLogger.webviewError('Camera with GPS error: $e');
       return ActionInfoJs(
@@ -97,25 +87,10 @@ class LocationActionHandler with ActionHandlerContract {
     try {
       FormGearLogger.webview('Getting location for dataKey: $dataKey');
 
-      final accessResult = await LocationServiceHelper.ensureLocationAccess(
-        contextDescription: 'location',
-      );
-      if (!accessResult.success) {
-        return ActionInfoJs(
-          success: false,
-          error: accessResult.errorMessage ?? 'Location access failed',
-        );
+      final position = await _fix(dataKey, 'location');
+      if (position == null) {
+        return ActionInfoJs(success: false, error: 'Location cancelled');
       }
-
-      final locationResult = await LocationServiceHelper.getCurrentLocation();
-      if (!locationResult.success) {
-        return ActionInfoJs(
-          success: false,
-          error: locationResult.errorMessage ?? 'Failed to get location',
-        );
-      }
-
-      final position = locationResult.position!;
       final locationData = '${position.latitude},${position.longitude}';
       FormGearLogger.webview('Location completed: $locationData');
 
@@ -127,6 +102,8 @@ class LocationActionHandler with ActionHandlerContract {
       );
 
       return ActionInfoJs(success: true, result: locationData);
+    } on CapabilityException catch (e) {
+      return CapabilityBroker.errorToJs(e, 'Location');
     } on Exception catch (e) {
       FormGearLogger.webviewError('Location error: $e');
       return ActionInfoJs(
