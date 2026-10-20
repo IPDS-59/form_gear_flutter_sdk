@@ -2,11 +2,11 @@ import 'dart:convert';
 
 import 'package:form_gear_engine_sdk/src/core/capabilities/capability_broker.dart';
 import 'package:form_gear_engine_sdk/src/core/capabilities/form_gear_capabilities.dart';
+import 'package:form_gear_engine_sdk/src/core/capabilities/location_resolver.dart';
 import 'package:form_gear_engine_sdk/src/core/form_gear_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/models/response_models.dart';
 import 'package:form_gear_engine_sdk/src/utils/captured_photo.dart';
-import 'package:form_gear_engine_sdk/src/utils/location_service_helper.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -151,35 +151,19 @@ class ClientActionHandler {
       _ClientActionMethodHandler('gpsHandler', (args) async {
         if (args.isNotEmpty) {
           try {
-            // Ensure location access using helper
-            // (automatically opens settings if disabled)
-            final accessResult =
-                await LocationServiceHelper.ensureLocationAccess(
-                  contextDescription: 'GPS handler',
-                );
-            if (!accessResult.success) {
-              return ActionInfoJs(
-                success: false,
-                error: accessResult.errorMessage ?? 'Location access failed',
-              );
+            final position = await resolveLocation(
+              dataKey: 'gpsHandler',
+              purpose: 'GPS handler',
+            );
+            if (position == null) {
+              return ActionInfoJs(success: false, error: 'Location cancelled');
             }
-
-            // Get current location using helper
-            final locationResult =
-                await LocationServiceHelper.getCurrentLocation();
-            if (!locationResult.success) {
-              return ActionInfoJs(
-                success: false,
-                error: locationResult.errorMessage ?? 'Failed to get location',
-              );
-            }
-
-            final position = locationResult.position!;
             final locationData = {
               'latitude': position.latitude,
               'longitude': position.longitude,
               'accuracy': position.accuracy,
-              'timestamp': position.timestamp.toIso8601String(),
+              'timestamp': (position.timestamp ?? DateTime.now())
+                  .toIso8601String(),
             };
 
             await onLocationUpdate?.call(locationData);
@@ -191,6 +175,8 @@ class ClientActionHandler {
               success: true,
               result: jsonEncode(locationData),
             );
+          } on CapabilityException catch (e) {
+            return CapabilityBroker.errorToJs(e, 'GPS');
           } on Exception catch (e) {
             FormGearLogger.webviewError('GPS handler error: $e');
             return ActionInfoJs(success: false, error: e.toString());

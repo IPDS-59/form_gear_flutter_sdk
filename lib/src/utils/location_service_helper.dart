@@ -1,8 +1,16 @@
+// Deprecated on purpose: kept as the fallback until 1.0.0.
+// ignore_for_file: remove_deprecations_in_breaking_versions
+// ignore_for_file: deprecated_consistency
+
 import 'package:form_gear_engine_sdk/src/utils/form_gear_logger.dart';
 import 'package:form_gear_engine_sdk/src/utils/mock_location.dart';
 import 'package:geolocator/geolocator.dart';
 
-/// Helper class for managing location services and permissions
+/// Helper class for managing location services and permissions.
+///
+/// The built-in fallback for hosts without `FormGearCapabilities.locate`;
+/// removed at 1.0.0.
+@Deprecated('Provide FormGearCapabilities.locate in the host; removed in 1.0.0')
 /// Provides unified methods for checking, requesting, and handling location
 /// access
 class LocationServiceHelper {

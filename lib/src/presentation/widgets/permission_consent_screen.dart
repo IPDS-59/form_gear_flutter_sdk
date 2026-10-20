@@ -1,3 +1,7 @@
+// Deprecated on purpose: kept until 1.0.0.
+// ignore_for_file: remove_deprecations_in_breaking_versions
+// ignore_for_file: deprecated_consistency
+
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -18,7 +22,11 @@ class PermissionConsentItem {
   final Color color;
 }
 
-/// Reusable permission consent screen with FormGear design system
+/// Reusable permission consent screen with FormGear design system.
+///
+/// The host asks for its own permissions through `FormGearCapabilities`;
+/// removed at 1.0.0.
+@Deprecated('The host asks for permissions; removed in 1.0.0')
 /// Following the force update screen design pattern
 class PermissionConsentScreen extends StatelessWidget {
   const PermissionConsentScreen({
