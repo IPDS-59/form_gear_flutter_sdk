@@ -14,10 +14,8 @@ import 'package:form_gear_engine_sdk/src/core/services/services.dart';
 import 'package:form_gear_engine_sdk/src/core/version/form_gear_version_manager.dart';
 import 'package:form_gear_engine_sdk/src/domain/usecases/is_form_engine_downloaded_usecase.dart';
 import 'package:form_gear_engine_sdk/src/models/models.dart';
-import 'package:form_gear_engine_sdk/src/presentation/presentation.dart';
 import 'package:form_gear_engine_sdk/src/utils/fasih_form_notifier.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 /// Main FormGear SDK class - single entry point for all FormGear functionality
 class FormGearSDK {
@@ -399,38 +397,6 @@ class FormGearSDK {
         FormGearLogger.sdk('FormGear server stopped - Assignment completed');
       }
     }
-  }
-
-  /// Removed: the debug bridge test page no longer ships with the SDK.
-  ///
-  /// Always returns `null`. Use [openFormWithAssignment] instead.
-  // ignore: remove_deprecations_in_breaking_versions -- kept so hosts still compile
-  @Deprecated(
-    'The debug bridge test page was removed from the SDK and this always '
-    'returns null. Use openFormWithAssignment.',
-  )
-  Future<FormGearWebView?> createDebugBridgeTest({
-    List<JSHandler<dynamic>> customHandlers = const [],
-    void Function(WebViewController controller)? onWebViewCreated,
-    void Function(WebViewController controller, String url)? onLoadStart,
-    void Function(WebViewController controller, String url)? onLoadStop,
-    void Function(
-      WebViewController controller,
-      String url,
-      int code,
-      String message,
-    )?
-    onLoadError,
-    void Function(
-      WebViewController controller,
-      JavaScriptConsoleMessage consoleMessage,
-    )?
-    onConsoleMessage,
-  }) async {
-    FormGearLogger.sdkError(
-      'createDebugBridgeTest was removed from the SDK and returns null',
-    );
-    return null;
   }
 
   /// Determines the FormEngineType based on template ID

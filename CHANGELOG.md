@@ -1,4 +1,7 @@
 # Changelog
+
+Upgrading from 0.x to 1.0.0? Read [MIGRATION.md](MIGRATION.md).
+
 ## [0.17.0] - 2026-10-20
 
 ### ✨ Features

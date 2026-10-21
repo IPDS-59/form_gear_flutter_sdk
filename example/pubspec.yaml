@@ -16,8 +16,6 @@ dependencies:
   dio: ^5.9.0
   envied: ^1.3.2
 
-  # File picker
-  file_picker: ^13.1.0
   flutter:
     sdk: flutter
 
@@ -31,20 +29,12 @@ dependencies:
   form_gear_engine_sdk:
     path: ../
 
-  # Location services
-  geolocator: ^14.0.2
 
-  # Image and camera
-  image_picker: ^1.2.1
 
   # Path provider for file storage
   path_provider: ^2.1.5
 
-  # Permission handling
-  permission_handler: ^13.0.2
 
-  # Audio recording
-  record: ^7.1.2
 
   # Skeleton loading animations
   skeletonizer: ^3.0.0
@@ -65,6 +55,8 @@ flutter:
   # Assets for FormGear
   # Explicitly list all asset files to ensure they're included in release builds
   assets:
+    # Sample photo for the stub FormGearCapabilities
+    - assets/sample/sample_photo.jpg
     # Form engine assets - Engine 1 (FormGear)
     - assets/formengine/1/index.html
     - assets/formengine/1/form-gear.es.js

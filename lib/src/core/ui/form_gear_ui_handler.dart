@@ -1,9 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:form_gear_engine_sdk/src/core/capabilities/capability_broker.dart';
-import 'package:form_gear_engine_sdk/src/core/ui/barcode_scan.dart';
 
 /// Lets the host draw the small pieces of UI the SDK shows around a form, so
 /// they match the host's design system. Every method has a default that
@@ -59,34 +55,12 @@ abstract class FormGearUiHandler {
   /// `<html>`, so its own header and footer can pad themselves.
   bool get useSafeArea => true;
 
-  /// Lets the host change a photo the user just took with the camera, for
-  /// example to stamp the time and place on it. Return the file to keep: the
-  /// same file or a new one. Gallery and file picks do not pass here. If this
-  /// throws, the SDK keeps the original photo.
-  Future<File> processCapturedPhoto(File photo) async => photo;
-
   /// Called when the device reports a location from a mock provider (a fake
   /// GPS app) while the form asks for the position. The position is still
   /// given to the form. Show a warning here, or close the form if the host
   /// does not accept faked positions. [context] is the form page's. The
   /// default does nothing.
   Future<void> onMockLocation(BuildContext context) async {}
-
-  /// Scans one barcode or QR code for a `BARCODE` or `QR_SCAN` form field. The
-  /// SDK has no scanner of its own: the host opens its camera screen here and
-  /// returns the code, or [BarcodeScanResult.cancelled] when the user leaves.
-  /// Return `null` (the default) when the host has no scanner: the form then
-  /// shows that scanning is not available. [context] is the form page's.
-  ///
-  /// Deprecated: provide `FormGearCapabilities.scan` instead. The default now
-  /// forwards to it, so a host that moves the method keeps the same types.
-  // Kept through 0.x for hosts that still override it; 1.0.0 removes it.
-  // ignore: remove_deprecations_in_breaking_versions
-  @Deprecated('Provide FormGearCapabilities.scan instead')
-  Future<BarcodeScanResult?> scanBarcode(
-    BuildContext context,
-    BarcodeScanRequest request,
-  ) => CapabilityBroker.current.scan(context, request);
 
   /// The status and navigation bar style for the form page. Return `null` to
   /// pick transparent bars with icons that fit the page brightness.

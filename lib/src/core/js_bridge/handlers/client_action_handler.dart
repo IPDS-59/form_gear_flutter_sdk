@@ -6,10 +6,7 @@ import 'package:form_gear_engine_sdk/src/core/capabilities/location_resolver.dar
 import 'package:form_gear_engine_sdk/src/core/form_gear_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/js_handler_base.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/models/response_models.dart';
-import 'package:form_gear_engine_sdk/src/utils/captured_photo.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 /// Factory class that creates JSHandlers for FormGear client action methods
 /// These are higher-level methods called by FormGear JavaScript client
@@ -59,53 +56,25 @@ class ClientActionHandler {
           final fileName = args[1].toString();
 
           try {
-            final host = CapabilityBroker.current;
-            if (host.provides(CapabilityKind.photo)) {
-              final photo = await host.capturePhoto(
-                dataKey: fileName,
-                assignmentId:
-                    FormGearSDK.instance.currentAssignment?.assignmentId ?? '',
-              );
-              if (photo == null) {
-                return ActionInfoJs(
-                  success: false,
-                  error: 'Camera capture cancelled',
-                );
-              }
-              final result = await onCameraCapture?.call(
-                fileName,
-                photo.file.path,
-              );
-              return ActionInfoJs(
-                success: true,
-                result: result ?? photo.file.path,
-              );
-            }
-
-            // Check camera permissions
-            final cameraStatus = await Permission.camera.request();
-            if (!cameraStatus.isGranted) {
-              return ActionInfoJs(
-                success: false,
-                error: 'Camera permission denied',
-              );
-            }
-
-            // Use image picker to capture photo
-            final picker = ImagePicker();
-            final image = await picker.pickImage(source: ImageSource.camera);
-
-            if (image != null) {
-              final photo = await processCapturedPhoto(image.path);
-              final result = await onCameraCapture?.call(fileName, photo.path);
-              FormGearLogger.webview('Camera capture completed: $fileName');
-              return ActionInfoJs(success: true, result: result ?? photo.path);
-            } else {
+            final photo = await CapabilityBroker.current.capturePhoto(
+              dataKey: fileName,
+              assignmentId:
+                  FormGearSDK.instance.currentAssignment?.assignmentId ?? '',
+            );
+            if (photo == null) {
               return ActionInfoJs(
                 success: false,
                 error: 'Camera capture cancelled',
               );
             }
+            final result = await onCameraCapture?.call(
+              fileName,
+              photo.file.path,
+            );
+            return ActionInfoJs(
+              success: true,
+              result: result ?? photo.file.path,
+            );
           } on Exception catch (e) {
             FormGearLogger.webviewError('Camera handler error: $e');
             return e is CapabilityException

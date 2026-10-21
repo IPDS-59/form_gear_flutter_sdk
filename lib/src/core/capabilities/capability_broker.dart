@@ -36,11 +36,18 @@ class CapabilityBroker {
   bool provides(CapabilityKind kind) =>
       _capabilities?.support(kind).supported ?? false;
 
+  /// The host for [kind]; a [CapabilityException.unsupported] when it does not
+  /// provide it, so every route answers the same way (the form shows
+  /// "tidak tersedia").
+  FormGearCapabilities _host(CapabilityKind kind) => provides(kind)
+      ? _capabilities!
+      : throw CapabilityException.unsupported(kind);
+
   Future<CapturedMedia?> capturePhoto({
     required String dataKey,
     required String assignmentId,
   }) async {
-    final media = await _capabilities!.capturePhoto(
+    final media = await _host(CapabilityKind.photo).capturePhoto(
       CapturePhotoRequest(
         context: _requireContext(),
         dataKey: dataKey,
@@ -57,7 +64,7 @@ class CapabilityBroker {
     required String assignmentId,
     Duration? maxDuration,
   }) async {
-    final clip = await _capabilities!.recordAudio(
+    final clip = await _host(CapabilityKind.audio).recordAudio(
       RecordAudioRequest(
         context: _requireContext(),
         dataKey: dataKey,
@@ -76,7 +83,7 @@ class CapabilityBroker {
     Duration? maxDuration,
     VideoQuality quality = VideoQuality.medium,
   }) async {
-    final clip = await _capabilities!.recordVideo(
+    final clip = await _host(CapabilityKind.video).recordVideo(
       RecordVideoRequest(
         context: _requireContext(),
         dataKey: dataKey,
@@ -96,7 +103,7 @@ class CapabilityBroker {
     List<String> allowedExtensions = const [],
     bool imagesOnly = false,
   }) async {
-    final picked = await _capabilities!.pickFile(
+    final picked = await _host(CapabilityKind.pickFile).pickFile(
       PickRequest(
         context: _requireContext(),
         dataKey: dataKey,
@@ -115,7 +122,7 @@ class CapabilityBroker {
     required String assignmentId,
     LocateAccuracy accuracy = LocateAccuracy.high,
     Duration timeout = const Duration(seconds: 10),
-  }) async => await _capabilities!.locate(
+  }) async => await _host(CapabilityKind.locate).locate(
     LocateRequest(
       context: _requireContext(),
       dataKey: dataKey,
@@ -127,13 +134,10 @@ class CapabilityBroker {
     ),
   );
 
-  /// The host scanner, or null when the host has none.
   Future<BarcodeScanResult?> scan(
     BuildContext context,
     BarcodeScanRequest request,
-  ) => provides(CapabilityKind.scan)
-      ? _capabilities!.scan(context, request)
-      : Future.value();
+  ) => _host(CapabilityKind.scan).scan(context, request);
 
   BuildContext _requireContext() =>
       _context() ??
