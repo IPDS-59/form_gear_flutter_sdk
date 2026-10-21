@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
 import 'package:form_gear_engine_sdk/src/core/capabilities/capability_broker.dart';
+import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/barcode_action_handler.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/client_action_handler.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/execute_handler.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/media_action_handler.dart';
@@ -12,6 +13,9 @@ import 'package:form_gear_engine_sdk/src/core/services/navigator_context_provide
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 
 import '../../../helpers/test_path_provider_platform.dart';
+
+/// What the form gets for a capability the host does not provide.
+const unsupportedReply = 'Fitur ini belum tersedia di aplikasi';
 
 /// A scripted host: one outcome per call.
 class FakeCapabilities extends FormGearCapabilities {
@@ -302,9 +306,8 @@ void main() {
       expect(r.error, 'Video recording cancelled by user');
     });
 
-    testWidgets('a host without video keeps the built-in recorder', (t) async {
-      // No navigator context is registered, so the built-in path answers with
-      // its own "no context" error instead of the broker's.
+    testWidgets('a host without video answers unsupported', (t) async {
+      await withContext(t);
       FormGearSDK.instance.capabilities = FakeCapabilities(
         kinds: {CapabilityKind.photo},
       );
@@ -312,7 +315,7 @@ void main() {
         () => MediaActionHandler().handleVideo('film', 'A1'),
       ))!;
       expect(r.success, isFalse);
-      expect(r.error, 'No valid context available for video recorder');
+      expect(r.error, unsupportedReply);
     });
 
     test('the default host does not provide video', () {
@@ -429,43 +432,56 @@ void main() {
   });
 
   group('scan', () {
-    testWidgets('the deprecated UiHandler hook forwards to the capability', (
-      t,
-    ) async {
-      late BuildContext ctx;
-      await t.pumpWidget(
-        Builder(
-          builder: (c) {
-            ctx = c;
-            return const SizedBox();
-          },
-        ),
-      );
+    testWidgets('the scan action uses the host scanner', (t) async {
+      await withContext(t);
       FormGearSDK.instance.capabilities = _ScanCaps();
-      // ignore: deprecated_member_use_from_same_package
-      final r = await const _PlainUi().scanBarcode(
-        ctx,
-        const BarcodeScanRequest(dataKey: 'k', title: 't'),
-      );
-      expect(r?.text, 'ABC');
+      final r = (await t.runAsync(
+        () => BarcodeActionHandler().handle('BARCODE', 'k', ''),
+      ))!;
+      expect(r.success, isTrue);
+      expect(r.result, 'ABC');
     });
 
-    testWidgets('no scan capability keeps the old answer: null', (t) async {
-      late BuildContext ctx;
-      await t.pumpWidget(
-        Builder(
-          builder: (c) {
-            ctx = c;
-            return const SizedBox();
-          },
-        ),
-      );
-      // ignore: deprecated_member_use_from_same_package
-      final r = await const _PlainUi().scanBarcode(
-        ctx,
-        const BarcodeScanRequest(dataKey: 'k', title: 't'),
-      );
-      expect(r, isNull);
+    testWidgets('without a scan capability the form gets unsupported', (
+      t,
+    ) async {
+      await withContext(t);
+      FormGearSDK.instance.capabilities = FakeCapabilities(kinds: {});
+      final r = (await t.runAsync(
+        () => BarcodeActionHandler().handle('BARCODE', 'k', ''),
+      ))!;
+      expect(r.success, isFalse);
+      expect(r.error, unsupportedReply);
+    });
+  });
+
+  group('a host that provides nothing (no built-in fallback)', () {
+    testWidgets('every route answers the same unsupported reply', (t) async {
+      await withContext(t);
+      for (final caps in <FormGearCapabilities?>[
+        null,
+        FakeCapabilities(kinds: {}),
+      ]) {
+        FormGearSDK.instance.capabilities = caps;
+        final replies = (await t.runAsync(
+          () async => [
+            await MediaActionHandler().handleCamera('foto', 'A1'),
+            await MediaActionHandler().handleAudio('rekam', 'A1'),
+            await MediaActionHandler().handleVideo('film', 'A1'),
+            await ExecuteHandler().callback(['CAMERA', 'foto', '']),
+            await ExecuteHandler().callback(['FILE_PICKER', 'berkas', '']),
+            await FileActionHandler().handleFilePicker('berkas', ''),
+            await ClientActionHandler().createHandlers().first.callback([
+              'x',
+              'foto',
+            ]),
+          ],
+        ))!;
+        for (final r in replies) {
+          expect(r.success, isFalse);
+          expect(r.error, unsupportedReply);
+        }
+      }
     });
   });
 
@@ -483,10 +499,6 @@ void main() {
 
 class _Defaults extends FormGearCapabilities {
   const _Defaults();
-}
-
-class _PlainUi extends FormGearUiHandler {
-  const _PlainUi();
 }
 
 class _ScanCaps extends FormGearCapabilities {

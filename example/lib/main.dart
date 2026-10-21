@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:alice/alice.dart';
 import 'package:alice_dio/alice_dio_adapter.dart';
+import 'package:example/example_capabilities.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
@@ -184,42 +185,7 @@ Future<void> initializeFormGearSDK() async {
     globalConfig,
     dioInterceptors: [dioAdapter],
   );
-  FormGearSDK.instance.uiHandler = const _ExampleHandler();
-}
-
-/// The SDK has no scanner: the example asks for the code in a dialog. A real
-/// host opens its camera screen here.
-class _ExampleHandler extends FormGearUiHandler {
-  const _ExampleHandler();
-
-  @override
-  Future<BarcodeScanResult?> scanBarcode(
-    BuildContext context,
-    BarcodeScanRequest request,
-  ) async {
-    final controller = TextEditingController();
-    final text = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(request.title),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(labelText: 'Masukkan kode'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-    return BarcodeScanResult(text: text);
-  }
+  FormGearSDK.instance.capabilities = const ExampleCapabilities();
 }
 
 class MyApp extends StatelessWidget {

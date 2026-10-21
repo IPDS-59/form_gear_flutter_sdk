@@ -14,9 +14,4 @@ void main() {
       throwsA(anything),
     );
   });
-
-  test('the removed debug bridge test page returns null', () async {
-    // ignore: deprecated_member_use_from_same_package
-    expect(await FormGearSDK.instance.createDebugBridgeTest(), isNull);
-  });
 }
