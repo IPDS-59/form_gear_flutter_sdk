@@ -161,19 +161,18 @@ void main() {
       expect(r.error, 'Lokasi belum ketemu');
     });
 
-    testWidgets('a host without locate falls back to the built-in path', (
-      t,
-    ) async {
+    testWidgets('a host without locate answers unsupported', (t) async {
       await withContext(t);
       final host = _LocateHost(fix: _palu, supported: false);
       FormGearSDK.instance.capabilities = host;
 
       final r = await run(t, 'LOCATION');
 
-      // No geolocator plugin in a unit test: the built-in path fails on its
-      // own, and the host is never asked.
+      // The SDK has no location of its own: the host is never asked and the
+      // form gets the same "tidak tersedia" reply as for any unsupported kind.
       expect(host.requests, isEmpty);
       expect(r.success, isFalse);
+      expect(r.error, 'Fitur ini belum tersedia di aplikasi');
     });
   });
 

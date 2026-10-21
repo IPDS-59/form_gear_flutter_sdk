@@ -503,6 +503,11 @@
         "dataKey": "media-scan-example",
         "description": "New Media Input Types",
         "type": 1,
+        "enableCondition": "getValue('age_confirmation') == true && getValue('agreement') == true",
+        "componentEnable": [
+          "age_confirmation",
+          "agreement"
+        ],
         "components": [
           [
             {
@@ -581,6 +586,11 @@
         "dataKey": "lookup-example",
         "description": "Lookup Example",
         "type": 1,
+        "enableCondition": "getValue('age_confirmation') == true && getValue('agreement') == true",
+        "componentEnable": [
+          "age_confirmation",
+          "agreement"
+        ],
         "components": [
           [
             {

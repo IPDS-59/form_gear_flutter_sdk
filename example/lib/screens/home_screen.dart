@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:form_gear_engine_sdk/src/presentation/widgets/media_demo_screen.dart';
 import 'assignment_demo_screen.dart';
 import 'clean_architecture_demo_screen.dart';
 import 'form_data_listener_demo_screen.dart';
 import 'form_engine_selection_screen.dart';
 import 'loading_screen_demo.dart';
-import 'simple_typed_bridge_test_screen.dart';
 import 'version_update_demo_screen.dart';
 import '../download_demo_page_enhanced.dart';
 import '../main.dart'; // For Alice access
@@ -140,19 +138,6 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            _DemoCard(
-              title: 'Media Features',
-              subtitle: 'Audio recording and barcode scanning',
-              icon: Icons.perm_media,
-              gradientColors: const [Color(0xFFE91E63), Color(0xFFC2185B)],
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const MediaDemoScreen(),
-                ),
-              ),
-            ),
 
             const SizedBox(height: 24),
             const Text(
@@ -208,19 +193,6 @@ class HomeScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const LoadingScreenDemo(),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _DemoCard(
-              title: 'Bridge Test',
-              subtitle: 'JavaScript bridge integration',
-              icon: Icons.code,
-              gradientColors: const [Color(0xFF673AB7), Color(0xFF512DA8)],
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SimpleTypedBridgeTestScreen(),
                 ),
               ),
             ),

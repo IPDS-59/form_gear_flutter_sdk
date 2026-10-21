@@ -20,7 +20,7 @@ A Flutter SDK for FormGear - A flexible, JSON-driven form generation framework f
 
 - 🎯 **JSON-driven forms** with 30+ input control types
 - 📱 **Multi-engine support**: FormGear (ID 1) and FasihForm (ID 2)
-- 📷 **Device integration**: Camera, GPS, file uploads, signature capture
+- 📷 **Device integration through your app**: camera, audio, video, scan, file pick and GPS come from `FormGearCapabilities`; the SDK ships no device plugin
 - 🔒 **Security**: Input validation, HTTPS enforcement, log sanitization
 - 💾 **Offline capability**: Forms work without internet
 - 🎨 **Customizable listeners**: SaveOrSubmit and FileUpload patterns
@@ -29,25 +29,21 @@ A Flutter SDK for FormGear - A flexible, JSON-driven form generation framework f
 
 ```yaml
 dependencies:
-  form_gear_engine_sdk: ^0.4.0
+  form_gear_engine_sdk: ^1.0.0
 ```
 
 ### Platform Setup
 
-**Android** - Add to `AndroidManifest.xml`:
+The SDK needs only the network for its web view.
+
+**Android** - `AndroidManifest.xml`:
 ```xml
 <uses-permission android:name="android.permission.INTERNET" />
-<uses-permission android:name="android.permission.CAMERA" />
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 ```
 
-**iOS** - Add to `Info.plist`:
-```xml
-<key>NSCameraUsageDescription</key>
-<string>Camera access for form photos</string>
-<key>NSLocationWhenInUseUsageDescription</key>
-<string>Location access for GPS coordinates</string>
-```
+Camera, microphone, location and photo permissions belong to your app, because
+your app provides those capabilities. See the checklist in
+[MIGRATION.md](MIGRATION.md#permissions-your-app-now-owns).
 
 ## Quick Start
 
@@ -427,43 +423,31 @@ UI. The form page draws edge to edge by default; return `false` from
 `false` from `useSafeArea` to let it fill the page (the insets reach the engine
 as the CSS variables `--safe-area-inset-top|right|bottom|left`; the SDK also
 pads the engine's mount element (`#fasih-form`) with them, so the header clears
-the status bar and the footer clears the gesture bar). Override `processCapturedPhoto` to change a fresh camera photo before the SDK saves it (for example a time and place stamp; gallery picks skip it). Override `onMockLocation` to warn, or close the form, when a position comes from a mock provider (fake GPS); the position is still given to the form. `FormGearSDK.instance.bridgeEvents` streams every JS
+the status bar and the footer clears the gesture bar). Override `onMockLocation` to warn, or close the form, when a position comes from a mock provider (fake GPS); the position is still given to the form. `FormGearSDK.instance.bridgeEvents` streams every JS
 bridge event for debuggers. See `docs/adr/0001-host-ui-handler-and-bridge-events.md`.
 
-### Barcode and QR scanning
+### Host capabilities (`FormGearCapabilities`)
 
-The SDK has no scanner of its own (it used to ship a zxing screen; that code
-and the `flutter_zxing` dependency are gone, so a host that scans owns the
-camera screen and its size). The `BARCODE` and `QR_SCAN` form actions call
-`FormGearUiHandler.scanBarcode(context, request)`. Open your scanner there and
-return the code:
+The SDK owns the web view, the local server, the bridge, the data and the
+engine download. Everything that touches the device comes from your app, through
+one class. Set it once:
 
 ```dart
-class MyHandler extends FormGearUiHandler {
-  @override
-  Future<BarcodeScanResult?> scanBarcode(
-    BuildContext context,
-    BarcodeScanRequest request,
-  ) async {
-    final code = await myScanner(context); // your camera screen
-    return code == null
-        ? const BarcodeScanResult.cancelled()
-        : BarcodeScanResult(text: code.text, format: code.format);
-  }
-}
+FormGearSDK.instance.capabilities = MyCapabilities();
 ```
 
-The default returns `null`, and the form then shows that scanning is not
-available. **Migration from 0.11 to 0.13:** `BarcodeScannerEngine`,
-`ScannedCode`, `ScannerPermissionDenied` and `FormGearScanner.engineBuilder`
-are removed; move your engine into the `scanBarcode` screen.
+Extend the class (do not implement it), so members added later keep their
+defaults. Every member defaults to "not provided".
 
-### Host capabilities (0.15)
-
-Device features come from the host through one class, `FormGearCapabilities`,
-set with `FormGearSDK.instance.capabilities = MyCapabilities()`. Every member
-defaults to "not provided". Phase 2 covers `capturePhoto`, `pickFile` and
-`scan`:
+| Member | Kind | What the host does |
+|---|---|---|
+| `capturePhoto(CapturePhotoRequest)` | `photo` | Take one photo (camera, stamp, resize) |
+| `pickFile(PickRequest)` | `pickFile` | Pick one file or gallery image |
+| `scan(BuildContext, BarcodeScanRequest)` | `scan` | Scan one barcode or QR code |
+| `recordAudio(RecordAudioRequest)` | `audio` | Record one clip, with its own sheet |
+| `recordVideo(RecordVideoRequest)` | `video` | Record one clip, with its own page |
+| `locate(LocateRequest)` | `locate` | Get one position, flag mock GPS |
+| `support(CapabilityKind)` | all | Say which of the above you do |
 
 ```dart
 class MyCapabilities extends FormGearCapabilities {
@@ -482,18 +466,62 @@ class MyCapabilities extends FormGearCapabilities {
 }
 ```
 
-`null` means the user cancelled; a failure is a `CapabilityException` with a
-sentence for the user. The engine still names the file, stores it in the
-assignment media folder and updates `media.json`. All three bridge routes
-(`action`, `execute` and the client handlers) use the same call. While the SDK
-is 0.x, a kind the host does not provide keeps the built-in camera and picker
-(`image_picker`, `file_picker`); they go away in 1.0.0.
-`FormGearUiHandler.scanBarcode` is deprecated and forwards to
-`FormGearCapabilities.scan` (same types).
+Rules:
+
+- `null` means the user cancelled. It is not an error.
+- A failure is a `CapabilityException` with a sentence for the user. Use
+  `CapabilityException.denied` for a refused permission.
+- The host asks for its own permissions.
+- The engine names the final file, stores it in the assignment media folder and
+  updates `media.json`.
+- The form closing fires `request.cancel`, so you can pop your route.
+- A kind you do not provide gives the form `Fitur ini belum tersedia di
+  aplikasi` ("tidak tersedia"). Nothing opens and nothing crashes.
+
+All bridge routes (`action`, `execute` and the client handlers) go through one
+`CapabilityBroker`, so a capability behaves the same on every route. A fix with
+`LocationFix.isMock == true` calls `FormGearUiHandler.onMockLocation`; the fix
+is still returned.
+
+Upgrading from 0.x? Follow [MIGRATION.md](MIGRATION.md).
+
+### Run the example
+
+```bash
+cd example
+flutter pub get
+flutter run
+```
+
+The example uses stub capabilities (`example/lib/example_capabilities.dart`): a
+sample photo, a sample CSV file, a fixed position and a dialog for scans. Audio
+and video are left out on purpose, so you can see the "tidak tersedia" reply.
+The example needs an `.env` for its API settings (see `example/lib/env/env.dart`).
+
+### Versions and deprecation
+
+- 0.14 to 0.17 added one capability each and kept a deprecated built-in
+  fallback.
+- 1.0.0 removed the fallbacks, the plugins and the built-in screens.
+- From 1.0.0 the SDK follows semantic versioning. A new capability is a minor
+  release and defaults to "not provided". A removal is a major release, with a
+  deprecation window of at least two minor releases first.
+
+### What is next
+
+- **Engine registry:** engines 1 and 2 are the only ones the SDK knows today.
+  A planned registry (open engine keys, a signed feed, per-survey selection)
+  will let a host run another engine. This is a plan, not a feature yet. See the
+  capabilities epic.
+- **Host bridge:** a platform-agnostic bridge to replace `window.Android` is in
+  RFC. See issue [#96](https://github.com/IPDS-59/form_gear_flutter_sdk/issues/96).
+
+Tracking: [capabilities epic #110](https://github.com/IPDS-59/form_gear_flutter_sdk/issues/110)
+and [phase 5 #101](https://github.com/IPDS-59/form_gear_flutter_sdk/issues/101).
 
 ### Removed APIs
 
-The following internal APIs have been removed from the public surface:
+See the full list in [MIGRATION.md](MIGRATION.md#removed-apis). Earlier removals from the public surface:
 - `FormGearDownloadManager` - Use bundled assets or implement custom download
 - Template download methods - Manage templates in your app
 - Update screens - Implement custom UI for updates

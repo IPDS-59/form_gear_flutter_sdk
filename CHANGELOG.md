@@ -1,4 +1,21 @@
 # Changelog
+## [1.0.0] - 2026-10-21
+
+### ⚠️ BREAKING CHANGES
+
+- feat!: remove the device plugins and built-in fallbacks; capabilities are the only device path (6992793)
+
+### 🐛 Bug Fixes
+
+- fix(example): gate the Media & Scan and Lookup sections of the demo template behind the first-page agreement (#88) (5750fa9)
+
+### 📝 Other Changes
+
+- Merge pull request #111 from IPDS-59/release/1.0.0 (f4c0fb5)
+
+
+Upgrading from 0.x to 1.0.0? Read [MIGRATION.md](MIGRATION.md).
+
 ## [0.17.0] - 2026-10-20
 
 ### ✨ Features
