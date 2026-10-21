@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
@@ -28,17 +26,7 @@ void main() {
     expect(handler.systemOverlayStyle(context), isNull);
     expect(handler.edgeToEdge, isTrue);
     expect(handler.useSafeArea, isTrue);
-    final photo = File('photo.jpg');
-    expect(await handler.processCapturedPhoto(photo), same(photo));
     await handler.onMockLocation(context);
-    // No host scanner: the form shows that scanning is not available.
-    expect(
-      await handler.scanBarcode(
-        context,
-        const BarcodeScanRequest(dataKey: 'k', title: 't'),
-      ),
-      isNull,
-    );
   });
 
   test('a scan result without text is a cancel', () {

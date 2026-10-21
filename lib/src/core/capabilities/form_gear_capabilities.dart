@@ -252,8 +252,9 @@ abstract class FormGearCapabilities {
   const FormGearCapabilities();
 
   /// Whether the host does [kind]. The engine asks before it calls: an
-  /// unsupported kind uses the SDK's built-in path while it still has one, and
-  /// gives the page a friendly error after that.
+  /// unsupported kind gives the form page a friendly error ("tidak
+  /// tersedia"). The SDK has no built-in camera, recorder, picker or location
+  /// of its own.
   CapabilitySupport support(CapabilityKind kind) =>
       const CapabilitySupport.unsupported();
 
@@ -264,16 +265,14 @@ abstract class FormGearCapabilities {
   Future<CapturedMedia?> recordAudio(RecordAudioRequest request) async =>
       throw const CapabilityException.unsupported(CapabilityKind.audio);
 
-  /// Records one video clip (`video/mp4`). A host that does not provide it
-  /// leaves the SDK's built-in video recorder in charge (until 1.0.0).
+  /// Records one video clip (`video/mp4`).
   Future<CapturedMedia?> recordVideo(RecordVideoRequest request) async =>
       throw const CapabilityException.unsupported(CapabilityKind.video);
 
   Future<PickedFile?> pickFile(PickRequest request) async =>
       throw const CapabilityException.unsupported(CapabilityKind.pickFile);
 
-  /// Scans one barcode or QR code. Same types as
-  /// `FormGearUiHandler.scanBarcode`, which now forwards here.
+  /// Scans one barcode or QR code.
   Future<BarcodeScanResult?> scan(
     BuildContext context,
     BarcodeScanRequest request,
@@ -281,7 +280,6 @@ abstract class FormGearCapabilities {
 
   /// Gets one position fix. The host asks for the location permission, copes
   /// with the system Location switch being off, and flags mock positions.
-  /// Without it the SDK uses its built-in geolocator path (until 1.0.0).
   Future<LocationFix?> locate(LocateRequest request) async =>
       throw const CapabilityException.unsupported(CapabilityKind.locate);
 }

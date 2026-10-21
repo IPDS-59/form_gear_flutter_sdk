@@ -1,4 +1,5 @@
 import 'package:form_gear_engine_sdk/form_gear_engine_sdk.dart';
+import 'package:form_gear_engine_sdk/src/core/capabilities/capability_broker.dart';
 import 'package:form_gear_engine_sdk/src/core/js_bridge/handlers/action_handler_contract.dart';
 import 'package:form_gear_engine_sdk/src/core/services/navigator_context_provider.dart';
 import 'package:form_gear_engine_sdk/src/utils/utils.dart';
@@ -6,7 +7,7 @@ import 'package:form_gear_engine_sdk/src/utils/utils.dart';
 /// Handler for barcode/QR scanning actions (BARCODE, QR_SCAN).
 ///
 /// The SDK has no scanner: it asks the host through
-/// `FormGearUiHandler.scanBarcode`.
+/// `FormGearCapabilities.scan`.
 class BarcodeActionHandler with ActionHandlerContract {
   @override
   List<String> get supportedActions => ['BARCODE', 'QR_SCAN'];
@@ -20,7 +21,6 @@ class BarcodeActionHandler with ActionHandlerContract {
     try {
       FormGearLogger.webview('Barcode scan action for dataKey: $dataKey');
 
-      final handler = FormGearSDK.instance.uiHandler;
       final context = NavigatorContextProvider.instance.context;
       if (context == null) {
         return ActionInfoJs(
@@ -29,17 +29,10 @@ class BarcodeActionHandler with ActionHandlerContract {
         );
       }
 
-      final scan = handler == null
-          ? null
-          // The SDK's own default forwards to the host capability.
-          // ignore: deprecated_member_use_from_same_package
-          : await handler.scanBarcode(
-              context,
-              BarcodeScanRequest(
-                dataKey: dataKey,
-                title: 'Scan Barcode - $dataKey',
-              ),
-            );
+      final scan = await CapabilityBroker.current.scan(
+        context,
+        BarcodeScanRequest(dataKey: dataKey, title: 'Scan Barcode - $dataKey'),
+      );
       if (scan == null) {
         return ActionInfoJs(
           success: false,
@@ -65,10 +58,7 @@ class BarcodeActionHandler with ActionHandlerContract {
       return ActionInfoJs(success: true, result: result);
     } on Exception catch (e) {
       FormGearLogger.webviewError('Barcode scan error: $e');
-      return ActionInfoJs(
-        success: false,
-        error: ErrorSanitizer.sanitizeWithContext('Barcode scan', e.toString()),
-      );
+      return CapabilityBroker.errorToJs(e, 'Barcode scan');
     }
   }
 }
