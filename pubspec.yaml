@@ -13,7 +13,7 @@ environment:
 dependencies:
   archive: ^4.0.9
   dio: ^5.10.0
-  equatable: ^2.0.8
+  equatable: ">=2.0.8 <4.0.0"
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
