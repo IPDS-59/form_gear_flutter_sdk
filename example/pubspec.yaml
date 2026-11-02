@@ -23,7 +23,7 @@ dependencies:
   flutter_bloc: ^9.1.1
 
   # SVG support
-  flutter_svg: ^2.2.3
+  flutter_svg: ^2.3.2
 
   # FormGear SDK
   form_gear_engine_sdk:
